@@ -10,7 +10,7 @@ int main(void)
   int i,c;
   unsigned char* pk = (unsigned char*) malloc(NTRU_PUBLICKEYBYTES);
   unsigned char* sk = (unsigned char*) malloc(NTRU_SECRETKEYBYTES);
-  unsigned char* ct = (unsigned char*) malloc(NTRU_BYTES);
+  unsigned char* ct = (unsigned char*) malloc(NTRU_CIPHERTEXTBYTES);
   unsigned char* k1 = (unsigned char*) malloc(NTRU_SHAREDKEYBYTES);
   unsigned char* k2 = (unsigned char*) malloc(NTRU_SHAREDKEYBYTES);
 

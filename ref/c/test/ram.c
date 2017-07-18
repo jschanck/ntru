@@ -12,7 +12,7 @@ int main()
 {
   unsigned char* pks = (unsigned char*) malloc(NTRU_PUBLICKEYBYTES);
   unsigned char* sks = (unsigned char*) malloc(NTRU_SECRETKEYBYTES);
-  unsigned char* cts = (unsigned char*) malloc(NTRU_BYTES);
+  unsigned char* cts = (unsigned char*) malloc(NTRU_CIPHERTEXTBYTES);
   unsigned char* k1 = (unsigned char*) malloc(NTRU_SHAREDKEYBYTES);
   unsigned char* k2 = (unsigned char*) malloc(NTRU_SHAREDKEYBYTES);
 

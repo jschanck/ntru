@@ -53,7 +53,7 @@ int main()
   poly r, a, b;
   unsigned char* pks = (unsigned char*) malloc(NTESTS*NTRU_PUBLICKEYBYTES);
   unsigned char* sks = (unsigned char*) malloc(NTESTS*NTRU_SECRETKEYBYTES);
-  unsigned char* cts = (unsigned char*) malloc(NTESTS*NTRU_BYTES);
+  unsigned char* cts = (unsigned char*) malloc(NTESTS*NTRU_CIPHERTEXTBYTES);
   unsigned char seed[NTRU_SEEDBYTES];
   unsigned long long t[NTESTS];
   uint16_t a1 = 0;
@@ -72,14 +72,14 @@ int main()
   for(i=0; i<NTESTS; i++)
   {
     t[i] = cpucycles();
-    crypto_kem_enc(cts+i*NTRU_BYTES, key_b, pks+i*NTRU_PUBLICKEYBYTES);
+    crypto_kem_enc(cts+i*NTRU_CIPHERTEXTBYTES, key_b, pks+i*NTRU_PUBLICKEYBYTES);
   }
   print_results("ntru_encaps: ", t, NTESTS);
 
   for(i=0; i<NTESTS; i++)
   {
     t[i] = cpucycles();
-    crypto_kem_dec(key_a, cts+i*NTRU_BYTES, sks+i*NTRU_SECRETKEYBYTES);
+    crypto_kem_dec(key_a, cts+i*NTRU_CIPHERTEXTBYTES, sks+i*NTRU_SECRETKEYBYTES);
   }
   print_results("ntru_decaps: ", t, NTESTS);
 
