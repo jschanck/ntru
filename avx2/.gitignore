@@ -1,0 +1,8 @@
+test/*
+!test/*.c
+!test/*.h
+*.s
+__pycache__/
+# patched from ref/c/
+poly.c
+poly.h
