@@ -212,7 +212,7 @@ void poly_S3_sample_plus(poly *r, const unsigned char *seed, const unsigned char
   /* Map sign of correlation to element of Zp.     */
   s = ((s >> 15) & 1) + 1; /* s = (s >= 0) ? 1 : 2 */
 
-  for(i=1; i<NTRU_N; i+=2)
+  for(i=0; i<NTRU_N; i+=2)
     r->coeffs[i] = mod3(r->coeffs[i]*s);
 }
 
