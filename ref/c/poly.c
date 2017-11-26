@@ -173,14 +173,19 @@ void poly_S3_frombytes(poly *r, const unsigned char msg[NTRU_OWCPA_MSGBYTES])
 void poly_S3_sample(poly *r, const unsigned char *seed, const unsigned char nonce)
 {
   uint32_t buf[(NTRU_N+7)/8];
-  unsigned char n[8];
+  unsigned char extseed[NTRU_SEEDBYTES+8];
   int i;
 
+  for(i=0;i<NTRU_SEEDBYTES;i++)
+    extseed[i] = seed[i];
   for(i=1;i<8;i++)
-    n[i] = 0;
-  n[0] = nonce;
+    extseed[NTRU_SEEDBYTES+i] = 0;
+  extseed[NTRU_SEEDBYTES] = nonce;
 
-  crypto_stream_shake128((unsigned char *)buf,sizeof(buf),n,seed);
+  //crypto_stream_shake128((unsigned char *)buf,sizeof(buf),n,seed);
+  shake128((unsigned char *)buf, sizeof(buf), extseed, sizeof(extseed));
+  //shake128(buf, NTRU_COINBYTES + NTRU_SHAREDKEYBYTES + NTRU_OWCPA_MSGBYTES,
+  //         m, NTRU_OWCPA_MSGBYTES);
 
   cbdS3(r, buf);
 }
