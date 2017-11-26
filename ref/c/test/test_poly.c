@@ -51,8 +51,8 @@ static int test_sample_plus(const unsigned char seed[NTRU_SEEDBYTES], const unsi
   if(zero_a - zero_b)
     return -1;
 
-  /* Even index coefficents should be unchanged */
-  for(i=0; i<NTRU_N; i+=2)
+  /* Odd index coefficents should be unchanged */
+  for(i=1; i<NTRU_N; i+=2)
     if(a.coeffs[i] != b.coeffs[i])
       return -1;
 
