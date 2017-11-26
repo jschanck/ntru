@@ -33,7 +33,7 @@ void poly_Rq_tobytes(unsigned char *r, const poly *a)
   int i,j;
   uint16_t t[8];
 
-  for(i=0;i<NTRU_N/8;i++)
+  for(i=0;i<NTRU_PACK_DEG/8;i++)
   {
     for(j=0;j<8;j++)
       t[j] = a->coeffs[8*i+j];
@@ -53,30 +53,26 @@ void poly_Rq_tobytes(unsigned char *r, const poly *a)
     r[13*i+12] = (t[7] >>  5);
   }
 
-  for(j=0;j<NTRU_N-8*i;j++)
+  for(j=0;j<NTRU_PACK_DEG-8*i;j++)
     t[j] = a->coeffs[8*i+j];
   for(; j<8; j++)
     t[j] = 0;
 
-  switch(NTRU_N - 8*(NTRU_N/8))
+  switch(NTRU_PACK_DEG - 8*(NTRU_PACK_DEG/8))
   {
-    case 7:
-      r[13*i+11] = (t[6] >> 10) | ((t[7] & 0x1f) << 3);
-      r[13*i+10] = (t[6] >>  2) & 0xff;
+    case 6:
       r[13*i+ 9] = (t[5] >>  7) | ((t[6] & 0x03) << 6);
-    // fallthrough
-    case 5:
       r[13*i+ 8] = (t[4] >> 12) | ((t[5] & 0x7f) << 1);
       r[13*i+ 7] = (t[4] >>  4) & 0xff;
+    // fallthrough
+    case 4:
       r[13*i+ 6] = (t[3] >>  9) | ((t[4] & 0x0f) << 4);
       r[13*i+ 5] = (t[3] >>  1) & 0xff;
-    // fallthrough
-    case 3:
       r[13*i+ 4] = (t[2] >>  6) | ((t[3] & 0x01) << 7);
+    // fallthrough
+    case 2:
       r[13*i+ 3] = (t[1] >> 11) | ((t[2] & 0x3f) << 2);
       r[13*i+ 2] = (t[1] >>  3) & 0xff;
-    // fallthrough
-    case 1:
       r[13*i+ 1] = (t[0] >>  8) | ((t[1] & 0x07) << 5);
       r[13*i+ 0] =  t[0]        & 0xff;
   }
@@ -85,7 +81,7 @@ void poly_Rq_tobytes(unsigned char *r, const poly *a)
 void poly_Rq_frombytes(poly *r, const unsigned char *a)
 {
   int i;
-  for(i=0;i<NTRU_N/8;i++)
+  for(i=0;i<NTRU_PACK_DEG/8;i++)
   {
     r->coeffs[8*i+0] =  a[13*i+ 0]       | (((uint16_t)a[13*i+ 1] & 0x1f) << 8);
     r->coeffs[8*i+1] = (a[13*i+ 1] >> 5) | (((uint16_t)a[13*i+ 2]       ) << 3) | (((uint16_t)a[13*i+ 3] & 0x03) << 11);
@@ -96,23 +92,27 @@ void poly_Rq_frombytes(poly *r, const unsigned char *a)
     r->coeffs[8*i+6] = (a[13*i+ 9] >> 6) | (((uint16_t)a[13*i+10]       ) << 2) | (((uint16_t)a[13*i+11] & 0x07) << 10);
     r->coeffs[8*i+7] = (a[13*i+11] >> 3) | (((uint16_t)a[13*i+12]       ) << 5);
   }
-  switch(NTRU_N - 8*(NTRU_N/8))
+  switch(NTRU_PACK_DEG - 8*(NTRU_PACK_DEG/8))
   {
-    case 7:
-      r->coeffs[8*i+6] = (a[13*i+ 9] >> 6) | (((uint16_t)a[13*i+10]       ) << 2) | (((uint16_t)a[13*i+11] & 0x07) << 10);
+    case 6:
       r->coeffs[8*i+5] = (a[13*i+ 8] >> 1) | (((uint16_t)a[13*i+ 9] & 0x3f) << 7);
-    // fallthrough
-    case 5:
       r->coeffs[8*i+4] = (a[13*i+ 6] >> 4) | (((uint16_t)a[13*i+ 7]       ) << 4) | (((uint16_t)a[13*i+ 8] & 0x01) << 12);
+    // fallthrough
+    case 4:
       r->coeffs[8*i+3] = (a[13*i+ 4] >> 7) | (((uint16_t)a[13*i+ 5]       ) << 1) | (((uint16_t)a[13*i+ 6] & 0x0f) <<  9);
-    // fallthrough
-    case 3:
       r->coeffs[8*i+2] = (a[13*i+ 3] >> 2) | (((uint16_t)a[13*i+ 4] & 0x7f) << 6);
-      r->coeffs[8*i+1] = (a[13*i+ 1] >> 5) | (((uint16_t)a[13*i+ 2]       ) << 3) | (((uint16_t)a[13*i+ 3] & 0x03) << 11);
     // fallthrough
-    case 1:
+    case 2:
+      r->coeffs[8*i+1] = (a[13*i+ 1] >> 5) | (((uint16_t)a[13*i+ 2]       ) << 3) | (((uint16_t)a[13*i+ 3] & 0x03) << 11);
       r->coeffs[8*i+0] =  a[13*i+ 0]       | (((uint16_t)a[13*i+ 1] & 0x1f) << 8);
   }
+  /* Set r[n-1] so that the sum of coefficients is zero mod q */
+  r->coeffs[NTRU_N-1] = 0;
+  for(i=0;i<NTRU_PACK_DEG;i++)
+  {
+    r->coeffs[NTRU_N-1] += r->coeffs[i];
+  }
+  r->coeffs[NTRU_N-1] = MODQ(-(r->coeffs[NTRU_N-1]));
 }
 
 void poly_Rq_frommsg(poly *r, const unsigned char *m)
@@ -126,7 +126,7 @@ void poly_S3_tobytes(unsigned char msg[NTRU_OWCPA_MSGBYTES], const poly *a)
 {
   int i,j;
   unsigned char c;
-  for(i=0; i<NTRU_N/5; i++)
+  for(i=0; i<NTRU_PACK_DEG/5; i++)
   {
     c =        a->coeffs[5*i+4] & 255;
     c = (3*c + a->coeffs[5*i+3]) & 255;
@@ -135,9 +135,9 @@ void poly_S3_tobytes(unsigned char msg[NTRU_OWCPA_MSGBYTES], const poly *a)
     c = (3*c + a->coeffs[5*i+0]) & 255;
     msg[i] = c;
   }
-  i = NTRU_N/5;
+  i = NTRU_PACK_DEG/5;
   c = 0;
-  for(j = NTRU_N - (5*i) - 1; j>=0; j--)
+  for(j = NTRU_PACK_DEG - (5*i) - 1; j>=0; j--)
     c = (3*c + a->coeffs[5*i+j]) & 255;
   msg[i] = c;
 }
@@ -152,7 +152,7 @@ void poly_S3_frombytes(poly *r, const unsigned char msg[NTRU_OWCPA_MSGBYTES])
 {
   int i,j;
   unsigned char c;
-  for(i=0; i<NTRU_N/5; i++)
+  for(i=0; i<NTRU_PACK_DEG/5; i++)
   {
     c = msg[i];
     r->coeffs[5*i+0] = mod3(c);
@@ -161,13 +161,14 @@ void poly_S3_frombytes(poly *r, const unsigned char msg[NTRU_OWCPA_MSGBYTES])
     r->coeffs[5*i+3] = mod3(c * 19 >> 9);  // division by 3^3
     r->coeffs[5*i+4] = mod3(c * 203 >> 14);  // etc.
   }
-  i = NTRU_N/5;
+  i = NTRU_PACK_DEG/5;
   c = msg[i];
-  for(j=0; (5*i+j)<NTRU_N; j++)
+  for(j=0; (5*i+j)<NTRU_PACK_DEG; j++)
   {
     r->coeffs[5*i+j] = mod3(c);
     c = c * 171 >> 9;
   }
+  r->coeffs[NTRU_N-1] = 0;
 }
 
 void poly_S3_sample(poly *r, const unsigned char *seed, const unsigned char nonce)
@@ -545,4 +546,8 @@ void poly_S3_inv(poly *r, const poly *a)
     r->coeffs[i-k] = mod3(fsign*b.coeffs[i]);
   for(i=0; i<k; i++)
     r->coeffs[NTRU_N-k+i] = mod3(fsign*b.coeffs[i]);
+
+  /* Reduce modulo Phi_n */
+  for(i=0; i<NTRU_N; i++)
+    r->coeffs[i] = mod3(r->coeffs[i] + 2*r->coeffs[NTRU_N-1]);
 }

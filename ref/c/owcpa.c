@@ -20,13 +20,11 @@ static void unpack_pk(poly *pk, const unsigned char *packedpk)
 
 static void pack_ciphertext(unsigned char *r, const poly *c)
 {
-  /* TODO: lazy reduce last coeff */
   poly_Rq_tobytes(r, c);
 }
 
 static void unpack_ciphertext(poly *c, const unsigned char *packedct)
 {
-  /* TODO: un-lazy reduce last coeff */
   poly_Rq_frombytes(c, packedct);
 }
 
