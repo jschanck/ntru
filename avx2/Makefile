@@ -25,6 +25,9 @@ all: test/test_polymul \
      test/test_cshake \
      test/speed \
      test/ram \
+     test/encap \
+     test/decap \
+     test/keypair \
      test/speed_r2_inv \
 
 poly_rq_mul.s: asmgen/rq_mul/poly_rq_mul.py asmgen/rq_mul/K2_schoolbook_64x11.py asmgen/rq_mul/K2_K2_64x44.py
@@ -79,6 +82,15 @@ test/speed_r2_inv: $(SOURCES) $(OBJS) $(HEADERS) cpucycles.h cpucycles.c test/sp
 test/test_cshake: fips202.h fips202.c test/test_cshake.c
 	$(CC) $(CFLAGS) -o $@ fips202.c test/test_cshake.c
 
+test/encap: $(SOURCES) $(OBJS) $(HEADERS) test/encap.c
+	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(OBJS) test/encap.c
+
+test/decap: $(SOURCES) $(OBJS) $(HEADERS) test/decap.c
+	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(OBJS) test/decap.c
+
+test/keypair: $(SOURCES) $(OBJS) $(HEADERS) test/keypair.c
+	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(OBJS) test/keypair.c
+
 .PHONY: clean test
 
 # In particular useful for the .s files;
@@ -104,4 +116,7 @@ clean:
 	-$(RM) -r test/test_cshake
 	-$(RM) -r test/speed
 	-$(RM) -r test/ram
+	-$(RM) -r test/encap
+	-$(RM) -r test/decap
+	-$(RM) -r test/keypair
 	-$(RM) -r test/speed_r2_inv

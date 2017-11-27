@@ -12,6 +12,9 @@ all: test/test_poly \
      test/test_shake \
      test/ram \
      test/speed \
+     test/encap \
+     test/decap \
+     test/keypair \
      test/gen_owcpa_vecs \
 
 test/test_polymul: $(SOURCES) $(HEADERS) test/test_polymul.c
@@ -41,6 +44,15 @@ test/test_shake: fips202.h fips202.c test/test_shake.c
 test/gen_owcpa_vecs: test/gen_owcpa_vecs.c
 	$(CC) $(CFLAGS) -o $@ $(SOURCES) test/gen_owcpa_vecs.c
 
+test/encap: $(SOURCES) $(HEADERS) test/encap.c
+	$(CC) $(CFLAGS) -o $@ $(SOURCES) test/encap.c
+
+test/decap: $(SOURCES) $(HEADERS) test/decap.c
+	$(CC) $(CFLAGS) -o $@ $(SOURCES) test/decap.c
+
+test/keypair: $(SOURCES) $(HEADERS) test/keypair.c
+	$(CC) $(CFLAGS) -o $@ $(SOURCES) test/keypair.c
+
 .PHONY: clean test
 
 test:
@@ -53,7 +65,6 @@ test:
 	./test/speed
 	./test/ram
 
-
 clean:
 	-$(RM) *.o
 	-$(RM) -r test/test_poly
@@ -63,4 +74,7 @@ clean:
 	-$(RM) -r test/test_cshake
 	-$(RM) -r test/test_shake
 	-$(RM) -r test/speed
+	-$(RM) -r test/encap
+	-$(RM) -r test/decap
+	-$(RM) -r test/keypair
 	-$(RM) -r util/gen_owcpa_vecs

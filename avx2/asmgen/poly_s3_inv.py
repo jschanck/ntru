@@ -2,6 +2,36 @@ from math import ceil
 
 p = print
 
+# TODO we do not need to do a full reduction here, but right now that's easiest
+def mod3(a, r=13, t=14, c=15):
+    # r = (a >> 8) + (a & 0xff); // r mod 255 == a mod 255
+    p("vpsrlw $8, %ymm{}, %ymm{}".format(a, r))
+    p("vpand mask_ff, %ymm{}, %ymm{}".format(a, a))
+    p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(r, a, r))
+
+    # r = (r >> 4) + (r & 0xf); // r' mod 15 == r mod 15
+    p("vpand mask_f, %ymm{}, %ymm{}".format(r, a))
+    p("vpsrlw $4, %ymm{}, %ymm{}".format(r, r))
+    p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(r, a, r))
+
+    # r = (r >> 2) + (r & 0x3); // r' mod 3 == r mod 3
+    # r = (r >> 2) + (r & 0x3); // r' mod 3 == r mod 3
+    for _ in range(2):
+        p("vpand mask_3, %ymm{}, %ymm{}".format(r, a))
+        p("vpsrlw $2, %ymm{}, %ymm{}".format(r, r))
+        p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(r, a, r))
+
+    #   t = r - 3;
+    p("vpsubw mask_3, %ymm{}, %ymm{}".format(r, t))
+    #   c = t >> 15;  t is signed, so shift arithmetic
+    p("vpsraw $15, %ymm{}, %ymm{}".format(t, c))
+
+    tmp = a
+    #   return (c&r) ^ (~c&t);
+    p("vpandn %ymm{}, %ymm{}, %ymm{}".format(t, c, tmp))
+    p("vpand %ymm{}, %ymm{}, %ymm{}".format(c, r, t))
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t, tmp, r))
+
 
 def mul_mod3(r, a, b, t=15, a_from_mem=False):
     # /* Multiplication and lazy reduction to two bits */
@@ -81,6 +111,16 @@ def poly_s3_fmadd(a, b, s, t0=13, t1=14, t2=15, b_from_mem=False):
 if __name__ == '__main__':
     p(".data")
     p(".align 32")
+
+    p("mask_ff:")
+    for i in range(16):
+        p(".word 0xff")
+    p("mask_f:")
+    for i in range(16):
+        p(".word 0xf")
+    p("mask_3:")
+    for i in range(16):
+        p(".word 0x03")
 
     p("low16:")
     p(".word 0xFFFF")
@@ -744,6 +784,30 @@ if __name__ == '__main__':
             combined = t1
             p("or %r{}, %r{}".format(t0, t1))
             p("mov %r{}, {}(%rdi)".format(combined, (i*16 + j)*8))
+
+
+    # Account for lazy reduction of Sq to Sp;
+    # for(i=0; i<NTRU_N; i++)
+    #     r->coeffs[i] = mod3(r->coeffs[i] + 2*r->coeffs[NTRU_N-1]);
+
+    N_min_1 = 0
+    t = 1
+    # NTRU_N is in 701th element; 13th word of 44th register
+    p("vmovdqa {}(%rdi), %ymm{}".format(43*32, N_min_1))
+    p("vpermq ${}, %ymm{}, %ymm{}".format(int('00000011', 2), N_min_1, N_min_1))
+    # move into high 16 in doubleword (to clear high 16) and multiply by two
+    p("vpslld $17, %ymm{}, %ymm{}".format(N_min_1, N_min_1))
+    # clone into bottom 16
+    p("vpsrld $16, %ymm{}, %ymm{}".format(N_min_1, t))
+    p("vpor %ymm{}, %ymm{}, %ymm{}".format(N_min_1, t, N_min_1))
+    # and now it's everywhere in N_min_1
+    p("vbroadcastss %xmm{}, %ymm{}".format(N_min_1, N_min_1))
+
+    retval = 2
+    for i in range(ceil(701 / 16)):
+        p("vpaddw {}(%rdi), %ymm{}, %ymm{}".format(i * 32, N_min_1, t))
+        mod3(t, retval)
+        p("vmovdqa %ymm{}, {}(%rdi)".format(retval, i*32))
 
     p("mov %r8, %rsp")
     p("pop %r14")

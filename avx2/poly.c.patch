@@ -10,7 +10,7 @@
 > extern void poly_Rq_to_S3(poly *r, const poly *a);
 > extern void poly_S3_to_Rq(poly *r, const poly *a);
 > extern void cbdS3(poly *r, const uint32_t *buf);
-223,439d230
+226,442d233
 < void poly_Rq_mul(poly *r, const poly *a, const poly *b)
 < {
 <   int k,i;
@@ -228,7 +228,7 @@
 <     r->coeffs[NTRU_N-k+i] = b.coeffs[i];
 < }
 < 
-480,542d270
+483,549d273
 < }
 < 
 < void poly_S3_inv(poly *r, const poly *a)
@@ -292,3 +292,7 @@
 <     r->coeffs[i-k] = mod3(fsign*b.coeffs[i]);
 <   for(i=0; i<k; i++)
 <     r->coeffs[NTRU_N-k+i] = mod3(fsign*b.coeffs[i]);
+< 
+<   /* Reduce modulo Phi_n */
+<   for(i=0; i<NTRU_N; i++)
+<     r->coeffs[i] = mod3(r->coeffs[i] + 2*r->coeffs[NTRU_N-1]);
