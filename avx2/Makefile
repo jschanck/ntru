@@ -1,5 +1,5 @@
 CC = /usr/bin/cc
-CFLAGS = -O3 -Wall -Wextra -fomit-frame-pointer -march=native
+CFLAGS = -O3 -Wall -Wextra -fomit-frame-pointer -march=native -no-pie
 
 SOURCES = poly.c fips202.c randombytes.c verify.c owcpa.c ntrukem.c poly_r2_inv.c
 HEADERS = params.h poly.h randombytes.h verify.h owcpa.h ntrukem.h poly_r2_inv.h
