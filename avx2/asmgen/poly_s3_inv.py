@@ -2,24 +2,12 @@ from math import ceil
 
 p = print
 
-# TODO we do not need to do a full reduction here, but right now that's easiest
-def mod3(a, r=13, t=14, c=15):
-    # r = (a >> 8) + (a & 0xff); // r mod 255 == a mod 255
-    p("vpsrlw $8, %ymm{}, %ymm{}".format(a, r))
-    p("vpand mask_ff, %ymm{}, %ymm{}".format(a, a))
-    p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(r, a, r))
-
-    # r = (r >> 4) + (r & 0xf); // r' mod 15 == r mod 15
-    p("vpand mask_f, %ymm{}, %ymm{}".format(r, a))
-    p("vpsrlw $4, %ymm{}, %ymm{}".format(r, r))
-    p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(r, a, r))
-
+# This does not perform a full 16 bit reduction; assumes input is 4 bits.
+def fourbit_mod3(a, r=13, t=14, c=15):
     # r = (r >> 2) + (r & 0x3); // r' mod 3 == r mod 3
-    # r = (r >> 2) + (r & 0x3); // r' mod 3 == r mod 3
-    for _ in range(2):
-        p("vpand mask_3, %ymm{}, %ymm{}".format(r, a))
-        p("vpsrlw $2, %ymm{}, %ymm{}".format(r, r))
-        p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(r, a, r))
+    p("vpand mask_3, %ymm{}, %ymm{}".format(a, r))
+    p("vpsrlw $2, %ymm{}, %ymm{}".format(a, a))
+    p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(a, r, r))
 
     #   t = r - 3;
     p("vpsubw mask_3, %ymm{}, %ymm{}".format(r, t))
@@ -112,12 +100,6 @@ if __name__ == '__main__':
     p(".data")
     p(".align 32")
 
-    p("mask_ff:")
-    for i in range(16):
-        p(".word 0xff")
-    p("mask_f:")
-    for i in range(16):
-        p(".word 0xf")
     p("mask_3:")
     for i in range(16):
         p(".word 0x03")
@@ -806,7 +788,7 @@ if __name__ == '__main__':
     retval = 2
     for i in range(ceil(701 / 16)):
         p("vpaddw {}(%rdi), %ymm{}, %ymm{}".format(i * 32, N_min_1, t))
-        mod3(t, retval)
+        fourbit_mod3(t, retval)
         p("vmovdqa %ymm{}, {}(%rdi)".format(retval, i*32))
 
     p("mov %r8, %rsp")
