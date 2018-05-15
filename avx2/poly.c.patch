@@ -10,7 +10,7 @@
 > extern void poly_Rq_to_S3(poly *r, const poly *a);
 > extern void poly_S3_to_Rq(poly *r, const poly *a);
 > extern void cbdS3(poly *r, const uint32_t *buf);
-226,442d233
+238,454d245
 < void poly_Rq_mul(poly *r, const poly *a, const poly *b)
 < {
 <   int k,i;
@@ -228,7 +228,7 @@
 <     r->coeffs[NTRU_N-k+i] = b.coeffs[i];
 < }
 < 
-483,549d273
+495,561d285
 < }
 < 
 < void poly_S3_inv(poly *r, const poly *a)
