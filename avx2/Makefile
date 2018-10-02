@@ -41,21 +41,18 @@ $(PATCHED): %: %.patch %.unpatched
 	patch $@ $@.patch
 
 square_%_701.s: $(wildcard bitpermutations/*)
-	@git submodule update --init bitpermutations
 	PYTHONPATH=bitpermutations \
 	 python3 bitpermutations/applications/squaring_mod_GF2N.py \
 	 --raw-name $(word 2, $(subst _, ,$@)) \
 	 > $@
 
 square_%_701_shufbytes.s: $(wildcard bitpermutations/*)
-	@git submodule update --init bitpermutations
 	PYTHONPATH=bitpermutations \
 	 python3 bitpermutations/applications/squaring_mod_GF2N.py \
 	 --shufbytes --raw-name $(word 2, $(subst _, ,$@)) \
 	 > $@
 
 square_%_701_patience.s: $(wildcard bitpermutations/*)
-	@git submodule update --init bitpermutations
 	PYTHONPATH=bitpermutations \
 	 python3 bitpermutations/applications/squaring_mod_GF2N.py \
 	 --patience --callee 6 --raw-name $(word 2, $(subst _, ,$@)) \

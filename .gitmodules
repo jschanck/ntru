@@ -1,3 +1,0 @@
-[submodule "avx2/bitpermutations"]
-	path = avx2/bitpermutations
-	url = git@github.com:joostrijneveld/bitpermutations.git
