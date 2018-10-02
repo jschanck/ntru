@@ -1,1 +1,1 @@
-../../ref/c/test/keypair.c
+../../ref/test/keypair.c

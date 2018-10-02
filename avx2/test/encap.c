@@ -1,1 +1,1 @@
-../../ref/c/test/encap.c
+../../ref/test/encap.c

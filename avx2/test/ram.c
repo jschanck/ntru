@@ -1,1 +1,1 @@
-../../ref/c/test/ram.c
+../../ref/test/ram.c

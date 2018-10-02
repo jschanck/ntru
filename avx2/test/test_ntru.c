@@ -1,1 +1,1 @@
-../../ref/c/test/test_ntru.c
+../../ref/test/test_ntru.c

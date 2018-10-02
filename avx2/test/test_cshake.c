@@ -1,1 +1,1 @@
-../../ref/c/test/test_cshake.c
+../../ref/test/test_cshake.c

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-make -C ref/c {test/keypair,test/encap,test/decap}
+make -C ref {test/keypair,test/encap,test/decap}
 make -C avx2 {test/keypair,test/encap,test/decap}
 
 PKBYTES=1138
@@ -13,9 +13,9 @@ ciphertextandkey=$(mktemp)
 ciphertext=$(mktemp)
 key=$(mktemp)
 
-for keygen in {"ref/c","avx2"}; do
-    for encap in {"ref/c","avx2"}; do
-        for decap in {"ref/c","avx2"}; do
+for keygen in {"ref","avx2"}; do
+    for encap in {"ref","avx2"}; do
+        for decap in {"ref","avx2"}; do
             echo -n "Testing with keygen: ${keygen}, encap: ${encap}, decap: ${decap}.. "
             ${keygen}/test/keypair > ${keyfile}
             head -c ${PKBYTES} ${keyfile} | ${encap}/test/encap > ${ciphertextandkey}

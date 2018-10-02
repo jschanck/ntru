@@ -1,1 +1,1 @@
-../ref/c/ntrukem.h
+../ref/ntrukem.h

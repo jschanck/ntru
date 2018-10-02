@@ -1,1 +1,1 @@
-../../ref/c/test/test_pack.c
+../../ref/test/test_pack.c

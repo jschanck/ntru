@@ -1,1 +1,1 @@
-../ref/c/verify.c
+../ref/verify.c

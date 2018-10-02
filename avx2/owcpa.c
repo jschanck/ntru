@@ -1,1 +1,1 @@
-../ref/c/owcpa.c
+../ref/owcpa.c

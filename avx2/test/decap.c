@@ -1,1 +1,1 @@
-../../ref/c/test/decap.c
+../../ref/test/decap.c

@@ -1,1 +1,1 @@
-../../ref/c/test/test_polymul.c
+../../ref/test/test_polymul.c
