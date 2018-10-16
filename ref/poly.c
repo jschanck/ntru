@@ -1,6 +1,7 @@
 #include "poly.h"
 #include "cbd.h"
 #include "fips202.h"
+#include "verify.h"
 
 #define MODQ(X) ((X) & (NTRU_Q-1))
 
@@ -390,16 +391,17 @@ static void poly_R2_inv(poly *r, const poly *a)
 {
   /* Schroeppel--Orman--O'Malley--Spatscheck
    * "Almost Inverse" algorithm as described
-   * by Siverman in NTRU Tech Report #14 */
+   * by Silverman in NTRU Tech Report #14 */
   // with several modifications to make it run in constant-time
   int i, j;
   int k = 0;
-  int degf = NTRU_N-1;
-  int degg = NTRU_N-1;
+  uint16_t degf = NTRU_N-1;
+  uint16_t degg = NTRU_N-1;
   int sign, t, swap;
   int done = 0;
   poly b, f, g;
   poly *c = r; // save some stack space
+  poly *temp_r = &f;
 
   /* b(X) := 1 */
   for(i=1; i<NTRU_N; i++)
@@ -412,11 +414,7 @@ static void poly_R2_inv(poly *r, const poly *a)
 
   /* f(X) := a(X) */
   for(i=0; i<NTRU_N; i++)
-  {
     f.coeffs[i] = a->coeffs[i] & 1;
-    if(f.coeffs[i])
-      degf = i;
-  }
 
   /* g(X) := 1 + X + X^2 + ... + X^{N-1} */
   for(i=0; i<NTRU_N; i++)
@@ -425,7 +423,7 @@ static void poly_R2_inv(poly *r, const poly *a)
   for(j=0;j<2*(NTRU_N-1)-1;j++)
   {
     sign = f.coeffs[0];
-    swap = sign && !done && (degf < degg);
+    swap = sign & !done & ((degf - degg) >> 15);
 
     cswappoly(&f, &g, swap);
     cswappoly(&b, c, swap);
@@ -441,15 +439,26 @@ static void poly_R2_inv(poly *r, const poly *a)
     degf -= !done;
     k += !done;
 
-    done = (degf == 0);
+    done = 1 - (((uint16_t)-degf) >> 15);
   }
 
-  k = k - NTRU_N*(k >= NTRU_N);
+  k = k - NTRU_N*((uint16_t)(NTRU_N - k - 1) >> 15);
+
     /* Return X^{N-k} * b(X) */
-  for(i=k; i<NTRU_N; i++)
-    r->coeffs[i-k] = b.coeffs[i];
-  for(i=0; i<k; i++)
-    r->coeffs[NTRU_N-k+i] = b.coeffs[i];
+  /* This is a k-coefficient rotation. We do this by looking at the binary
+     representation of k, rotating for every power of 2, and performing a cmov
+     if the respective bit is set. */
+  for (i = 0; i < NTRU_N; i++)
+    r->coeffs[i] = b.coeffs[i];
+
+  for (i = 0; i < 10; i++) {
+    for (j = 0; j < NTRU_N; j++) {
+      temp_r->coeffs[j] = r->coeffs[(j + (1 << i)) % NTRU_N];
+    }
+    cmov((unsigned char *)&(r->coeffs),
+         (unsigned char *)&(temp_r->coeffs), sizeof(uint16_t) * NTRU_N, k & 1);
+    k >>= 1;
+  }
 }
 
 static void poly_R2_inv_to_Rq_inv(poly *r, const poly *ai, const poly *a)
@@ -498,15 +507,16 @@ void poly_S3_inv(poly *r, const poly *a)
 {
   /* Schroeppel--Orman--O'Malley--Spatscheck
    * "Almost Inverse" algorithm as described
-   * by Siverman in NTRU Tech Report #14 */
+   * by Silverman in NTRU Tech Report #14 */
   // with several modifications to make it run in constant-time
   int i, j;
-  int k = 0;
-  int degf = NTRU_N-1;
-  int degg = NTRU_N-1;
+  uint16_t k = 0;
+  uint16_t degf = NTRU_N-1;
+  uint16_t degg = NTRU_N-1;
   int sign, fsign = 0, t, swap;
   int done = 0;
   poly b, c, f, g;
+  poly *temp_r = &f;
 
   /* b(X) := 1 */
   for(i=1; i<NTRU_N; i++)
@@ -528,7 +538,7 @@ void poly_S3_inv(poly *r, const poly *a)
   for(j=0; j<2*(NTRU_N-1)-1; j++)
   {
     sign = mod3(2 * g.coeffs[0] * f.coeffs[0]);
-    swap = sign && !done && (degf < degg);
+    swap = (((sign & 2) >> 1) | sign) & !done & ((degf - degg) >> 15);
 
     cswappoly(&f, &g, swap);
     cswappoly(&b, &c, swap);
@@ -544,17 +554,27 @@ void poly_S3_inv(poly *r, const poly *a)
     degf -= !done;
     k += !done;
 
-    done = (degf == 0);
+    done = 1 - (((uint16_t)-degf) >> 15);
   }
 
   fsign = f.coeffs[0];
-  k = k - NTRU_N*(k >= NTRU_N);
+  k = k - NTRU_N*((uint16_t)(NTRU_N - k - 1) >> 15);
 
   /* Return X^{N-k} * b(X) */
-  for(i=k; i<NTRU_N; i++)
-    r->coeffs[i-k] = mod3(fsign*b.coeffs[i]);
-  for(i=0; i<k; i++)
-    r->coeffs[NTRU_N-k+i] = mod3(fsign*b.coeffs[i]);
+  /* This is a k-coefficient rotation. We do this by looking at the binary
+     representation of k, rotating for every power of 2, and performing a cmov
+     if the respective bit is set. */
+  for (i = 0; i < NTRU_N; i++)
+    r->coeffs[i] = mod3(fsign * b.coeffs[i]);
+
+  for (i = 0; i < 10; i++) {
+    for (j = 0; j < NTRU_N; j++) {
+      temp_r->coeffs[j] = r->coeffs[(j + (1 << i)) % NTRU_N];
+    }
+    cmov((unsigned char *)&(r->coeffs),
+         (unsigned char *)&(temp_r->coeffs), sizeof(uint16_t) * NTRU_N, k & 1);
+    k >>= 1;
+  }
 
   /* Reduce modulo Phi_n */
   for(i=0; i<NTRU_N; i++)
