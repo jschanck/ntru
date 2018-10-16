@@ -17,8 +17,6 @@ OBJS = square_1_701_patience.s \
 OBJS += poly_r2_mul.s poly_rq_mul.s poly_s3_mul.s poly_rq_mul_xm1.s
 OBJS += poly_s3_inv.s poly_rq_to_s3.s poly_s3_to_rq.s cbds3.s
 
-PATCHED = poly.c poly.h
-
 all: test/test_polymul \
      test/test_ntru \
      test/test_pack \
@@ -35,10 +33,6 @@ poly_rq_mul.s: asmgen/rq_mul/poly_rq_mul.py asmgen/rq_mul/K2_schoolbook_64x11.py
 
 %.s: asmgen/%.py
 	python3 $^ > $@
-
-$(PATCHED): %: %.patch %.unpatched
-	cp --dereference $@.unpatched $@
-	patch $@ $@.patch
 
 square_%_701.s: $(wildcard bitpermutations/*)
 	PYTHONPATH=bitpermutations \
@@ -106,7 +100,6 @@ clean:
 	-find . -name '__pycache__' -delete
 	-$(RM) *.o
 	-$(RM) *.s
-	-$(RM) $(PATCHED)
 	-$(RM) -r test/test_polymul
 	-$(RM) -r test/test_ntru
 	-$(RM) -r test/test_pack

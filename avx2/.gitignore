@@ -3,6 +3,3 @@ test/*
 !test/*.h
 *.s
 __pycache__/
-# patched from ref/
-poly.c
-poly.h
