@@ -3,7 +3,6 @@
 #include "../poly.h"
 #include "../randombytes.h"
 
-
 static void poly_S3_a_dot_xa_count(int *pos, int *neg, int *zero, const poly *a)
 {
   int i;
@@ -84,26 +83,25 @@ static int test_all_sample_plus_cases()
   if(!(pos_a > neg_a))
     return -1;
 
-  /* ... 7 has negative correlation */
-  poly_S3_sample(&a, seed, 7);
+  /* ... 3 has negative correlation */
+  poly_S3_sample(&a, seed, 3);
   poly_S3_a_dot_xa_count(&pos_a, &neg_a, &zero_a, &a);
   if(!(pos_a < neg_a))
     return -1;
 
-  /* ... 78 has zero correlation*/
-  poly_S3_sample(&a, seed, 78);
+  /* ... 12 has zero correlation*/
+  poly_S3_sample(&a, seed, 12);
   poly_S3_a_dot_xa_count(&pos_a, &neg_a, &zero_a, &a);
   if(!(pos_a == neg_a))
     return -1;
 
   if(test_sample_plus(seed, 1) ||
-     test_sample_plus(seed, 7) ||
-     test_sample_plus(seed, 78))
+     test_sample_plus(seed, 3) ||
+     test_sample_plus(seed, 12))
     return -1;
 
   return 0;
 }
-
 
 int main(void)
 {

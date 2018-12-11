@@ -1,8 +1,8 @@
 CC = /usr/bin/cc
 CFLAGS = -Wall -Wextra -Wpedantic -O3
 
-SOURCES = poly.c fips202.c randombytes.c cbd.c verify.c owcpa.c ntrukem.c
-HEADERS = params.h poly.h randombytes.h cbd.h verify.h owcpa.h ntrukem.h
+SOURCES = poly.c fips202.c randombytes.c verify.c owcpa.c ntrukem.c
+HEADERS = params.h poly.h randombytes.h verify.h owcpa.h ntrukem.h
 
 all: test/test_poly \
      test/test_polymul \
@@ -15,7 +15,7 @@ all: test/test_poly \
      test/encap \
      test/decap \
      test/keypair \
-     test/gen_owcpa_vecs \
+     test/gen_owcpa_vecs
 
 test/test_polymul: $(SOURCES) $(HEADERS) test/test_polymul.c
 	$(CC) $(CFLAGS) -o $@ $(SOURCES) test/test_polymul.c

@@ -4,52 +4,37 @@
 
 #define MODQ(X) ((X) & (NTRU_Q-1))
 
-/* Map {0, 1, 2} -> {0,1,q-1} */
-#define ZP_TO_ZQ(C) \
-    (((C) & 1) | ((-((C)>>1)) & (NTRU_Q-1)));
+#define DOMM 0
+#define DOMF 1
+#define DOMG 2
+#define DOMR 3
 
-static void pack_pk(unsigned char *r, const poly *pk)
+static int owcpa_check_r(const poly *r)
 {
-  poly_Rq_tobytes(r, pk);
-}
-
-static void unpack_pk(poly *pk, const unsigned char *packedpk)
-{
-  poly_Rq_frombytes(pk, packedpk);
-}
-
-static void pack_ciphertext(unsigned char *r, const poly *c)
-{
-  poly_Rq_tobytes(r, c);
-}
-
-static void unpack_ciphertext(poly *c, const unsigned char *packedct)
-{
-  poly_Rq_frombytes(c, packedct);
-}
-
-static void pack_sk(unsigned char *r, const poly *f, const poly *finv3)
-{
-  poly_S3_tobytes(r, f);
-  poly_S3_tobytes(r+NTRU_PACK_TRINARY_BYTES, finv3);
-}
-
-static void unpack_sk(poly *f, poly *finv3, const unsigned char *packedsk)
-{
+  /* Check that r has coefficients in {0,1,q-1} and r_{n-1} = 0. */
   int i;
-  poly_S3_frombytes(f, packedsk);
-  poly_S3_frombytes(finv3, packedsk+NTRU_PACK_TRINARY_BYTES);
-
-  /* Lift coeffs of f from Z_p to Z_q */
+  uint64_t t = 0;
+  uint16_t c;
   for(i=0; i<NTRU_N; i++)
-    f->coeffs[i] = (f->coeffs[i] & 1) | ((-(f->coeffs[i]>>1)) & (NTRU_Q-1));
+  {
+    c = MODQ(r->coeffs[i]+1);
+    t |= c & (NTRU_Q-4);  /* 0 if c is in {0,1,2,3} */
+    t |= (c + 1) & 0x4;   /* 0 if c is in {0,1,2} */
+  }
+  t |= r->coeffs[NTRU_N-1]; /* Coefficient n-1 must be zero */
+  t = (-t) >> 63;
+  return t;
 }
 
 void owcpa_samplemsg(unsigned char msg[NTRU_OWCPA_MSGBYTES], unsigned char seed[NTRU_SEEDBYTES])
 {
-  poly m;
-  poly_S3_sample(&m,seed,0);
-  poly_S3_tobytes(msg, &m);
+  poly r, m;
+
+  poly_S3_sample(&r,seed,DOMR);
+  poly_S3_sample(&m,seed,DOMM);
+
+  poly_S3_tobytes(msg, &r);
+  poly_S3_tobytes(msg+NTRU_PACK_TRINARY_BYTES, &m);
 }
 
 void owcpa_keypair(unsigned char *pk,
@@ -57,68 +42,149 @@ void owcpa_keypair(unsigned char *pk,
 {
   int i;
   unsigned char seed[NTRU_SEEDBYTES];
-  poly p1, p2, p3; // for somewhat more efficient stack usage
-  poly *f = &p1, *fi3 = &p2, *fiq = &p1, *g = &p2, *h = &p3, *r1 = &p3;
+  uint16_t t;
+
+  poly x1, x2, x3, x4, x5;
+
+  poly *f=&x1, *invf_mod3=&x2;
+  poly *g=&x3, *G=&x2;
+  poly *Gf=&x3, *invGf=&x4, *tmp=&x5;
+  poly *invh=&x3, *h=&x3;
 
   randombytes(seed, NTRU_SEEDBYTES);
 
-  poly_S3_sample_plus(f,seed,1);
+  poly_S3_sample_plus(f,seed,DOMF);
 
-  poly_S3_inv(fi3, f);
+  poly_S3_inv(invf_mod3, f);
 
-  /* Pack sk before constructing pk */
-  pack_sk(sk, f, fi3);
+  poly_S3_tobytes(sk, f);
+  poly_S3_tobytes(sk+NTRU_PACK_TRINARY_BYTES, invf_mod3);
 
   /* Lift coeffs of f and g from Z_p to Z_q */
-  for(i=0; i<NTRU_N; i++)
-    f->coeffs[i] = ZP_TO_ZQ(f->coeffs[i]);
+  poly_Z3_to_Zq(f);
 
-  poly_S3_sample_plus(g,seed,2);
-  for(i=0; i<NTRU_N; i++)
-    g->coeffs[i] = ZP_TO_ZQ(g->coeffs[i]);
+  poly_S3_sample_plus(g,seed,DOMG);
+  poly_Z3_to_Zq(g);
 
-  poly_Rq_inv(fiq, f);
-  poly_Rq_mul(r1, g, fiq);
-  poly_Rq_mul_xm1(h, r1);
+  /* G = 3*(x-1)*g */
+  poly_Rq_mul_x_minus_1(G, g);
   for(i=0; i<NTRU_N; i++)
-    h->coeffs[i] = MODQ(3 * h->coeffs[i]);
+    G->coeffs[i] = MODQ(3 * G->coeffs[i]);
 
-  pack_pk(pk, h);
+  poly_Rq_mul(Gf, G, f);
+
+  poly_Rq_inv(invGf, Gf);
+
+  poly_Rq_mul(tmp, invGf, f);
+  poly_Rq_mul(invh, tmp, f);
+
+  /* We really only need invh mod (q, Phi_n), but we  */
+  /* don't have a dedicated encoding routine for      */
+  /* arbitrary degree 699 polynomials. We do have an  */
+  /* encoding routine for degree 700 polynomials with */
+  /* coefficients that sum to 0 (which uses the same  */
+  /* amount of space). So we'll just add a multiple   */
+  /* of Phi_n and use the existing routine.           */
+  t=0;
+  for(i=0; i<NTRU_N; i++)
+    t = t + invh->coeffs[i];
+  t = MODQ(t*NTRU_N_INVERSE_MOD_Q);
+  for(i=0; i<NTRU_N; i++)
+    invh->coeffs[i] = MODQ(invh->coeffs[i] - t);
+
+  poly_Rq_sum_zero_tobytes(sk+2*NTRU_PACK_TRINARY_BYTES, invh);
+
+  poly_Rq_mul(tmp, invGf, G);
+  poly_Rq_mul(h, tmp, G);
+
+  poly_Rq_sum_zero_tobytes(pk, h);
 }
 
 
 void owcpa_enc(unsigned char *c,
-               const unsigned char *m,
-               const unsigned char *pk,
-               const unsigned char *coins)
+               const unsigned char *rm,
+               const unsigned char *pk)
 {
   int i;
-  poly h, b, r, ct;
+  poly x1, x2, x3;
+  poly *h = &x1, *liftm = &x1;
+  poly *r = &x2, *m = &x2;
+  poly *ct = &x3;
 
-  unpack_pk(&h, pk);
+  poly_Rq_sum_zero_frombytes(h, pk);
 
-  poly_Rq_getnoise(&r, coins, 0);
-  poly_Rq_mul(&ct, &r, &h);
-  poly_Rq_frommsg(&b, m);
+  poly_S3_frombytes(r, rm);
+  poly_Z3_to_Zq(r);
+
+  poly_Rq_mul(ct, r, h);
+
+  poly_S3_frombytes(m, rm+NTRU_PACK_TRINARY_BYTES);
+  poly_S3_to_Rq(liftm, m);
   for(i=0; i<NTRU_N; i++)
-    ct.coeffs[i] = MODQ(ct.coeffs[i] + b.coeffs[i]);
+    ct->coeffs[i] = MODQ(ct->coeffs[i] + liftm->coeffs[i]);
 
-  pack_ciphertext(c, &ct);
+  poly_Rq_sum_zero_tobytes(c, ct);
 }
 
-
-void owcpa_dec(unsigned char *m,
-               const unsigned char *c,
-               const unsigned char *sk)
+int owcpa_dec_and_reenc(unsigned char *c2,
+                        unsigned char *rm,
+                        const unsigned char *ciphertext,
+                        const unsigned char *secretkey)
 {
-  poly ct, f, finv3, r1, r2;
+  int i;
+  int fail;
+  poly x1, x2, x3, x4;
 
-  unpack_ciphertext(&ct, c);
-  unpack_sk(&f, &finv3, sk);
+  poly *c = &x1, *f = &x2, *cf = &x3;
+  poly *mf = &x2, *finv3 = &x3, *m = &x4;
+  poly *liftm = &x2, *invh = &x3, *r = &x4;
+  poly *b = &x1;
 
-  poly_Rq_mul(&r1, &ct, &f);
-  poly_Rq_to_S3(&r2, &r1);
-  poly_S3_mul(&r1, &r2, &finv3);
+  uint16_t t;
 
-  poly_S3_tomsg(m, &r1);
+  poly_Rq_sum_zero_frombytes(c, ciphertext);
+  poly_S3_frombytes(f, secretkey);
+  poly_Z3_to_Zq(f);
+
+  poly_Rq_mul(cf, c, f);
+  poly_Rq_to_S3(mf, cf);
+
+  poly_S3_frombytes(finv3, secretkey+NTRU_PACK_TRINARY_BYTES);
+  poly_S3_mul(m, mf, finv3);
+  poly_S3_tobytes(rm+NTRU_PACK_TRINARY_BYTES, m);
+  poly_S3_to_Rq(liftm, m);
+
+  /* b = ct - Lift(m) mod (q, Phi_n) */
+  for(i=0; i<NTRU_N; i++)
+    b->coeffs[i] = MODQ(c->coeffs[i] - liftm->coeffs[i]);
+  for(i=0; i<NTRU_N; i++)
+    b->coeffs[i] = MODQ(b->coeffs[i] - b->coeffs[NTRU_N-1]);
+
+  /* r = b / h mod (q, Phi_n) */
+  poly_Rq_sum_zero_frombytes(invh, secretkey+2*NTRU_PACK_TRINARY_BYTES);
+  poly_Rq_mul(r, b, invh);
+  for(i=0; i<NTRU_N; i++)
+    r->coeffs[i] = MODQ(r->coeffs[i] - r->coeffs[NTRU_N-1]);
+
+  /* NOTE: We can re-encaps with b, instead of computing rh, as long as  */
+  /* we check that r has coefficients in {-1,0,1} and has r_{n-1} = 0.   */
+  /* It is important not to reduce r mod 3 (or perform any other         */
+  /* non-invertible operations) before this check.                       */
+  /* All m in the domain of poly_S3_to_Rq are OK, so no need to check m. */
+  fail = owcpa_check_r(r);
+
+  poly_trinary_Zq_to_Z3(r);
+  poly_S3_tobytes(rm, r);
+
+  /* t = -(b(1) / n) mod q */
+  t = 0;
+  for(i=0; i<NTRU_N; i++)
+    t = t + b->coeffs[i];
+  t = MODQ(t * NTRU_N_INVERSE_MOD_Q);
+  for(i=0; i<NTRU_N; i++)
+    b->coeffs[i] = MODQ(b->coeffs[i] - t + liftm->coeffs[i]);
+
+  poly_Rq_sum_zero_tobytes(c2, b);
+
+  return fail;
 }

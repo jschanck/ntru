@@ -1,17 +1,8 @@
 #include "poly.h"
-#include "cbd.h"
 #include "fips202.h"
 #include "verify.h"
 
 #define MODQ(X) ((X) & (NTRU_Q-1))
-
-/* Map {0, 1, 2} -> {0,1,q-1} */
-#define ZP_TO_ZQ(C) \
-    (((C) & 1) | ((-((C)>>1)) & (NTRU_Q-1)));
-
-/* Map {0,1,2,4} -> {0,1,2^16-1,1} */
-#define ZP_PROD_TO_UINT16(C) \
-  (((C) | ((C)>>2)) & 1)  |  (-(((C) & 2)>>1))
 
 uint16_t mod3(uint16_t a)
 {
@@ -29,7 +20,23 @@ uint16_t mod3(uint16_t a)
   return (c&r) ^ (~c&t);
 }
 
-void poly_Rq_tobytes(unsigned char *r, const poly *a)
+/* Map {0, 1, 2} -> {0,1,q-1} in place */
+void poly_Z3_to_Zq(poly *r)
+{
+  int i;
+  for(i=0; i<NTRU_N; i++)
+    r->coeffs[i] = r->coeffs[i] | ((-(r->coeffs[i]>>1)) & (NTRU_Q-1));
+}
+
+/* Map {0, 1, q-1} -> {0,1,2} in place */
+void poly_trinary_Zq_to_Z3(poly *r)
+{
+  int i;
+  for(i=0; i<NTRU_N; i++)
+    r->coeffs[i] = 3 & (r->coeffs[i] ^ (r->coeffs[i]>>(NTRU_LOGQ-1)));
+}
+
+void poly_Rq_sum_zero_tobytes(unsigned char *r, const poly *a)
 {
   int i,j;
   uint16_t t[8];
@@ -79,7 +86,7 @@ void poly_Rq_tobytes(unsigned char *r, const poly *a)
   }
 }
 
-void poly_Rq_frombytes(poly *r, const unsigned char *a)
+void poly_Rq_sum_zero_frombytes(poly *r, const unsigned char *a)
 {
   int i;
   for(i=0;i<NTRU_PACK_DEG/8;i++)
@@ -116,13 +123,6 @@ void poly_Rq_frombytes(poly *r, const unsigned char *a)
   r->coeffs[NTRU_N-1] = MODQ(-(r->coeffs[NTRU_N-1]));
 }
 
-void poly_Rq_frommsg(poly *r, const unsigned char *m)
-{
-  poly b3;
-  poly_S3_frombytes(&b3, m);
-  poly_S3_to_Rq(r, &b3);
-}
-
 void poly_S3_tobytes(unsigned char msg[NTRU_OWCPA_MSGBYTES], const poly *a)
 {
   int i;
@@ -148,12 +148,6 @@ void poly_S3_tobytes(unsigned char msg[NTRU_OWCPA_MSGBYTES], const poly *a)
   msg[i] = c;
 #endif
 }
-
-void poly_S3_tomsg(unsigned char msg[NTRU_OWCPA_MSGBYTES], const poly *a)
-{
-  poly_S3_tobytes(msg, a);
-}
-
 
 void poly_S3_frombytes(poly *r, const unsigned char msg[NTRU_OWCPA_MSGBYTES])
 {
@@ -186,7 +180,7 @@ void poly_S3_frombytes(poly *r, const unsigned char msg[NTRU_OWCPA_MSGBYTES])
 
 void poly_S3_sample(poly *r, const unsigned char *seed, const unsigned char nonce)
 {
-  uint32_t buf[(NTRU_N+7)/8];
+  unsigned char buf[NTRU_N-1];
   unsigned char extseed[NTRU_SEEDBYTES+8];
   int i;
 
@@ -196,44 +190,42 @@ void poly_S3_sample(poly *r, const unsigned char *seed, const unsigned char nonc
     extseed[NTRU_SEEDBYTES+i] = 0;
   extseed[NTRU_SEEDBYTES] = nonce;
 
-  shake128((unsigned char *)buf, sizeof(buf), extseed, sizeof(extseed));
+  shake128(buf, sizeof(buf), extseed, sizeof(extseed));
 
-  cbdS3(r, buf);
+  /* {0,1,...,255} -> {0,1,2}; Pr[0] = 86/256, Pr[1] = Pr[-1] = 85/256 */
+  for(i=0; i<NTRU_N-1; i++)
+    r->coeffs[i] = mod3(buf[i]);
+
+  r->coeffs[NTRU_N-1] = 0;
 }
 
 void poly_S3_sample_plus(poly *r, const unsigned char *seed, const unsigned char nonce)
 {
-  /* Samples r(X) then checks sign of inner product between
-   * r(X) and X*r(X). If negative, flips sign of every second
-   * coefficient of r(X).
-   * Assumes r(X) has coeffs in {0,1,2}.
-   * Treats r(X) as {-1,0,1} vector in ZZ^n.
-   */
+  /* Sample r using poly_S3_sample then conditionally flip    */
+  /* signs of even index coefficients so that <x*r, r> >= 0.  */
+
   int i;
-  uint16_t c = 0;
   uint16_t s = 0;
 
   poly_S3_sample(r, seed, nonce);
 
+  /* Map {0,1,2} -> {0, 1, 2^16 - 1} */
   for(i=0; i<NTRU_N-1; i++)
-  {
-    c = r->coeffs[i] * r->coeffs[i+1];
-    s += ZP_PROD_TO_UINT16(c);
-  }
-  /* Map sign of correlation to element of Zp.     */
-  s = ((s >> 15) & 1) + 1; /* s = (s >= 0) ? 1 : 2 */
+    r->coeffs[i] = r->coeffs[i] | (-(r->coeffs[i]>>1));
+
+  /* s = <x*r, r>.  (r[n-1] = 0) */
+  for(i=0; i<NTRU_N-1; i++)
+    s += r->coeffs[i+1] * r->coeffs[i];
+
+  /* Extract sign of s (sign(0) = 1) */
+  s = 1 | (-(s>>15));
 
   for(i=0; i<NTRU_N; i+=2)
-    r->coeffs[i] = mod3(r->coeffs[i]*s);
-}
+    r->coeffs[i] = s * r->coeffs[i];
 
-void poly_Rq_getnoise(poly *r, const unsigned char *seed, const unsigned char nonce)
-{
-  int i;
-
-  poly_S3_sample(r, seed, nonce);
+  /* Map {0,1,2^16-1} -> {0, 1, 2} */
   for(i=0; i<NTRU_N; i++)
-    r->coeffs[i] = ZP_TO_ZQ(r->coeffs[i]);
+    r->coeffs[i] = 3 & (r->coeffs[i] ^ (r->coeffs[i]>>15));
 }
 
 void poly_Rq_mul(poly *r, const poly *a, const poly *b)
@@ -267,7 +259,7 @@ void poly_S3_mul(poly *r, const poly *a, const poly *b)
     r->coeffs[k] = mod3(r->coeffs[k] + 2*r->coeffs[NTRU_N-1]);
 }
 
-void poly_Rq_mul_xm1(poly *r, const poly *a)
+void poly_Rq_mul_x_minus_1(poly *r, const poly *a)
 {
   int i;
   uint16_t last_coeff = a->coeffs[NTRU_N-1];
@@ -322,12 +314,11 @@ void poly_S3_to_Rq(poly *r, const poly *a)
   for(i=0; i<NTRU_N; i++)
     b.coeffs[i] = mod3(b.coeffs[i] + 2*b.coeffs[NTRU_N-1]);
 
-  /* Lift to an element of Z[x]/(q, x^n - 1) */
-  for(i=0; i<NTRU_N; i++)
-    b.coeffs[i] = ZP_TO_ZQ(b.coeffs[i]);
+  /* Switch from {0,1,2} to {0,1,q-1} coefficient representation */
+  poly_Z3_to_Zq(&b);
 
   /* Multiply by (x-1) */
-  poly_Rq_mul_xm1(r, &b);
+  poly_Rq_mul_x_minus_1(r, &b);
 }
 
 void poly_Rq_to_S3(poly *r, const poly *a)

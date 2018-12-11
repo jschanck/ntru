@@ -86,8 +86,10 @@ int main()
   printf("-- internals --\n\n");
 
   randombytes(seed, NTRU_SEEDBYTES);
-  poly_Rq_getnoise(&a, seed, 0);
-  poly_Rq_getnoise(&b, seed, 1);
+  poly_S3_sample(&a, seed, 0);
+  poly_Z3_to_Zq(&a);
+  poly_S3_sample(&b, seed, 1);
+  poly_Z3_to_Zq(&b);
 
   for(i=0; i<NTESTS; i++)
   {
@@ -104,7 +106,8 @@ int main()
   print_results("poly_S3_mul: ", t, NTESTS);
 
   // a as generated in test_polymul
-  poly_Rq_getnoise(&a, seed, 2);
+  poly_S3_sample(&a, seed, 2);
+  poly_Z3_to_Zq(&a);
   for(i=0; i<NTRU_N; i++)
     a1 += a.coeffs[i];
   a.coeffs[0] = (a.coeffs[0] + (1 ^ (a1&1))) & 3;
@@ -112,9 +115,9 @@ int main()
   for(i=0; i<NTESTS; i++)
   {
     t[i] = cpucycles();
-    poly_Rq_mul_xm1(&r, &a);
+    poly_Rq_mul_x_minus_1(&r, &a);
   }
-  print_results("poly_Rq_mul_xm1: ", t, NTESTS);
+  print_results("poly_Rq_mul_x_minus_1: ", t, NTESTS);
 
   for(i=0; i<NTESTS; i++)
   {
@@ -143,13 +146,6 @@ int main()
     poly_S3_sample_plus(&a, seed, 1);
   }
   print_results("poly_S3_sample_plus: ", t, NTESTS);
-
-  for(i=0; i<NTESTS; i++)
-  {
-    t[i] = cpucycles();
-    poly_Rq_getnoise(&a, seed, 1);
-  }
-  print_results("poly_Rq_getnoise: ", t, NTESTS);
 
   for(i=0; i<NTESTS; i++)
   {

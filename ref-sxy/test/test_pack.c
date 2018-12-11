@@ -28,11 +28,12 @@ int main(void)
   unsigned char seed[NTRU_SEEDBYTES];
   randombytes(seed, NTRU_SEEDBYTES);
 
-  poly_Rq_getnoise(&c,seed,0);
-  poly_Rq_mul_xm1(&a,&c); // We can only pack vectors with 0 coeff sum
+  poly_S3_sample(&c,seed,0);
+  poly_Z3_to_Zq(&c);
+  poly_Rq_mul_x_minus_1(&a,&c); // We can only pack vectors with 0 coeff sum
   //poly_print(&a);
-  poly_Rq_tobytes(p1, &a);
-  poly_Rq_frombytes(&b, p1);
+  poly_Rq_sum_zero_tobytes(p1, &a);
+  poly_Rq_sum_zero_frombytes(&b, p1);
   //poly_print(&b);
   for(i=0; i<NTRU_N; i++)
     errorRq |= (a.coeffs[i] != b.coeffs[i]);

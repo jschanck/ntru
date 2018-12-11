@@ -15,65 +15,63 @@ static void poly_write(FILE *f, const poly *a, const char *var)
 
 static void unpack_ciphertext(poly *c, const unsigned char *packedct)
 {
-  /* TODO: un-lazy reduce last coeff */
-  poly_Rq_frombytes(c, packedct);
+  poly_Rq_sum_zero_frombytes(c, packedct);
 }
 
-static void unpack_sk(poly *f, poly *finv3, const unsigned char *packedsk)
+static void unpack_sk(poly *f, poly *finv3, poly *hq, const unsigned char *packedsk)
 {
-  int i;
   poly_S3_frombytes(f, packedsk);
+  poly_Z3_to_Zq(f);
   poly_S3_frombytes(finv3, packedsk+NTRU_PACK_TRINARY_BYTES);
-
-  /* Lift coeffs of f from Z_p to Z_q */
-  for(i=0; i<NTRU_N; i++)
-    f->coeffs[i] = (f->coeffs[i] & 1) | ((-(f->coeffs[i]>>1)) & (NTRU_Q-1));
+  poly_Rq_sum_zero_frombytes(hq, packedsk+2*NTRU_PACK_TRINARY_BYTES);
 }
 
 static void unpack_pk(poly *pk, const unsigned char *packedpk)
 {
-  poly_Rq_frombytes(pk, packedpk);
+  poly_Rq_sum_zero_frombytes(pk, packedpk);
 }
 
-static void unpack_message(poly *m, const unsigned char *message)
+static void unpack_message(poly *r, poly *m, const unsigned char *message)
 {
-  poly_S3_frombytes(m, message);
+  poly_S3_frombytes(r, message);
+  poly_S3_frombytes(m, message+NTRU_PACK_TRINARY_BYTES);
 }
 
 int main(void)
 {
-  unsigned char m_seed[32] = "ntru-kem n=701 owcpa test seed m";
-  unsigned char r_seed[32] = "ntru-kem n=701 owcpa test seed r";
+  /* TODO: Should owcpa_keypair take a seed as input? */
+  unsigned char rm_seed[32] = "ntruhrss701 owcpa test seed #000";
   unsigned char packed_pk[NTRU_OWCPA_PUBLICKEYBYTES];
   unsigned char packed_sk[NTRU_OWCPA_SECRETKEYBYTES];
-  unsigned char packed_mA[NTRU_OWCPA_MSGBYTES];
-  unsigned char packed_mB[NTRU_OWCPA_MSGBYTES];
+  unsigned char packed_rmA[NTRU_OWCPA_MSGBYTES];
+  unsigned char packed_rmB[NTRU_OWCPA_MSGBYTES];
   unsigned char packed_ct[NTRU_OWCPA_BYTES];
-  poly pk, f, finv3, r, mA, ct, mB;
+  unsigned char packed_ct2[NTRU_OWCPA_BYTES];
+  poly pk, f, finv3, hq, rA, mA, ct, rB, mB;
 
   owcpa_keypair(packed_pk, packed_sk);
-  owcpa_samplemsg(packed_mA, m_seed);
-  owcpa_enc(packed_ct, packed_mA, packed_pk, r_seed);
-  owcpa_dec(packed_mB, packed_ct, packed_sk);
-  poly_Rq_getnoise(&r, r_seed, 0);
+  owcpa_samplemsg(packed_rmA, rm_seed);
+  owcpa_enc(packed_ct, packed_rmA, packed_pk);
+  owcpa_dec_and_reenc(packed_ct2, packed_rmB, packed_ct, packed_sk);
 
-  FILE *f_out = fopen("owcpa_vecs.txt", "w");
+  FILE *out = fopen("owcpa_vecs.txt", "w");
 
   unpack_pk(&pk, packed_pk);
-  unpack_sk(&f, &finv3, packed_sk);
+  unpack_sk(&f, &finv3, &hq, packed_sk);
   unpack_ciphertext(&ct, packed_ct);
-  unpack_message(&mA, packed_mA);
-  unpack_message(&mB, packed_mB);
+  unpack_message(&rA, &mA, packed_rmA);
+  unpack_message(&rB, &mB, packed_rmB);
 
-  poly_write(f_out, &f, "f");
-  poly_write(f_out, &finv3, "fp");
-  poly_write(f_out, &pk, "h");
-  poly_write(f_out, &ct, "ct");
-  poly_write(f_out, &r, "r");
-  poly_write(f_out, &mA, "mA");
-  poly_write(f_out, &mB, "mB");
+  poly_write(out, &f, "f");
+  poly_write(out, &finv3, "fp");
+  poly_write(out, &pk, "h");
+  poly_write(out, &ct, "ct");
+  poly_write(out, &rA, "rA");
+  poly_write(out, &mA, "mA");
+  poly_write(out, &rB, "rB");
+  poly_write(out, &mB, "mB");
 
-  fclose(f_out);
+  fclose(out);
 
   return 0;
 }

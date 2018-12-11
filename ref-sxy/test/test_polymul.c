@@ -81,7 +81,8 @@ int main(void)
 
   poly a;
   poly b;
-  poly_Rq_getnoise(&a,seed,0);
+  poly_S3_sample(&a,seed,0);
+  poly_Z3_to_Zq(&a);
   poly_S3_sample(&b,seed,0);
 
   printf("TEST_POLY_INV MOD2:\t%d\n", test_poly_Rq_inv(&a));
