@@ -45,7 +45,7 @@ int crypto_kem_dec(unsigned char *k, const unsigned char *c, const unsigned char
   /* c and the secret domain separator s. I'm just doing shake(s ^ c).   */
   for(i=0;i<NTRU_CIPHERTEXTBYTES;i++)
     cmp[i] = c[i];
-  for(i=0;i<NTRU_SHAREDKEYBYTES;i++)
+  for(i=0;i<NTRU_SEEDBYTES;i++)
     cmp[i] ^= sk[i+NTRU_OWCPA_SECRETKEYBYTES];
   shake128(rm, NTRU_SHAREDKEYBYTES, cmp, NTRU_CIPHERTEXTBYTES);
 
