@@ -12,7 +12,7 @@ int crypto_kem_keypair(unsigned char *pk, unsigned char *sk)
   randombytes(seed, NTRU_SEEDBYTES);
   owcpa_keypair(pk, sk, seed);
 
-  randombytes(sk+NTRU_OWCPA_SECRETKEYBYTES, NTRU_SEEDBYTES);
+  randombytes(sk+NTRU_OWCPA_SECRETKEYBYTES, NTRU_PRFKEYBYTES);
 
   return 0;
 }
@@ -37,7 +37,8 @@ int crypto_kem_dec(unsigned char *k, const unsigned char *c, const unsigned char
 {
   int i, fail;
   unsigned char rm[NTRU_OWCPA_MSGBYTES];
-  unsigned char cmp[NTRU_CIPHERTEXTBYTES];
+  unsigned char buf[NTRU_PRFKEYBYTES+NTRU_CIPHERTEXTBYTES];
+  unsigned char *cmp = buf+NTRU_PRFKEYBYTES;
 
   fail = 0;
   fail |= owcpa_dec_and_reenc(cmp, rm, c, sk);
@@ -45,13 +46,12 @@ int crypto_kem_dec(unsigned char *k, const unsigned char *c, const unsigned char
 
   shake128(k, NTRU_SHAREDKEYBYTES, rm, NTRU_OWCPA_MSGBYTES);
 
-  /* TODO: Something nicer here? We need a random output that depends on */
-  /* c and the secret domain separator s. I'm just doing shake(s ^ c).   */
+  /* shake(secret PRF key || input ciphertext) */
+  for(i=0;i<NTRU_PRFKEYBYTES;i++)
+    buf[i] = sk[i+NTRU_OWCPA_SECRETKEYBYTES];
   for(i=0;i<NTRU_CIPHERTEXTBYTES;i++)
     cmp[i] = c[i];
-  for(i=0;i<NTRU_SEEDBYTES;i++)
-    cmp[i] ^= sk[i+NTRU_OWCPA_SECRETKEYBYTES];
-  shake128(rm, NTRU_SHAREDKEYBYTES, cmp, NTRU_CIPHERTEXTBYTES);
+  shake128(rm, NTRU_SHAREDKEYBYTES, cmp, NTRU_PRFKEYBYTES+NTRU_CIPHERTEXTBYTES);
 
   cmov(k, rm, NTRU_SHAREDKEYBYTES, fail);
 
