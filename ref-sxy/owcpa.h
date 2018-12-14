@@ -6,8 +6,9 @@
 void owcpa_samplemsg(unsigned char msg[NTRU_OWCPA_MSGBYTES],
                      unsigned char seed[NTRU_SEEDBYTES]);
 
-void owcpa_keypair(unsigned char *pk, 
-                   unsigned char *sk);
+void owcpa_keypair(unsigned char *pk,
+                   unsigned char *sk,
+                   const unsigned char seed[NTRU_SEEDBYTES]);
 
 void owcpa_enc(unsigned char *c,
                const unsigned char *rm,

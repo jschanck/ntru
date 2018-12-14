@@ -26,7 +26,8 @@ static int owcpa_check_r(const poly *r)
   return t;
 }
 
-void owcpa_samplemsg(unsigned char msg[NTRU_OWCPA_MSGBYTES], unsigned char seed[NTRU_SEEDBYTES])
+void owcpa_samplemsg(unsigned char msg[NTRU_OWCPA_MSGBYTES],
+                     const unsigned char seed[NTRU_SEEDBYTES])
 {
   poly r, m;
 
@@ -38,10 +39,10 @@ void owcpa_samplemsg(unsigned char msg[NTRU_OWCPA_MSGBYTES], unsigned char seed[
 }
 
 void owcpa_keypair(unsigned char *pk,
-                   unsigned char *sk)
+                   unsigned char *sk,
+                   const unsigned char seed[NTRU_SEEDBYTES])
 {
   int i;
-  unsigned char seed[NTRU_SEEDBYTES];
   uint16_t t;
 
   poly x1, x2, x3, x4, x5;
@@ -50,8 +51,6 @@ void owcpa_keypair(unsigned char *pk,
   poly *g=&x3, *G=&x2;
   poly *Gf=&x3, *invGf=&x4, *tmp=&x5;
   poly *invh=&x3, *h=&x3;
-
-  randombytes(seed, NTRU_SEEDBYTES);
 
   poly_S3_sample_plus(f,seed,DOMF);
 

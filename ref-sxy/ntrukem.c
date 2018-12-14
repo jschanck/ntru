@@ -7,7 +7,11 @@
 // API FUNCTIONS 
 int crypto_kem_keypair(unsigned char *pk, unsigned char *sk)
 {
-  owcpa_keypair(pk, sk);
+  unsigned char seed[NTRU_SEEDBYTES];
+
+  randombytes(seed, NTRU_SEEDBYTES);
+  owcpa_keypair(pk, sk, seed);
+
   randombytes(sk+NTRU_OWCPA_SECRETKEYBYTES, NTRU_SEEDBYTES);
 
   return 0;

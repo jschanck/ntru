@@ -39,8 +39,8 @@ static void unpack_message(poly *r, poly *m, const unsigned char *message)
 
 int main(void)
 {
-  /* TODO: Should owcpa_keypair take a seed as input? */
-  unsigned char rm_seed[32] = "ntruhrss701 owcpa test seed #000";
+  unsigned char key_seed[32] = "ntruhrss701 owcpa test seed #000";
+  unsigned char rm_seed[32] = "ntruhrss701 owcpa test seed #001";
   unsigned char packed_pk[NTRU_OWCPA_PUBLICKEYBYTES];
   unsigned char packed_sk[NTRU_OWCPA_SECRETKEYBYTES];
   unsigned char packed_rmA[NTRU_OWCPA_MSGBYTES];
@@ -49,7 +49,7 @@ int main(void)
   unsigned char packed_ct2[NTRU_OWCPA_BYTES];
   poly pk, f, finv3, hq, rA, mA, ct, rB, mB;
 
-  owcpa_keypair(packed_pk, packed_sk);
+  owcpa_keypair(packed_pk, packed_sk, key_seed);
   owcpa_samplemsg(packed_rmA, rm_seed);
   owcpa_enc(packed_ct, packed_rmA, packed_pk);
   owcpa_dec_and_reenc(packed_ct2, packed_rmB, packed_ct, packed_sk);
