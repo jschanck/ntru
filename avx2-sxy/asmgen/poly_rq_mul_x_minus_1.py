@@ -28,10 +28,10 @@ if __name__ == '__main__':
         p(".byte 255")
 
     p(".text")
-    p(".global poly_Rq_mul_xm1")
+    p(".global poly_Rq_mul_x_minus_1")
     p(".att_syntax prefix")
 
-    p("poly_Rq_mul_xm1:")
+    p("poly_Rq_mul_x_minus_1:")
 
     a_imin1 = 0
     t0 = 1

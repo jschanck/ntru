@@ -67,14 +67,14 @@ int main()
   unsigned char r_bytes[(((NTRU_N / 8) + 31) / 32) * 32];
   unsigned char seed[NTRU_SEEDBYTES];
   unsigned long long t[NTESTS];
-  uint16_t a1 = 0;
   int i;
 
   printf("-- inversion in R2 --\n\n");
 
   randombytes(seed, NTRU_SEEDBYTES);
-  poly_Rq_getnoise(&a, seed, 0);
-  poly_Rq_getnoise(&b, seed, 1);
+  poly_S3_sample(&a, seed, 0);
+  poly_Z3_to_Zq(&a);
+  poly_S3_sample(&b, seed, 1);
 
   poly_R2_tobytes(a_bytes, &a);
   poly_R2_tobytes(b_bytes, &b);
@@ -111,11 +111,8 @@ int main()
   }
   print_results("poly_R2_frombytes: ", t, NTESTS);
 
-  // a as generated in test_polymul
-  poly_Rq_getnoise(&a, seed, 2);
-  for(i=0; i<NTRU_N; i++)
-    a1 += a.coeffs[i];
-  a.coeffs[0] = (a.coeffs[0] + (1 ^ (a1&1))) & 3;
+  poly_S3_sample(&a, seed, 0);
+  poly_Z3_to_Zq(&a);
 
   for(i=0; i<NTESTS; i++)
   {

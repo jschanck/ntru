@@ -280,8 +280,8 @@ if __name__ == '__main__':
         p("vpor %ymm{}, %ymm{}, %ymm{}".format(retval, t, retval))
         p("vmovdqa %ymm{}, {}(%rsp)".format(retval, i*32))
 
-    p("mov %rsp, %rsi")  # use b as input for Rq_mul_xm1
-    p("call poly_Rq_mul_xm1")
+    p("mov %rsp, %rsi")  # use b as input for poly_Rq_mul_x_minus_1
+    p("call poly_Rq_mul_x_minus_1")
 
     p("mov %r8, %rsp")
     p("ret")

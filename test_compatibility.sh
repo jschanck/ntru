@@ -4,9 +4,9 @@ make -C ref-sxy {test/keypair,test/encap,test/decap}
 make -C avx2-sxy {test/keypair,test/encap,test/decap}
 
 PKBYTES=1138
-SKBYTES=1418
+SKBYTES=1450
 KEYBYTES=32
-BYTES=1278
+BYTES=1138
 
 keyfile=$(mktemp)
 ciphertextandkey=$(mktemp)
