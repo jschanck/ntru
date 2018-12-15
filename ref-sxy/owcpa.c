@@ -125,10 +125,9 @@ void owcpa_enc(unsigned char *c,
   poly_Rq_sum_zero_tobytes(c, ct);
 }
 
-int owcpa_dec_and_reenc(unsigned char *c2,
-                        unsigned char *rm,
-                        const unsigned char *ciphertext,
-                        const unsigned char *secretkey)
+int owcpa_dec(unsigned char *rm,
+              const unsigned char *ciphertext,
+              const unsigned char *secretkey)
 {
   int i;
   int fail;
@@ -138,8 +137,6 @@ int owcpa_dec_and_reenc(unsigned char *c2,
   poly *mf = &x2, *finv3 = &x3, *m = &x4;
   poly *liftm = &x2, *invh = &x3, *r = &x4;
   poly *b = &x1;
-
-  uint16_t t;
 
   poly_Rq_sum_zero_frombytes(c, ciphertext);
   poly_S3_frombytes(f, secretkey);
@@ -153,11 +150,9 @@ int owcpa_dec_and_reenc(unsigned char *c2,
   poly_S3_tobytes(rm+NTRU_PACK_TRINARY_BYTES, m);
   poly_S3_to_Rq(liftm, m);
 
-  /* b = ct - Lift(m) mod (q, Phi_n) */
+  /* b = c - Lift(m) mod (q, x^n - 1) */
   for(i=0; i<NTRU_N; i++)
     b->coeffs[i] = MODQ(c->coeffs[i] - liftm->coeffs[i]);
-  for(i=0; i<NTRU_N; i++)
-    b->coeffs[i] = MODQ(b->coeffs[i] - b->coeffs[NTRU_N-1]);
 
   /* r = b / h mod (q, Phi_n) */
   poly_Rq_sum_zero_frombytes(invh, secretkey+2*NTRU_PACK_TRINARY_BYTES);
@@ -165,25 +160,32 @@ int owcpa_dec_and_reenc(unsigned char *c2,
   for(i=0; i<NTRU_N; i++)
     r->coeffs[i] = MODQ(r->coeffs[i] - r->coeffs[NTRU_N-1]);
 
-  /* NOTE: We can re-encaps with b, instead of computing rh, as long as  */
-  /* we check that r has coefficients in {-1,0,1} and has r_{n-1} = 0.   */
-  /* It is important not to reduce r mod 3 (or perform any other         */
-  /* non-invertible operations) before this check.                       */
-  /* All m in the domain of poly_S3_to_Rq are OK, so no need to check m. */
+  /* NOTE: For the IND-CCA2 KEM we must ensure that c = Enc(h, (r,m)).       */
+  /* We can avoid re-computing r*h + Lift(m) as long as we check that        */
+  /* r (defined as b/h mod (q, Phi_n)) and m are in the message space, i.e.  */
+  /* as long as r and m have coefficients in {-1,0,1} and degree < n-1.      */
+  /* Both conditions hold for m by construction. The degree condition holds  */
+  /* for r by construction. Only the first n-1 coefficients of r need to be  */
+  /* checked.                                                                */
+  /* Our definition of r as b/h mod (q, Phi_n) follows Figure 4 of           */
+  /*   [Sch18] https://eprint.iacr.org/2018/1174/20181203:032458.            */
+  /* This differs from Figure 10 of Saito--Xagawa--Yamakawa                  */
+  /*   [SXY17] https://eprint.iacr.org/2017/1005/20180516:055500             */
+  /* where r gets a final reduction modulo p.                                */
+  /* Skipping the final reduction modulo p is crucial.                       */
+  /* Proposition 1 of [Sch18] shows that, as long as the following call to   */
+  /* owcpa_check_r succeeds, there is a simple procedure (Fig. 8 [Sch18])    */
+  /* to compute a scalar t such that                                         */
+  /*   (1)  (b mod (q, Phi_n)) + t*Phi_n + Lift(m) = r*h + Lift(m).          */
+  /* Here we can use the fact that c(1) = 0 (by poly_Rq_sum_zero_frombytes)  */
+  /* to infer that the t computed by Fig. 8 of [Sch18] satisfies             */
+  /*        (b mod (q, Phi_n)) + t*Phi_n = b.                                */
+  /* Hence, with (1) and the definition of b,                                */
+  /*   c = b + Lift(m) = r*h + Lift(m).                                      */
   fail = owcpa_check_r(r);
 
   poly_trinary_Zq_to_Z3(r);
   poly_S3_tobytes(rm, r);
-
-  /* t = -(b(1) / n) mod q */
-  t = 0;
-  for(i=0; i<NTRU_N; i++)
-    t = t + b->coeffs[i];
-  t = MODQ(t * NTRU_N_INVERSE_MOD_Q);
-  for(i=0; i<NTRU_N; i++)
-    b->coeffs[i] = MODQ(b->coeffs[i] - t + liftm->coeffs[i]);
-
-  poly_Rq_sum_zero_tobytes(c2, b);
 
   return fail;
 }

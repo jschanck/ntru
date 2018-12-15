@@ -40,9 +40,9 @@ int crypto_kem_dec(unsigned char *k, const unsigned char *c, const unsigned char
   unsigned char buf[NTRU_PRFKEYBYTES+NTRU_CIPHERTEXTBYTES];
   unsigned char *cmp = buf+NTRU_PRFKEYBYTES;
 
-  fail = 0;
-  fail |= owcpa_dec_and_reenc(cmp, rm, c, sk);
-  fail |= verify(c, cmp, NTRU_CIPHERTEXTBYTES);
+  fail = owcpa_dec(rm, c, sk);
+  /* If fail = 0 then c = Enc(h, rm), there is no need to re-encapsulate. */
+  /* See comment in owcpa_dec for details.                                */
 
   shake128(k, NTRU_SHAREDKEYBYTES, rm, NTRU_OWCPA_MSGBYTES);
 
