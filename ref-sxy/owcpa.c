@@ -31,8 +31,11 @@ void owcpa_samplemsg(unsigned char msg[NTRU_OWCPA_MSGBYTES],
 {
   poly r, m;
 
-  poly_S3_sample(&r,seed,DOMR);
-  poly_S3_sample(&m,seed,DOMM);
+  unsigned char uniformbytes[2*NTRU_S3_RANDOMBYTES];
+  poly_S3_xof(uniformbytes, sizeof(uniformbytes), seed, NTRU_DOMAIN_MSG);
+
+  poly_S3_format(&r,uniformbytes);
+  poly_S3_format(&m,uniformbytes+NTRU_S3_RANDOMBYTES);
 
   poly_S3_tobytes(msg, &r);
   poly_S3_tobytes(msg+NTRU_PACK_TRINARY_BYTES, &m);
@@ -52,17 +55,18 @@ void owcpa_keypair(unsigned char *pk,
   poly *Gf=&x3, *invGf=&x4, *tmp=&x5;
   poly *invh=&x3, *h=&x3;
 
-  poly_S3_sample_plus(f,seed,DOMF);
+  unsigned char uniformbytes[2*NTRU_S3_RANDOMBYTES];
+  poly_S3_xof(uniformbytes, sizeof(uniformbytes), seed, NTRU_DOMAIN_KEY);
+
+  poly_S3_format_plus(f,uniformbytes);
+  poly_S3_format_plus(g,uniformbytes+NTRU_S3_RANDOMBYTES);
 
   poly_S3_inv(invf_mod3, f);
-
   poly_S3_tobytes(sk, f);
   poly_S3_tobytes(sk+NTRU_PACK_TRINARY_BYTES, invf_mod3);
 
   /* Lift coeffs of f and g from Z_p to Z_q */
   poly_Z3_to_Zq(f);
-
-  poly_S3_sample_plus(g,seed,DOMG);
   poly_Z3_to_Zq(g);
 
   /* G = 3*(x-1)*g */

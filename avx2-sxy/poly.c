@@ -185,36 +185,38 @@ void poly_S3_frombytes(poly *r, const unsigned char msg[NTRU_OWCPA_MSGBYTES])
   r->coeffs[NTRU_N-1] = 0;
 }
 
-void poly_S3_sample(poly *r, const unsigned char *seed, const unsigned char nonce)
+void poly_S3_xof(unsigned char *output, const size_t sizeof_output, const unsigned char seed[NTRU_SEEDBYTES], const unsigned char domain[NTRU_DOMAINBYTES])
 {
-  unsigned char buf[NTRU_N-1];
-  unsigned char extseed[NTRU_SEEDBYTES+8];
+  unsigned char input[NTRU_SEEDBYTES+NTRU_DOMAINBYTES];
   int i;
 
   for(i=0;i<NTRU_SEEDBYTES;i++)
-    extseed[i] = seed[i];
-  for(i=1;i<8;i++)
-    extseed[NTRU_SEEDBYTES+i] = 0;
-  extseed[NTRU_SEEDBYTES] = nonce;
+    input[i] = seed[i];
+  for(i=0;i<8;i++)
+    input[NTRU_SEEDBYTES+i] = domain[i];
 
-  shake128(buf, sizeof(buf), extseed, sizeof(extseed));
+  shake128(output, sizeof_output, input, sizeof(input));
+}
 
+void poly_S3_format(poly *r, const unsigned char uniformbytes[NTRU_S3_RANDOMBYTES])
+{
+  int i;
   /* {0,1,...,255} -> {0,1,2}; Pr[0] = 86/256, Pr[1] = Pr[-1] = 85/256 */
   for(i=0; i<NTRU_N-1; i++)
-    r->coeffs[i] = mod3(buf[i]);
+    r->coeffs[i] = mod3(uniformbytes[i]);
 
   r->coeffs[NTRU_N-1] = 0;
 }
 
-void poly_S3_sample_plus(poly *r, const unsigned char *seed, const unsigned char nonce)
+void poly_S3_format_plus(poly *r, const unsigned char uniformbytes[NTRU_S3_RANDOMBYTES])
 {
-  /* Sample r using poly_S3_sample then conditionally flip    */
+  /* Format r using poly_S3_format then conditionally flip    */
   /* signs of even index coefficients so that <x*r, r> >= 0.  */
 
   int i;
   uint16_t s = 0;
 
-  poly_S3_sample(r, seed, nonce);
+  poly_S3_format(r, uniformbytes);
 
   /* Map {0,1,2} -> {0, 1, 2^16 - 1} */
   for(i=0; i<NTRU_N-1; i++)

@@ -52,7 +52,7 @@ int main(void)
   owcpa_keypair(packed_pk, packed_sk, key_seed);
   owcpa_samplemsg(packed_rmA, rm_seed);
   owcpa_enc(packed_ct, packed_rmA, packed_pk);
-  owcpa_dec_and_reenc(packed_ct2, packed_rmB, packed_ct, packed_sk);
+  owcpa_dec(packed_ct2, packed_ct, packed_sk);
 
   FILE *out = fopen("owcpa_vecs.txt", "w");
 

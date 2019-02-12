@@ -34,10 +34,16 @@ static int test_sample_plus(const unsigned char seed[NTRU_SEEDBYTES], const unsi
   int pos_a, neg_a, zero_a;
   int pos_b, neg_b, zero_b;
 
-  poly_S3_sample(&a, seed, nonce);
+  unsigned char uniformbytes[NTRU_S3_RANDOMBYTES];
+  unsigned char domain[NTRU_DOMAINBYTES] = {0};
+  domain[0] = nonce;
+
+  poly_S3_xof(uniformbytes, sizeof(uniformbytes), seed, domain);
+
+  poly_S3_format(&a, uniformbytes);
   poly_S3_a_dot_xa_count(&pos_a, &neg_a, &zero_a, &a);
 
-  poly_S3_sample_plus(&b, seed, nonce);
+  poly_S3_format_plus(&b, uniformbytes);
   poly_S3_a_dot_xa_count(&pos_b, &neg_b, &zero_b, &b);
 
   /* Total count should be N-1 */
@@ -75,22 +81,32 @@ static int test_all_sample_plus_cases()
   poly a;
   int pos_a, neg_a, zero_a;
   unsigned char seed[NTRU_SEEDBYTES] = {0};
-  seed[0] = 3;
+  unsigned char domain[NTRU_DOMAINBYTES] = {0};
+  unsigned char uniformbytes[NTRU_S3_RANDOMBYTES];
 
-  /* For seed 3, index 1 has positive correlation */
-  poly_S3_sample(&a, seed, 1);
+  seed[0] = 3;
+  domain[0] = 1;
+
+  poly_S3_xof(uniformbytes, sizeof(uniformbytes), seed, domain);
+
+  /* For seed 3, domain 1 has positive correlation */
+  poly_S3_format(&a, uniformbytes);
   poly_S3_a_dot_xa_count(&pos_a, &neg_a, &zero_a, &a);
   if(!(pos_a > neg_a))
     return -1;
 
-  /* ... 3 has negative correlation */
-  poly_S3_sample(&a, seed, 3);
+  /* domain 3 has negative correlation */
+  domain[0] = 3;
+  poly_S3_xof(uniformbytes, sizeof(uniformbytes), seed, domain);
+  poly_S3_format(&a, uniformbytes);
   poly_S3_a_dot_xa_count(&pos_a, &neg_a, &zero_a, &a);
   if(!(pos_a < neg_a))
     return -1;
 
-  /* ... 12 has zero correlation*/
-  poly_S3_sample(&a, seed, 12);
+  /* domain 12 has zero correlation*/
+  domain[0] = 12;
+  poly_S3_xof(uniformbytes, sizeof(uniformbytes), seed, domain);
+  poly_S3_format(&a, uniformbytes);
   poly_S3_a_dot_xa_count(&pos_a, &neg_a, &zero_a, &a);
   if(!(pos_a == neg_a))
     return -1;

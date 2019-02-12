@@ -22,7 +22,6 @@ int crypto_kem_enc(unsigned char *c, unsigned char *k, const unsigned char *pk)
   unsigned char rm[NTRU_OWCPA_MSGBYTES];
   unsigned char rm_seed[NTRU_SEEDBYTES];
 
-  /* TODO: Should we use a larger seed? Sample r and m independently? */
   randombytes(rm_seed, NTRU_SEEDBYTES);
   owcpa_samplemsg(rm, rm_seed);
 

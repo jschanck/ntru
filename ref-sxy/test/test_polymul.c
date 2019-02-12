@@ -63,11 +63,11 @@ static int test_poly_S3_inv(poly *a)
 static int test_lift()
 {
   poly a, r1, r2;
-  unsigned char seed[NTRU_SEEDBYTES];
-  randombytes(seed, NTRU_SEEDBYTES);
+  unsigned char uniformbytes[NTRU_S3_RANDOMBYTES];
+  randombytes(uniformbytes, sizeof(uniformbytes));
 
   memset(&a,0,sizeof(poly));
-  poly_S3_sample(&a,seed,0);
+  poly_S3_format(&a,uniformbytes);
   poly_S3_to_Rq(&r1, &a);
   poly_Rq_to_S3(&r2, &r1);
 
@@ -76,14 +76,13 @@ static int test_lift()
 
 int main(void)
 {
-  unsigned char seed[NTRU_SEEDBYTES];
-  randombytes(seed, NTRU_SEEDBYTES);
+  unsigned char uniformbytes[2*NTRU_S3_RANDOMBYTES];
+  randombytes(uniformbytes, sizeof(uniformbytes));
 
-  poly a;
-  poly b;
-  poly_S3_sample(&a,seed,0);
+  poly a, b;
+  poly_S3_format(&a,uniformbytes);
   poly_Z3_to_Zq(&a);
-  poly_S3_sample(&b,seed,0);
+  poly_S3_format(&b,uniformbytes+NTRU_S3_RANDOMBYTES);
 
   printf("TEST_POLY_INV MOD2:\t%d\n", test_poly_Rq_inv(&a));
   printf("TEST_POLY_INV MOD3:\t%d\n", test_poly_S3_inv(&b));

@@ -65,16 +65,16 @@ int main()
   unsigned char a_bytes[(((NTRU_N / 8) + 31) / 32) * 32];
   unsigned char b_bytes[(((NTRU_N / 8) + 31) / 32) * 32];
   unsigned char r_bytes[(((NTRU_N / 8) + 31) / 32) * 32];
-  unsigned char seed[NTRU_SEEDBYTES];
+  unsigned char uniformbytes[2*NTRU_S3_RANDOMBYTES];
   unsigned long long t[NTESTS];
   int i;
 
   printf("-- inversion in R2 --\n\n");
 
-  randombytes(seed, NTRU_SEEDBYTES);
-  poly_S3_sample(&a, seed, 0);
+  randombytes(uniformbytes, sizeof(uniformbytes));
+  poly_S3_format(&a, uniformbytes);
   poly_Z3_to_Zq(&a);
-  poly_S3_sample(&b, seed, 1);
+  poly_S3_format(&b, uniformbytes+NTRU_S3_RANDOMBYTES);
 
   poly_R2_tobytes(a_bytes, &a);
   poly_R2_tobytes(b_bytes, &b);
@@ -111,7 +111,7 @@ int main()
   }
   print_results("poly_R2_frombytes: ", t, NTESTS);
 
-  poly_S3_sample(&a, seed, 0);
+  poly_S3_format(&a, uniformbytes);
   poly_Z3_to_Zq(&a);
 
   for(i=0; i<NTESTS; i++)

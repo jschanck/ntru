@@ -25,10 +25,10 @@ int main(void)
   unsigned char p2[NTRU_PACK_TRINARY_BYTES];
   poly a, b, c;
 
-  unsigned char seed[NTRU_SEEDBYTES];
-  randombytes(seed, NTRU_SEEDBYTES);
+  unsigned char uniformbytes[NTRU_S3_RANDOMBYTES];
+  randombytes(uniformbytes, sizeof(uniformbytes));
 
-  poly_S3_sample(&c,seed,0);
+  poly_S3_format(&c,uniformbytes);
   poly_Z3_to_Zq(&c);
   poly_Rq_mul_x_minus_1(&a,&c); // We can only pack vectors with 0 coeff sum
   //poly_print(&a);
@@ -41,7 +41,7 @@ int main(void)
   if(errorRq)
     printf("Pack Rq fails\n");
 
-  poly_S3_sample(&a,seed,0);
+  poly_S3_format(&a,uniformbytes);
   //poly_print(&a);
   poly_S3_tobytes(p2, &a);
   poly_S3_frombytes(&b, p2);

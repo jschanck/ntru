@@ -54,6 +54,7 @@ int main()
   unsigned char* pks = (unsigned char*) malloc(NTESTS*NTRU_PUBLICKEYBYTES);
   unsigned char* sks = (unsigned char*) malloc(NTESTS*NTRU_SECRETKEYBYTES);
   unsigned char* cts = (unsigned char*) malloc(NTESTS*NTRU_CIPHERTEXTBYTES);
+  unsigned char uniformbytes[2*NTRU_S3_RANDOMBYTES];
   unsigned char seed[NTRU_SEEDBYTES];
   unsigned long long t[NTESTS];
   uint16_t a1 = 0;
@@ -85,10 +86,10 @@ int main()
 
   printf("-- internals --\n\n");
 
-  randombytes(seed, NTRU_SEEDBYTES);
-  poly_S3_sample(&a, seed, 0);
+  randombytes(uniformbytes, sizeof(uniformbytes));
+  poly_S3_format(&a, uniformbytes);
+  poly_S3_format(&b, uniformbytes+NTRU_S3_RANDOMBYTES);
   poly_Z3_to_Zq(&a);
-  poly_S3_sample(&b, seed, 1);
   poly_Z3_to_Zq(&b);
 
   for(i=0; i<NTESTS; i++)
@@ -106,8 +107,6 @@ int main()
   print_results("poly_S3_mul: ", t, NTESTS);
 
   // a as generated in test_polymul
-  poly_S3_sample(&a, seed, 2);
-  poly_Z3_to_Zq(&a);
   for(i=0; i<NTRU_N; i++)
     a1 += a.coeffs[i];
   a.coeffs[0] = (a.coeffs[0] + (1 ^ (a1&1))) & 3;
@@ -136,16 +135,30 @@ int main()
   for(i=0; i<NTESTS; i++)
   {
     t[i] = cpucycles();
-    poly_S3_sample(&a, seed, 1);
+    poly_S3_xof(uniformbytes, NTRU_S3_RANDOMBYTES, seed, NTRU_DOMAIN_KEY);
   }
-  print_results("poly_S3_sample: ", t, NTESTS);
+  print_results("poly_S3_xof (for 1 poly_S3): ", t, NTESTS);
 
   for(i=0; i<NTESTS; i++)
   {
     t[i] = cpucycles();
-    poly_S3_sample_plus(&a, seed, 1);
+    poly_S3_xof(uniformbytes, 2*NTRU_S3_RANDOMBYTES, seed, NTRU_DOMAIN_KEY);
   }
-  print_results("poly_S3_sample_plus: ", t, NTESTS);
+  print_results("poly_S3_xof (for 2 poly_S3): ", t, NTESTS);
+
+  for(i=0; i<NTESTS; i++)
+  {
+    t[i] = cpucycles();
+    poly_S3_format(&a, uniformbytes);
+  }
+  print_results("poly_S3_format: ", t, NTESTS);
+
+  for(i=0; i<NTESTS; i++)
+  {
+    t[i] = cpucycles();
+    poly_S3_format_plus(&a, uniformbytes);
+  }
+  print_results("poly_S3_format_plus: ", t, NTESTS);
 
   for(i=0; i<NTESTS; i++)
   {
@@ -160,6 +173,34 @@ int main()
     poly_Rq_to_S3(&a, &b);
   }
   print_results("poly_Rq_to_S3: ", t, NTESTS);
+
+  for(i=0; i<NTESTS; i++)
+  {
+    t[i] = cpucycles();
+    poly_Rq_sum_zero_tobytes(cts, &a);
+  }
+  print_results("poly_Rq_sum_zero_tobytes: ", t, NTESTS);
+
+  for(i=0; i<NTESTS; i++)
+  {
+    t[i] = cpucycles();
+    poly_Rq_sum_zero_frombytes(&a, cts);
+  }
+  print_results("poly_Rq_sum_zero_frombytes: ", t, NTESTS);
+
+  for(i=0; i<NTESTS; i++)
+  {
+    t[i] = cpucycles();
+    poly_S3_tobytes(cts, &b);
+  }
+  print_results("poly_S3_tobytes: ", t, NTESTS);
+
+  for(i=0; i<NTESTS; i++)
+  {
+    t[i] = cpucycles();
+    poly_S3_frombytes(&b, cts);
+  }
+  print_results("poly_S3_frombytes: ", t, NTESTS);
 
   free(pks);
   free(sks);
