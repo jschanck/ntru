@@ -1,7 +1,7 @@
 CC = /usr/bin/cc
 CFLAGS = -Wall -Wextra -Wpedantic -O3
 
-SOURCES = poly.c fips202.c randombytes.c verify.c owcpa.c ntrukem.c
+SOURCES = poly.c pack.c fips202.c randombytes.c verify.c owcpa.c ntrukem.c
 HEADERS = params.h poly.h randombytes.h verify.h owcpa.h ntrukem.h
 
 all: test/test_poly \
