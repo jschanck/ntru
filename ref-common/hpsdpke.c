@@ -4,11 +4,6 @@
 
 #define MODQ(X) ((X) & (NTRU_Q-1))
 
-#define DOMM 0
-#define DOMF 1
-#define DOMG 2
-#define DOMR 3
-
 static int owcpa_check_r(const poly *r)
 {
   /* Check that r has coefficients in {0,1,q-1} and r_{n-1} = 0. */
@@ -69,8 +64,7 @@ void owcpa_keypair(unsigned char *pk,
   poly_Z3_to_Zq(f);
   poly_Z3_to_Zq(g);
 
-  /* G = 3*(x-1)*g */
-  poly_Rq_mul_x_minus_1(G, g);
+  /* G = 3*g */
   for(i=0; i<NTRU_N; i++)
     G->coeffs[i] = MODQ(3 * G->coeffs[i]);
 
