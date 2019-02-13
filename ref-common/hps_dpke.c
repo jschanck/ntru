@@ -19,6 +19,25 @@ static int owcpa_check_r(const poly *r)
   return t;
 }
 
+static int owcpa_check_m(const poly *m)
+{
+  /* Check that m has the right type. */
+  /* Assume that m has coefficients in {0,1,2}. */
+  int i;
+  uint64_t t = 0;
+  uint16_t p1 = 0;
+  uint16_t m1 = 0;
+  for(i=0; i<NTRU_N; i++)
+  {
+    p1 += m->coeffs[i] & 0x01;
+    m1 += (m->coeffs[i] & 0x02) >> 1;
+  }
+  /* Need p1 = m1 and p1 + m1 = NTRU_WEIGHT */
+  t |= p1 ^ m1;
+  t |= (p1 + m1) ^ NTRU_WEIGHT;
+  return t;
+}
+
 void owcpa_samplemsg(unsigned char msg[NTRU_OWCPA_MSGBYTES],
                      const unsigned char seed[NTRU_SEEDBYTES])
 {
@@ -64,7 +83,7 @@ void owcpa_keypair(unsigned char *pk,
 
   /* G = 3*g */
   for(i=0; i<NTRU_N; i++)
-    G->coeffs[i] = MODQ(3 * G->coeffs[i]);
+    G->coeffs[i] = MODQ(3 * g->coeffs[i]);
 
   poly_Rq_mul(Gf, G, f);
 
@@ -95,14 +114,13 @@ void owcpa_keypair(unsigned char *pk,
   poly_Rq_sum_zero_tobytes(pk, h);
 }
 
-
 void owcpa_enc(unsigned char *c,
                const unsigned char *rm,
                const unsigned char *pk)
 {
   int i;
   poly x1, x2, x3;
-  poly *h = &x1, *liftm = &x1;
+  poly *h = &x1;
   poly *r = &x2, *m = &x2;
   poly *ct = &x3;
 
@@ -114,9 +132,9 @@ void owcpa_enc(unsigned char *c,
   poly_Rq_mul(ct, r, h);
 
   poly_S3_frombytes(m, rm+NTRU_PACK_TRINARY_BYTES);
-  poly_S3_to_Rq(liftm, m);
+  poly_Z3_to_Zq(m);
   for(i=0; i<NTRU_N; i++)
-    ct->coeffs[i] = MODQ(ct->coeffs[i] + liftm->coeffs[i]);
+    ct->coeffs[i] = MODQ(ct->coeffs[i] + m->coeffs[i]);
 
   poly_Rq_sum_zero_tobytes(c, ct);
 }
@@ -130,9 +148,8 @@ int owcpa_dec(unsigned char *rm,
   poly x1, x2, x3, x4;
 
   poly *c = &x1, *f = &x2, *cf = &x3;
-  poly *mf = &x2, *finv3 = &x3, *m = &x4;
-  poly *liftm = &x2, *invh = &x3, *r = &x4;
-  poly *b = &x1;
+  poly *mf = &x2, *finv3 = &x3, *m=&x4;
+  poly *b = &x1, *invh = &x2, *r = &x3;
 
   poly_Rq_sum_zero_frombytes(c, ciphertext);
   poly_S3_frombytes(f, secretkey);
@@ -143,12 +160,13 @@ int owcpa_dec(unsigned char *rm,
 
   poly_S3_frombytes(finv3, secretkey+NTRU_PACK_TRINARY_BYTES);
   poly_S3_mul(m, mf, finv3);
-  poly_S3_tobytes(rm+NTRU_PACK_TRINARY_BYTES, m);
-  poly_S3_to_Rq(liftm, m);
 
-  /* b = c - Lift(m) mod (q, x^n - 1) */
+  /* XXX: Change this to avoid Z3 -> Zq -> Z3. */
+  poly_Z3_to_Zq(m);
+  /* b = c - m mod (q, x^n - 1) */
   for(i=0; i<NTRU_N; i++)
-    b->coeffs[i] = MODQ(c->coeffs[i] - liftm->coeffs[i]);
+    b->coeffs[i] = MODQ(c->coeffs[i] - m->coeffs[i]);
+  poly_trinary_Zq_to_Z3(m);
 
   /* r = b / h mod (q, Phi_n) */
   poly_Rq_sum_zero_frombytes(invh, secretkey+2*NTRU_PACK_TRINARY_BYTES);
@@ -159,10 +177,7 @@ int owcpa_dec(unsigned char *rm,
   /* NOTE: For the IND-CCA2 KEM we must ensure that c = Enc(h, (r,m)).       */
   /* We can avoid re-computing r*h + Lift(m) as long as we check that        */
   /* r (defined as b/h mod (q, Phi_n)) and m are in the message space, i.e.  */
-  /* as long as r and m have coefficients in {-1,0,1} and degree < n-1.      */
-  /* Both conditions hold for m by construction. The degree condition holds  */
-  /* for r by construction. Only the first n-1 coefficients of r need to be  */
-  /* checked.                                                                */
+  /* as long as r and m are ternary and m is of the correct type.            */
   /* Our definition of r as b/h mod (q, Phi_n) follows Figure 4 of           */
   /*   [Sch18] https://eprint.iacr.org/2018/1174/20181203:032458.            */
   /* This differs from Figure 10 of Saito--Xagawa--Yamakawa                  */
@@ -178,10 +193,13 @@ int owcpa_dec(unsigned char *rm,
   /*        (b mod (q, Phi_n)) + t*Phi_n = b.                                */
   /* Hence, with (1) and the definition of b,                                */
   /*   c = b + Lift(m) = r*h + Lift(m).                                      */
-  fail = owcpa_check_r(r);
+  fail = 0;
+  fail |= owcpa_check_m(m);
+  fail |= owcpa_check_r(r);
 
   poly_trinary_Zq_to_Z3(r);
   poly_S3_tobytes(rm, r);
+  poly_S3_tobytes(rm+NTRU_PACK_TRINARY_BYTES, m);
 
   return fail;
 }
