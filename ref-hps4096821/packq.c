@@ -1,1 +1,1 @@
-../ref-common/pack2048.c
+../ref-common/pack4096.c
