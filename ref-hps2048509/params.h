@@ -1,17 +1,19 @@
 #ifndef PARAMS_H
 #define PARAMS_H
 
-#define NTRU_N 701
-#define NTRU_LOGQ 13
+#define NTRU_N 509
+#define NTRU_LOGQ 11
 #define NTRU_Q (1 << NTRU_LOGQ)
+#define NTRU_WEIGHT 254
 
-#define NTRU_N_INVERSE_MOD_Q 2197
+#define NTRU_N_INVERSE_MOD_Q 853
 
 #define NTRU_SEEDBYTES       32
 #define NTRU_PRFKEYBYTES     32
 #define NTRU_SHAREDKEYBYTES  32
 #define NTRU_DOMAINBYTES     8
 #define NTRU_S3_IID_BYTES    (NTRU_N-1)
+#define NTRU_S3_FT_BYTES     (4*NTRU_N-4)
 
 #define NTRU_DOMAIN_KEY ((unsigned char *) "samplefg")
 #define NTRU_DOMAIN_MSG ((unsigned char *) "samplerm")

@@ -55,7 +55,7 @@ int main()
   unsigned char* pks = (unsigned char*) malloc(NTESTS*NTRU_PUBLICKEYBYTES);
   unsigned char* sks = (unsigned char*) malloc(NTESTS*NTRU_SECRETKEYBYTES);
   unsigned char* cts = (unsigned char*) malloc(NTESTS*NTRU_CIPHERTEXTBYTES);
-  unsigned char uniformbytes[2*NTRU_S3_IID_BYTES];
+  unsigned char uniformbytes[2*NTRU_S3_IID_BYTES+NTRU_S3_FT_BYTES];
   unsigned char seed[NTRU_SEEDBYTES];
   unsigned long long t[NTESTS];
   uint16_t a1 = 0;
@@ -138,14 +138,14 @@ int main()
     t[i] = cpucycles();
     sample_xof(uniformbytes, NTRU_S3_IID_BYTES, seed, NTRU_DOMAIN_KEY);
   }
-  print_results("sample_xof (for 1 poly_S3): ", t, NTESTS);
+  print_results("sample_xof (for iid poly_S3): ", t, NTESTS);
 
   for(i=0; i<NTESTS; i++)
   {
     t[i] = cpucycles();
-    sample_xof(uniformbytes, 2*NTRU_S3_IID_BYTES, seed, NTRU_DOMAIN_KEY);
+    sample_xof(uniformbytes, NTRU_S3_FT_BYTES, seed, NTRU_DOMAIN_KEY);
   }
-  print_results("sample_xof (for 2 poly_S3): ", t, NTESTS);
+  print_results("sample_xof (for fixed type poly_S3): ", t, NTESTS);
 
   for(i=0; i<NTESTS; i++)
   {
@@ -157,9 +157,9 @@ int main()
   for(i=0; i<NTESTS; i++)
   {
     t[i] = cpucycles();
-    sample_iid_plus(&a, uniformbytes);
+    sample_fixed_type(&a, uniformbytes);
   }
-  print_results("sample_iid_plus: ", t, NTESTS);
+  print_results("sample_fixed_type: ", t, NTESTS);
 
   for(i=0; i<NTESTS; i++)
   {
