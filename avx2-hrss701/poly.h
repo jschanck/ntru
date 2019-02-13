@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include "params.h"
 
+#define MODQ(X) ((X) & (NTRU_Q-1))
+uint16_t mod3(uint16_t a);
+
 typedef struct{
   // round to nearest multiple of 32 to make it easier to load into vector
   //   registers without having to do bound checks
@@ -17,10 +20,6 @@ void poly_Rq_sum_zero_frombytes(poly *r, const unsigned char *a);
 
 void poly_S3_tobytes(unsigned char msg[NTRU_PACK_TRINARY_BYTES], const poly *r);
 void poly_S3_frombytes(poly *r, const unsigned char msg[NTRU_PACK_TRINARY_BYTES]);
-
-void poly_S3_xof(unsigned char *output, const size_t sizeof_output, const unsigned char seed[NTRU_SEEDBYTES], const unsigned char domain[NTRU_DOMAINBYTES]);
-void poly_S3_format(poly *r, const unsigned char uniformbytes[NTRU_S3_RANDOMBYTES]);
-void poly_S3_format_plus(poly *r, const unsigned char uniformbytes[NTRU_S3_RANDOMBYTES]);
 
 void poly_Rq_mul(poly *r, const poly *a, const poly *b);
 void poly_Rq_mul_x_minus_1(poly *r, const poly *a);
