@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "../poly.h"
+#include "../sample.h"
 #include "../randombytes.h"
 
 static void poly_S3_a_dot_xa_count(int *pos, int *neg, int *zero, const poly *a)
@@ -34,16 +35,16 @@ static int test_sample_plus(const unsigned char seed[NTRU_SEEDBYTES], const unsi
   int pos_a, neg_a, zero_a;
   int pos_b, neg_b, zero_b;
 
-  unsigned char uniformbytes[NTRU_S3_RANDOMBYTES];
+  unsigned char uniformbytes[NTRU_S3_IID_BYTES];
   unsigned char domain[NTRU_DOMAINBYTES] = {0};
   domain[0] = nonce;
 
-  poly_S3_xof(uniformbytes, sizeof(uniformbytes), seed, domain);
+  sample_xof(uniformbytes, sizeof(uniformbytes), seed, domain);
 
-  poly_S3_format(&a, uniformbytes);
+  sample_iid(&a, uniformbytes);
   poly_S3_a_dot_xa_count(&pos_a, &neg_a, &zero_a, &a);
 
-  poly_S3_format_plus(&b, uniformbytes);
+  sample_iid_plus(&b, uniformbytes);
   poly_S3_a_dot_xa_count(&pos_b, &neg_b, &zero_b, &b);
 
   /* Total count should be N-1 */
@@ -82,31 +83,31 @@ static int test_all_sample_plus_cases()
   int pos_a, neg_a, zero_a;
   unsigned char seed[NTRU_SEEDBYTES] = {0};
   unsigned char domain[NTRU_DOMAINBYTES] = {0};
-  unsigned char uniformbytes[NTRU_S3_RANDOMBYTES];
+  unsigned char uniformbytes[NTRU_S3_IID_BYTES];
 
   seed[0] = 3;
   domain[0] = 1;
 
-  poly_S3_xof(uniformbytes, sizeof(uniformbytes), seed, domain);
+  sample_xof(uniformbytes, sizeof(uniformbytes), seed, domain);
 
   /* For seed 3, domain 1 has positive correlation */
-  poly_S3_format(&a, uniformbytes);
+  sample_iid(&a, uniformbytes);
   poly_S3_a_dot_xa_count(&pos_a, &neg_a, &zero_a, &a);
   if(!(pos_a > neg_a))
     return -1;
 
   /* domain 3 has negative correlation */
   domain[0] = 3;
-  poly_S3_xof(uniformbytes, sizeof(uniformbytes), seed, domain);
-  poly_S3_format(&a, uniformbytes);
+  sample_xof(uniformbytes, sizeof(uniformbytes), seed, domain);
+  sample_iid(&a, uniformbytes);
   poly_S3_a_dot_xa_count(&pos_a, &neg_a, &zero_a, &a);
   if(!(pos_a < neg_a))
     return -1;
 
   /* domain 12 has zero correlation*/
   domain[0] = 12;
-  poly_S3_xof(uniformbytes, sizeof(uniformbytes), seed, domain);
-  poly_S3_format(&a, uniformbytes);
+  sample_xof(uniformbytes, sizeof(uniformbytes), seed, domain);
+  sample_iid(&a, uniformbytes);
   poly_S3_a_dot_xa_count(&pos_a, &neg_a, &zero_a, &a);
   if(!(pos_a == neg_a))
     return -1;

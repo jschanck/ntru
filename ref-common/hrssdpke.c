@@ -1,8 +1,6 @@
 #include "owcpa.h"
+#include "sample.h"
 #include "poly.h"
-#include "randombytes.h"
-
-#define MODQ(X) ((X) & (NTRU_Q-1))
 
 static int owcpa_check_r(const poly *r)
 {
@@ -26,11 +24,11 @@ void owcpa_samplemsg(unsigned char msg[NTRU_OWCPA_MSGBYTES],
 {
   poly r, m;
 
-  unsigned char uniformbytes[2*NTRU_S3_RANDOMBYTES];
-  poly_S3_xof(uniformbytes, sizeof(uniformbytes), seed, NTRU_DOMAIN_MSG);
+  unsigned char uniformbytes[2*NTRU_S3_IID_BYTES];
+  sample_xof(uniformbytes, sizeof(uniformbytes), seed, NTRU_DOMAIN_MSG);
 
-  poly_S3_format(&r,uniformbytes);
-  poly_S3_format(&m,uniformbytes+NTRU_S3_RANDOMBYTES);
+  sample_iid(&r,uniformbytes);
+  sample_iid(&m,uniformbytes+NTRU_S3_IID_BYTES);
 
   poly_S3_tobytes(msg, &r);
   poly_S3_tobytes(msg+NTRU_PACK_TRINARY_BYTES, &m);
@@ -50,11 +48,11 @@ void owcpa_keypair(unsigned char *pk,
   poly *Gf=&x3, *invGf=&x4, *tmp=&x5;
   poly *invh=&x3, *h=&x3;
 
-  unsigned char uniformbytes[2*NTRU_S3_RANDOMBYTES];
-  poly_S3_xof(uniformbytes, sizeof(uniformbytes), seed, NTRU_DOMAIN_KEY);
+  unsigned char uniformbytes[2*NTRU_S3_IID_BYTES];
+  sample_xof(uniformbytes, sizeof(uniformbytes), seed, NTRU_DOMAIN_KEY);
 
-  poly_S3_format_plus(f,uniformbytes);
-  poly_S3_format_plus(g,uniformbytes+NTRU_S3_RANDOMBYTES);
+  sample_iid_plus(f,uniformbytes);
+  sample_iid_plus(g,uniformbytes+NTRU_S3_IID_BYTES);
 
   poly_S3_inv(invf_mod3, f);
   poly_S3_tobytes(sk, f);

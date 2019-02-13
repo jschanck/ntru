@@ -2,8 +2,6 @@
 #include "fips202.h"
 #include "verify.h"
 
-#define MODQ(X) ((X) & (NTRU_Q-1))
-
 uint16_t mod3(uint16_t a)
 {
   uint16_t r;
@@ -34,113 +32,6 @@ void poly_trinary_Zq_to_Z3(poly *r)
   int i;
   for(i=0; i<NTRU_N; i++)
     r->coeffs[i] = 3 & (r->coeffs[i] ^ (r->coeffs[i]>>(NTRU_LOGQ-1)));
-}
-
-void poly_S3_tobytes(unsigned char msg[NTRU_OWCPA_MSGBYTES], const poly *a)
-{
-  int i;
-  unsigned char c;
-#if NTRU_PACK_DEG > (NTRU_PACK_DEG / 5) * 5  // if 5 does not divide NTRU_N-1
-  int j;
-#endif
-
-  for(i=0; i<NTRU_PACK_DEG/5; i++)
-  {
-    c =        a->coeffs[5*i+4] & 255;
-    c = (3*c + a->coeffs[5*i+3]) & 255;
-    c = (3*c + a->coeffs[5*i+2]) & 255;
-    c = (3*c + a->coeffs[5*i+1]) & 255;
-    c = (3*c + a->coeffs[5*i+0]) & 255;
-    msg[i] = c;
-  }
-#if NTRU_PACK_DEG > (NTRU_PACK_DEG / 5) * 5  // if 5 does not divide NTRU_N-1
-  i = NTRU_PACK_DEG/5;
-  c = 0;
-  for(j = NTRU_PACK_DEG - (5*i) - 1; j>=0; j--)
-    c = (3*c + a->coeffs[5*i+j]) & 255;
-  msg[i] = c;
-#endif
-}
-
-void poly_S3_frombytes(poly *r, const unsigned char msg[NTRU_OWCPA_MSGBYTES])
-{
-  int i;
-  unsigned char c;
-#if NTRU_PACK_DEG > (NTRU_PACK_DEG / 5) * 5  // if 5 does not divide NTRU_N-1
-  int j;
-#endif
-
-  for(i=0; i<NTRU_PACK_DEG/5; i++)
-  {
-    c = msg[i];
-    r->coeffs[5*i+0] = mod3(c);
-    r->coeffs[5*i+1] = mod3(c * 171 >> 9);  // this is division by 3
-    r->coeffs[5*i+2] = mod3(c * 57 >> 9);  // division by 3^2
-    r->coeffs[5*i+3] = mod3(c * 19 >> 9);  // division by 3^3
-    r->coeffs[5*i+4] = mod3(c * 203 >> 14);  // etc.
-  }
-#if NTRU_PACK_DEG > (NTRU_PACK_DEG / 5) * 5  // if 5 does not divide NTRU_N-1
-  i = NTRU_PACK_DEG/5;
-  c = msg[i];
-  for(j=0; (5*i+j)<NTRU_PACK_DEG; j++)
-  {
-    r->coeffs[5*i+j] = mod3(c);
-    c = c * 171 >> 9;
-  }
-#endif
-  r->coeffs[NTRU_N-1] = 0;
-}
-
-void poly_S3_xof(unsigned char *output, const size_t sizeof_output, const unsigned char seed[NTRU_SEEDBYTES], const unsigned char domain[NTRU_DOMAINBYTES])
-{
-  unsigned char input[NTRU_SEEDBYTES+NTRU_DOMAINBYTES];
-  int i;
-
-  for(i=0;i<NTRU_SEEDBYTES;i++)
-    input[i] = seed[i];
-  for(i=0;i<8;i++)
-    input[NTRU_SEEDBYTES+i] = domain[i];
-
-  shake128(output, sizeof_output, input, sizeof(input));
-}
-
-void poly_S3_format(poly *r, const unsigned char uniformbytes[NTRU_S3_RANDOMBYTES])
-{
-  int i;
-  /* {0,1,...,255} -> {0,1,2}; Pr[0] = 86/256, Pr[1] = Pr[-1] = 85/256 */
-  for(i=0; i<NTRU_N-1; i++)
-    r->coeffs[i] = mod3(uniformbytes[i]);
-
-  r->coeffs[NTRU_N-1] = 0;
-}
-
-void poly_S3_format_plus(poly *r, const unsigned char uniformbytes[NTRU_S3_RANDOMBYTES])
-{
-  /* Format r using poly_S3_format then conditionally flip    */
-  /* signs of even index coefficients so that <x*r, r> >= 0.  */
-
-  int i;
-  uint16_t s = 0;
-
-  poly_S3_format(r, uniformbytes);
-
-  /* Map {0,1,2} -> {0, 1, 2^16 - 1} */
-  for(i=0; i<NTRU_N-1; i++)
-    r->coeffs[i] = r->coeffs[i] | (-(r->coeffs[i]>>1));
-
-  /* s = <x*r, r>.  (r[n-1] = 0) */
-  for(i=0; i<NTRU_N-1; i++)
-    s += r->coeffs[i+1] * r->coeffs[i];
-
-  /* Extract sign of s (sign(0) = 1) */
-  s = 1 | (-(s>>15));
-
-  for(i=0; i<NTRU_N; i+=2)
-    r->coeffs[i] = s * r->coeffs[i];
-
-  /* Map {0,1,2^16-1} -> {0, 1, 2} */
-  for(i=0; i<NTRU_N; i++)
-    r->coeffs[i] = 3 & (r->coeffs[i] ^ (r->coeffs[i]>>15));
 }
 
 void poly_Rq_mul(poly *r, const poly *a, const poly *b)

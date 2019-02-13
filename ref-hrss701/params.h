@@ -11,7 +11,7 @@
 #define NTRU_PRFKEYBYTES     32
 #define NTRU_SHAREDKEYBYTES  32
 #define NTRU_DOMAINBYTES     8
-#define NTRU_S3_RANDOMBYTES  (NTRU_N-1)
+#define NTRU_S3_IID_BYTES    (NTRU_N-1)
 
 #define NTRU_DOMAIN_KEY ((unsigned char *) "samplefg")
 #define NTRU_DOMAIN_MSG ((unsigned char *) "samplerm")

@@ -1,7 +1,5 @@
 #include "poly.h"
 
-#define MODQ(X) ((X) & (NTRU_Q-1))
-
 void poly_Rq_sum_zero_tobytes(unsigned char *r, const poly *a)
 {
   int i,j;
