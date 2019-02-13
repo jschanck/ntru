@@ -1,4 +1,4 @@
-#include "../ntrukem.h"
+#include "../kem.h"
 #include "../params.h"
 #include "../cpucycles.h"
 #include "../randombytes.h"

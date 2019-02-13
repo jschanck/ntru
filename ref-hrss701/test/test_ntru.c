@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "../params.h"
-#include "../ntrukem.h"
+#include "../kem.h"
 #include "../verify.h"
 
 #define TRIALS 100

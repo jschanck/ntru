@@ -1,5 +1,5 @@
 #include "../api.h"
-#include "../ntrukem.h"
+#include "../kem.h"
 #include <stdio.h>
 #include <stdlib.h>
 

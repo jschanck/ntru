@@ -2,7 +2,7 @@
 #include "../params.h"
 #include "../poly.h"
 #include "../owcpa.h"
-#include "../ntrukem.h"
+#include "../kem.h"
 
 static void poly_write(FILE *f, const poly *a, const char *var)
 {
