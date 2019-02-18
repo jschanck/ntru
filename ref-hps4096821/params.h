@@ -1,12 +1,17 @@
 #ifndef PARAMS_H
 #define PARAMS_H
 
+/* New parameter sets need the following three values. */
+/* The rest of the parameters are derived from these.  */
+
 #define NTRU_N 821
 #define NTRU_LOGQ 12
-#define NTRU_Q (1 << NTRU_LOGQ)
-#define NTRU_WEIGHT 510
-
 #define NTRU_N_INVERSE_MOD_Q 773
+
+/**/
+
+#define NTRU_Q (1 << NTRU_LOGQ)
+#define NTRU_WEIGHT (NTRU_Q/8 - 2)
 
 #define NTRU_SEEDBYTES       32
 #define NTRU_PRFKEYBYTES     32
