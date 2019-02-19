@@ -54,5 +54,5 @@ int crypto_kem_dec(unsigned char *k, const unsigned char *c, const unsigned char
 
   cmov(k, rm, NTRU_SHAREDKEYBYTES, fail);
 
-  return fail;
+  return 0;
 }
