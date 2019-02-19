@@ -35,6 +35,7 @@ static int owcpa_check_m(const poly *m)
   /* Need p1 = m1 and p1 + m1 = NTRU_WEIGHT */
   t |= p1 ^ m1;
   t |= (p1 + m1) ^ NTRU_WEIGHT;
+  t = (-t) >> 63;
   return t;
 }
 
