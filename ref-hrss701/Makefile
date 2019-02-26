@@ -74,6 +74,7 @@ clean:
 	-$(RM) -r test/test_cshake
 	-$(RM) -r test/test_shake
 	-$(RM) -r test/speed
+	-$(RM) -r test/ram
 	-$(RM) -r test/encap
 	-$(RM) -r test/decap
 	-$(RM) -r test/keypair
