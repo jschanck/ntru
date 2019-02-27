@@ -76,6 +76,17 @@ void poly_Rq_mul_x_minus_1(poly *r, const poly *a)
   r->coeffs[0] = MODQ(last_coeff + (NTRU_Q - a->coeffs[0]));
 }
 
+#ifdef NTRU_HPS
+void poly_S3_to_Rq(poly *r, const poly *a)
+{
+  int i;
+  for(i=0; i<NTRU_N; i++)
+    r->coeffs[i] = a->coeffs[i];
+  poly_Z3_to_Zq(r);
+}
+#endif
+
+#ifdef NTRU_HRSS
 void poly_S3_to_Rq(poly *r, const poly *a)
 {
   /* NOTE: Assumes input is in {0,1,2}^N */
@@ -126,6 +137,7 @@ void poly_S3_to_Rq(poly *r, const poly *a)
   /* Multiply by (x-1) */
   poly_Rq_mul_x_minus_1(r, &b);
 }
+#endif
 
 void poly_Rq_to_S3(poly *r, const poly *a)
 {
