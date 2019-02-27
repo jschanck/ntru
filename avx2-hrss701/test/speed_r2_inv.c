@@ -66,7 +66,7 @@ int main()
   unsigned char a_bytes[(((NTRU_N / 8) + 31) / 32) * 32];
   unsigned char b_bytes[(((NTRU_N / 8) + 31) / 32) * 32];
   unsigned char r_bytes[(((NTRU_N / 8) + 31) / 32) * 32];
-  unsigned char uniformbytes[2*NTRU_S3_IID_BYTES];
+  unsigned char uniformbytes[2*NTRU_SAMPLE_IID_BYTES];
   unsigned long long t[NTESTS];
   int i;
 
@@ -75,7 +75,7 @@ int main()
   randombytes(uniformbytes, sizeof(uniformbytes));
   sample_iid(&a, uniformbytes);
   poly_Z3_to_Zq(&a);
-  sample_iid(&b, uniformbytes+NTRU_S3_IID_BYTES);
+  sample_iid(&b, uniformbytes+NTRU_SAMPLE_IID_BYTES);
 
   poly_R2_tobytes(a_bytes, &a);
   poly_R2_tobytes(b_bytes, &b);

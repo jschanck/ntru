@@ -69,7 +69,7 @@ static int test_lift()
 
   memset(&a,0,sizeof(poly));
   sample_iid(&a,uniformbytes);
-  poly_S3_to_Rq(&r1, &a);
+  poly_lift(&r1, &a);
   poly_Rq_to_S3(&r2, &r1);
 
   return 0;

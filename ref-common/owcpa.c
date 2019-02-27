@@ -152,7 +152,7 @@ void owcpa_enc(unsigned char *c,
   poly_Rq_mul(ct, r, h);
 
   poly_S3_frombytes(m, rm+NTRU_PACK_TRINARY_BYTES);
-  poly_S3_to_Rq(liftm, m);
+  poly_lift(liftm, m);
   for(i=0; i<NTRU_N; i++)
     ct->coeffs[i] = MODQ(ct->coeffs[i] + liftm->coeffs[i]);
 
@@ -190,7 +190,7 @@ int owcpa_dec(unsigned char *rm,
   fail |= owcpa_check_m(m);
 
   /* b = c - Lift(m) mod (q, x^n - 1) */
-  poly_S3_to_Rq(liftm, m);
+  poly_lift(liftm, m);
   for(i=0; i<NTRU_N; i++)
     b->coeffs[i] = MODQ(c->coeffs[i] - liftm->coeffs[i]);
 

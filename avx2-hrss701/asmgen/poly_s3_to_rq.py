@@ -116,10 +116,10 @@ if __name__ == '__main__':
         p(".word 0")
 
     p(".text")
-    p(".global poly_S3_to_Rq")
+    p(".global poly_lift")
     p(".att_syntax prefix")
 
-    p("poly_S3_to_Rq:")
+    p("poly_lift:")
 
     p("mov %rsp, %r8")  # Use r8 to store the old stack pointer during execution.
     p("andq $-32, %rsp")  # Align rsp to the next 32-byte value, for vmovdqa.

@@ -20,7 +20,7 @@ void poly_S3_frombytes(poly *r, const unsigned char msg[NTRU_PACK_TRINARY_BYTES]
 void poly_Rq_mul(poly *r, const poly *a, const poly *b);
 void poly_Rq_mul_x_minus_1(poly *r, const poly *a);
 void poly_S3_mul(poly *r, const poly *a, const poly *b);
-void poly_S3_to_Rq(poly *r, const poly *a);
+void poly_lift(poly *r, const poly *a);
 void poly_Rq_to_S3(poly *r, const poly *a);
 
 void poly_Rq_inv(poly *r, const poly *a);

@@ -7,7 +7,7 @@ extern void poly_S3_mul(poly *r, const poly *a, const poly *b);
 extern void poly_Rq_mul_x_minus_1(poly *r, const poly *a);
 extern void poly_S3_inv(poly *r, const poly *a);
 extern void poly_Rq_to_S3(poly *r, const poly *a);
-extern void poly_S3_to_Rq(poly *r, const poly *a);
+extern void poly_lift(poly *r, const poly *a);
 
 uint16_t mod3(uint16_t a)
 {

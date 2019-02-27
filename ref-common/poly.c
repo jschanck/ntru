@@ -77,7 +77,7 @@ void poly_Rq_mul_x_minus_1(poly *r, const poly *a)
 }
 
 #ifdef NTRU_HPS
-void poly_S3_to_Rq(poly *r, const poly *a)
+void poly_lift(poly *r, const poly *a)
 {
   int i;
   for(i=0; i<NTRU_N; i++)
@@ -87,7 +87,7 @@ void poly_S3_to_Rq(poly *r, const poly *a)
 #endif
 
 #ifdef NTRU_HRSS
-void poly_S3_to_Rq(poly *r, const poly *a)
+void poly_lift(poly *r, const poly *a)
 {
   /* NOTE: Assumes input is in {0,1,2}^N */
   /*       Produces output in [0,Q-1]^N */

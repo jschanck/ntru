@@ -164,9 +164,9 @@ int main()
   for(i=0; i<NTESTS; i++)
   {
     t[i] = cpucycles();
-    poly_S3_to_Rq(&a, &b);
+    poly_lift(&a, &b);
   }
-  print_results("poly_S3_to_Rq: ", t, NTESTS);
+  print_results("poly_lift: ", t, NTESTS);
 
   for(i=0; i<NTESTS; i++)
   {
