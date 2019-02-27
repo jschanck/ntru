@@ -1,1 +1,1 @@
-../ref-common/hrss_dpke.c
+../ref-common/owcpa.c
