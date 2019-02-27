@@ -1,6 +1,8 @@
 #ifndef PARAMS_H
 #define PARAMS_H
 
+#define NTRU_HPS
+
 /* New parameter sets need the following three values. */
 /* The rest of the parameters are derived from these.  */
 
@@ -17,11 +19,13 @@
 #define NTRU_PRFKEYBYTES     32
 #define NTRU_SHAREDKEYBYTES  32
 #define NTRU_DOMAINBYTES     8
-#define NTRU_S3_IID_BYTES    (NTRU_N-1)
-#define NTRU_S3_FT_BYTES     (4*NTRU_N-4)
 
-#define NTRU_DOMAIN_KEY ((unsigned char *) "samplefg")
-#define NTRU_DOMAIN_MSG ((unsigned char *) "samplerm")
+#define NTRU_SAMPLE_IID_BYTES  (NTRU_N-1)
+#define NTRU_SAMPLE_FT_BYTES   (4*NTRU_N-4)
+#define NTRU_SAMPLE_FG_BYTES   (NTRU_SAMPLE_IID_BYTES+NTRU_SAMPLE_FT_BYTES)
+#define NTRU_SAMPLE_RM_BYTES   (NTRU_SAMPLE_IID_BYTES+NTRU_SAMPLE_FT_BYTES)
+#define NTRU_SAMPLE_DOMAIN_KEY ((unsigned char *) "samplefg")
+#define NTRU_SAMPLE_DOMAIN_MSG ((unsigned char *) "samplerm")
 
 #define NTRU_PACK_DEG (NTRU_N-1)
 #define NTRU_PACK_TRINARY_BYTES    ((NTRU_PACK_DEG+4)/5)
