@@ -10,7 +10,7 @@ int main(void)
   int p1 = 0;
   int m1 = 0;
 
-  unsigned char uniformbytes[NTRU_S3_FT_BYTES];
+  unsigned char uniformbytes[NTRU_SAMPLE_FT_BYTES];
   randombytes(uniformbytes, sizeof(uniformbytes));
 
   poly a;

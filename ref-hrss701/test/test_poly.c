@@ -35,7 +35,7 @@ static int test_sample_plus(const unsigned char seed[NTRU_SEEDBYTES], const unsi
   int pos_a, neg_a, zero_a;
   int pos_b, neg_b, zero_b;
 
-  unsigned char uniformbytes[NTRU_S3_IID_BYTES];
+  unsigned char uniformbytes[NTRU_SAMPLE_IID_BYTES];
   unsigned char domain[NTRU_DOMAINBYTES] = {0};
   domain[0] = nonce;
 
@@ -83,7 +83,7 @@ static int test_all_sample_plus_cases()
   int pos_a, neg_a, zero_a;
   unsigned char seed[NTRU_SEEDBYTES] = {0};
   unsigned char domain[NTRU_DOMAINBYTES] = {0};
-  unsigned char uniformbytes[NTRU_S3_IID_BYTES];
+  unsigned char uniformbytes[NTRU_SAMPLE_IID_BYTES];
 
   seed[0] = 3;
   domain[0] = 1;

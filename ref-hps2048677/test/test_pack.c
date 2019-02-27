@@ -26,7 +26,7 @@ int main(void)
   unsigned char p2[NTRU_PACK_TRINARY_BYTES];
   poly a, b, c;
 
-  unsigned char uniformbytes[NTRU_S3_IID_BYTES];
+  unsigned char uniformbytes[NTRU_SAMPLE_IID_BYTES];
   randombytes(uniformbytes, sizeof(uniformbytes));
 
   sample_iid(&c,uniformbytes);
