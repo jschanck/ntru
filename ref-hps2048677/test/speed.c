@@ -136,14 +136,14 @@ int main()
   for(i=0; i<NTESTS; i++)
   {
     t[i] = cpucycles();
-    sample_xof(uniformbytes, NTRU_SAMPLE_IID_BYTES, seed, NTRU_SAMPLE_DOMAIN_KEY);
+    sample_xof(uniformbytes, NTRU_SAMPLE_IID_BYTES, seed);
   }
   print_results("sample_xof (for iid poly_S3): ", t, NTESTS);
 
   for(i=0; i<NTESTS; i++)
   {
     t[i] = cpucycles();
-    sample_xof(uniformbytes, NTRU_SAMPLE_FT_BYTES, seed, NTRU_SAMPLE_DOMAIN_KEY);
+    sample_xof(uniformbytes, NTRU_SAMPLE_FT_BYTES, seed);
   }
   print_results("sample_xof (for fixed type poly_S3): ", t, NTESTS);
 

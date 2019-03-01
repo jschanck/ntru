@@ -2,17 +2,9 @@
 #include "crypto_sort.h"
 #include "fips202.h"
 
-void sample_xof(unsigned char *output, const size_t sizeof_output, const unsigned char seed[NTRU_SEEDBYTES], const unsigned char domain[NTRU_DOMAINBYTES])
+void sample_xof(unsigned char *output, const size_t sizeof_output, const unsigned char seed[NTRU_SEEDBYTES])
 {
-  unsigned char input[NTRU_SEEDBYTES+NTRU_DOMAINBYTES];
-  int i;
-
-  for(i=0;i<NTRU_SEEDBYTES;i++)
-    input[i] = seed[i];
-  for(i=0;i<8;i++)
-    input[NTRU_SEEDBYTES+i] = domain[i];
-
-  shake128(output, sizeof_output, input, sizeof(input));
+  shake128(output, sizeof_output, seed, NTRU_SEEDBYTES);
 }
 
 void sample_fg(poly *f, poly *g, const unsigned char uniformbytes[NTRU_SAMPLE_FG_BYTES])

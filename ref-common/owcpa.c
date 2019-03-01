@@ -56,7 +56,7 @@ void owcpa_samplemsg(unsigned char msg[NTRU_OWCPA_MSGBYTES],
   poly r, m;
 
   unsigned char uniformbytes[NTRU_SAMPLE_RM_BYTES];
-  sample_xof(uniformbytes, sizeof(uniformbytes), seed, NTRU_SAMPLE_DOMAIN_MSG);
+  sample_xof(uniformbytes, sizeof(uniformbytes), seed);
 
   sample_rm(&r, &m, uniformbytes);
 
@@ -79,7 +79,7 @@ void owcpa_keypair(unsigned char *pk,
   poly *invh=&x3, *h=&x3;
 
   unsigned char uniformbytes[NTRU_SAMPLE_FG_BYTES];
-  sample_xof(uniformbytes, sizeof(uniformbytes), seed, NTRU_SAMPLE_DOMAIN_KEY);
+  sample_xof(uniformbytes, sizeof(uniformbytes), seed);
 
   sample_fg(f,g,uniformbytes);
 
