@@ -42,14 +42,6 @@ static int owcpa_check_m(const poly *m)
 }
 #endif
 
-#ifdef NTRU_HRSS
-static int owcpa_check_m(const poly *m)
-{
-  /* All ternary m are valid in hrss */
-  return 0;
-}
-#endif
-
 void owcpa_samplemsg(unsigned char msg[NTRU_OWCPA_MSGBYTES],
                      const unsigned char seed[NTRU_SEEDBYTES])
 {
@@ -186,8 +178,11 @@ int owcpa_dec(unsigned char *rm,
   /* NOTE: For the IND-CCA2 KEM we must ensure that c = Enc(h, (r,m)).       */
   /* We can avoid re-computing r*h + Lift(m) as long as we check that        */
   /* r (defined as b/h mod (q, Phi_n)) and m are in the message space.       */
+  /* (m can take any value in S3 in NTRU_HRSS) */
   fail = 0;
+#ifdef NTRU_HPS
   fail |= owcpa_check_m(m);
+#endif
 
   /* b = c - Lift(m) mod (q, x^n - 1) */
   poly_lift(liftm, m);
