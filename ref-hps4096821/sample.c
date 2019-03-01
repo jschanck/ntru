@@ -1,1 +1,1 @@
-../ref-common/hps_sample.c
+../ref-common/sample.c
