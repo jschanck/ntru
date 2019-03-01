@@ -4,8 +4,7 @@ CFLAGS = -Wall -Wextra -Wpedantic -O3
 SOURCES = poly.c pack3.c packq.c fips202.c randombytes.c sample.c verify.c owcpa.c kem.c
 HEADERS = params.h poly.h randombytes.h sample.h verify.h owcpa.h kem.h
 
-all: test/test_poly \
-     test/test_polymul \
+all: test/test_polymul \
      test/test_ntru \
      test/test_pack \
      test/test_cshake \
@@ -19,9 +18,6 @@ all: test/test_poly \
 
 test/test_polymul: $(SOURCES) $(HEADERS) test/test_polymul.c
 	$(CC) $(CFLAGS) -o $@ $(SOURCES) test/test_polymul.c
-
-test/test_poly: $(SOURCES) $(HEADERS) test/test_poly.c
-	$(CC) $(CFLAGS) -o $@ $(SOURCES) test/test_poly.c
 
 test/test_ntru: $(SOURCES) $(HEADERS) test/test_ntru.c
 	$(CC) $(CFLAGS) -o $@ $(SOURCES) test/test_ntru.c
