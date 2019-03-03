@@ -7,9 +7,9 @@
 // API FUNCTIONS 
 int crypto_kem_keypair(unsigned char *pk, unsigned char *sk)
 {
-  unsigned char seed[NTRU_SEEDBYTES];
+  unsigned char seed[NTRU_SAMPLE_FG_BYTES];
 
-  randombytes(seed, NTRU_SEEDBYTES);
+  randombytes(seed, NTRU_SAMPLE_FG_BYTES);
   owcpa_keypair(pk, sk, seed);
 
   randombytes(sk+NTRU_OWCPA_SECRETKEYBYTES, NTRU_PRFKEYBYTES);
@@ -20,9 +20,9 @@ int crypto_kem_keypair(unsigned char *pk, unsigned char *sk)
 int crypto_kem_enc(unsigned char *c, unsigned char *k, const unsigned char *pk)
 {
   unsigned char rm[NTRU_OWCPA_MSGBYTES];
-  unsigned char rm_seed[NTRU_SEEDBYTES];
+  unsigned char rm_seed[NTRU_SAMPLE_RM_BYTES];
 
-  randombytes(rm_seed, NTRU_SEEDBYTES);
+  randombytes(rm_seed, NTRU_SAMPLE_RM_BYTES);
   owcpa_samplemsg(rm, rm_seed);
 
   shake128(k, NTRU_SHAREDKEYBYTES, rm, NTRU_OWCPA_MSGBYTES);

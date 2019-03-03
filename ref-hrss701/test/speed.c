@@ -56,6 +56,8 @@ int main()
   unsigned char* sks = (unsigned char*) malloc(NTESTS*NTRU_SECRETKEYBYTES);
   unsigned char* cts = (unsigned char*) malloc(NTESTS*NTRU_CIPHERTEXTBYTES);
   unsigned char uniformbytes[2*NTRU_SAMPLE_IID_BYTES];
+  unsigned char fgbytes[NTRU_SAMPLE_FG_BYTES];
+  unsigned char rmbytes[NTRU_SAMPLE_RM_BYTES];
   unsigned char seed[NTRU_SEEDBYTES];
   unsigned long long t[NTESTS];
   uint16_t a1 = 0;
@@ -146,6 +148,21 @@ int main()
     sample_xof(uniformbytes, 2*NTRU_SAMPLE_IID_BYTES, seed);
   }
   print_results("sample_xof (for 2 poly_S3): ", t, NTESTS);
+
+  for(i=0; i<NTESTS; i++)
+  {
+    t[i] = cpucycles();
+    randombytes(fgbytes, NTRU_SAMPLE_FG_BYTES);
+  }
+  print_results("randombytes for fg: ", t, NTESTS);
+
+
+  for(i=0; i<NTESTS; i++)
+  {
+    t[i] = cpucycles();
+    randombytes(rmbytes, NTRU_SAMPLE_RM_BYTES);
+  }
+  print_results("randombytes for rm: ", t, NTESTS);
 
   for(i=0; i<NTESTS; i++)
   {
