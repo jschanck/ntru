@@ -1,11 +1,6 @@
 #include "sample.h"
 #include "fips202.h"
 
-void sample_xof(unsigned char *output, const size_t sizeof_output, const unsigned char seed[NTRU_SEEDBYTES])
-{
-  shake128(output, sizeof_output, seed, NTRU_SEEDBYTES);
-}
-
 void sample_fg(poly *f, poly *g, const unsigned char uniformbytes[NTRU_SAMPLE_FG_BYTES])
 {
 #ifdef NTRU_HRSS
