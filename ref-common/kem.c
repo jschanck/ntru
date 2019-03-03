@@ -25,7 +25,7 @@ int crypto_kem_enc(unsigned char *c, unsigned char *k, const unsigned char *pk)
   randombytes(rm_seed, NTRU_SAMPLE_RM_BYTES);
   owcpa_samplemsg(rm, rm_seed);
 
-  shake128(k, NTRU_SHAREDKEYBYTES, rm, NTRU_OWCPA_MSGBYTES);
+  sha3_256(k, rm, NTRU_OWCPA_MSGBYTES);
 
   owcpa_enc(c, rm, pk);
 
@@ -43,14 +43,14 @@ int crypto_kem_dec(unsigned char *k, const unsigned char *c, const unsigned char
   /* If fail = 0 then c = Enc(h, rm), there is no need to re-encapsulate. */
   /* See comment in owcpa_dec for details.                                */
 
-  shake128(k, NTRU_SHAREDKEYBYTES, rm, NTRU_OWCPA_MSGBYTES);
+  sha3_256(k, rm, NTRU_OWCPA_MSGBYTES);
 
   /* shake(secret PRF key || input ciphertext) */
   for(i=0;i<NTRU_PRFKEYBYTES;i++)
     buf[i] = sk[i+NTRU_OWCPA_SECRETKEYBYTES];
   for(i=0;i<NTRU_CIPHERTEXTBYTES;i++)
     cmp[i] = c[i];
-  shake128(rm, NTRU_SHAREDKEYBYTES, cmp, NTRU_PRFKEYBYTES+NTRU_CIPHERTEXTBYTES);
+  sha3_256(rm, cmp, NTRU_PRFKEYBYTES+NTRU_CIPHERTEXTBYTES);
 
   cmov(k, rm, NTRU_SHAREDKEYBYTES, fail);
 

@@ -7,8 +7,6 @@ HEADERS = params.h poly.h randombytes.h sample.h verify.h owcpa.h kem.h
 all: test/test_polymul \
      test/test_ntru \
      test/test_pack \
-     test/test_cshake \
-     test/test_shake \
      test/ram \
      test/speed \
      test/encap \
