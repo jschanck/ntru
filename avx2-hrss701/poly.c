@@ -41,6 +41,13 @@ void poly_trinary_Zq_to_Z3(poly *r)
     r->coeffs[i] = 3 & (r->coeffs[i] ^ (r->coeffs[i]>>(NTRU_LOGQ-1)));
 }
 
+void poly_Sq_mul(poly *r, const poly *a, const poly *b)
+{
+  int i;
+  poly_Rq_mul(r, a, b);
+  for(i=0; i<NTRU_N; i++)
+    r->coeffs[i] = MODQ(r->coeffs[i] - r->coeffs[NTRU_N-1]);
+}
 
 static void poly_R2_inv_to_Rq_inv(poly *r, const poly *ai, const poly *a)
 {

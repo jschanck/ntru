@@ -49,6 +49,14 @@ void poly_Rq_mul(poly *r, const poly *a, const poly *b)
   }
 }
 
+void poly_Sq_mul(poly *r, const poly *a, const poly *b)
+{
+  int i;
+  poly_Rq_mul(r, a, b);
+  for(i=0; i<NTRU_N; i++)
+    r->coeffs[i] = MODQ(r->coeffs[i] - r->coeffs[NTRU_N-1]);
+}
+
 void poly_S3_mul(poly *r, const poly *a, const poly *b)
 {
   int k,i;

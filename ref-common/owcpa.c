@@ -100,16 +100,11 @@ void owcpa_keypair(unsigned char *pk,
   poly_Rq_inv(invGf, Gf);
 
   poly_Rq_mul(tmp, invGf, f);
-  poly_Rq_mul(invh, tmp, f);
-
-  for(i=0; i<NTRU_N; i++)
-    invh->coeffs[i] = MODQ(invh->coeffs[i] - invh->coeffs[NTRU_N-1]);
-
+  poly_Sq_mul(invh, tmp, f);
   poly_Sq_tobytes(sk+2*NTRU_PACK_TRINARY_BYTES, invh);
 
   poly_Rq_mul(tmp, invGf, G);
   poly_Rq_mul(h, tmp, G);
-
   poly_Rq_sum_zero_tobytes(pk, h);
 }
 
@@ -179,9 +174,7 @@ int owcpa_dec(unsigned char *rm,
 
   /* r = b / h mod (q, Phi_n) */
   poly_Sq_frombytes(invh, secretkey+2*NTRU_PACK_TRINARY_BYTES);
-  poly_Rq_mul(r, b, invh);
-  for(i=0; i<NTRU_N; i++)
-    r->coeffs[i] = MODQ(r->coeffs[i] - r->coeffs[NTRU_N-1]);
+  poly_Sq_mul(r, b, invh);
 
   /* NOTE: Our definition of r as b/h mod (q, Phi_n) follows Figure 4 of     */
   /*   [Sch18] https://eprint.iacr.org/2018/1174/20181203:032458.            */
