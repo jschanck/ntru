@@ -11,6 +11,10 @@ typedef struct{
   uint16_t coeffs[NTRU_N];
 } poly;
 
+
+void poly_Sq_tobytes(unsigned char *r, const poly *a);
+void poly_Sq_frombytes(poly *r, const unsigned char *a);
+
 void poly_Rq_sum_zero_tobytes(unsigned char *r, const poly *a);
 void poly_Rq_sum_zero_frombytes(poly *r, const unsigned char *a);
 

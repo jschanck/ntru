@@ -61,7 +61,6 @@ void owcpa_keypair(unsigned char *pk,
                    const unsigned char seed[NTRU_SEEDBYTES])
 {
   int i;
-  uint16_t t;
 
   poly x1, x2, x3, x4, x5;
 
@@ -103,21 +102,10 @@ void owcpa_keypair(unsigned char *pk,
   poly_Rq_mul(tmp, invGf, f);
   poly_Rq_mul(invh, tmp, f);
 
-  /* We really only need invh mod (q, Phi_n), but we  */
-  /* don't have a dedicated encoding routine for      */
-  /* arbitrary degree 699 polynomials. We do have an  */
-  /* encoding routine for degree 700 polynomials with */
-  /* coefficients that sum to 0 (which uses the same  */
-  /* amount of space). So we'll just add a multiple   */
-  /* of Phi_n and use the existing routine.           */
-  t=0;
   for(i=0; i<NTRU_N; i++)
-    t = t + invh->coeffs[i];
-  t = MODQ(t*NTRU_N_INVERSE_MOD_Q);
-  for(i=0; i<NTRU_N; i++)
-    invh->coeffs[i] = MODQ(invh->coeffs[i] - t);
+    invh->coeffs[i] = MODQ(invh->coeffs[i] - invh->coeffs[NTRU_N-1]);
 
-  poly_Rq_sum_zero_tobytes(sk+2*NTRU_PACK_TRINARY_BYTES, invh);
+  poly_Sq_tobytes(sk+2*NTRU_PACK_TRINARY_BYTES, invh);
 
   poly_Rq_mul(tmp, invGf, G);
   poly_Rq_mul(h, tmp, G);
@@ -190,7 +178,7 @@ int owcpa_dec(unsigned char *rm,
     b->coeffs[i] = MODQ(c->coeffs[i] - liftm->coeffs[i]);
 
   /* r = b / h mod (q, Phi_n) */
-  poly_Rq_sum_zero_frombytes(invh, secretkey+2*NTRU_PACK_TRINARY_BYTES);
+  poly_Sq_frombytes(invh, secretkey+2*NTRU_PACK_TRINARY_BYTES);
   poly_Rq_mul(r, b, invh);
   for(i=0; i<NTRU_N; i++)
     r->coeffs[i] = MODQ(r->coeffs[i] - r->coeffs[NTRU_N-1]);

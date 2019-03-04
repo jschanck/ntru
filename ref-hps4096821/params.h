@@ -8,7 +8,6 @@
 
 #define NTRU_N 821
 #define NTRU_LOGQ 12
-#define NTRU_N_INVERSE_MOD_Q 1821
 
 /**/
 

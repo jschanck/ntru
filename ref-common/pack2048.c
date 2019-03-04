@@ -1,6 +1,6 @@
 #include "poly.h"
 
-void poly_Rq_sum_zero_tobytes(unsigned char *r, const poly *a)
+void poly_Sq_tobytes(unsigned char *r, const poly *a)
 {
   int i,j;
   uint16_t t[8];
@@ -47,7 +47,7 @@ void poly_Rq_sum_zero_tobytes(unsigned char *r, const poly *a)
   }
 }
 
-void poly_Rq_sum_zero_frombytes(poly *r, const unsigned char *a)
+void poly_Sq_frombytes(poly *r, const unsigned char *a)
 {
   int i;
   for(i=0;i<NTRU_PACK_DEG/8;i++)
@@ -75,6 +75,18 @@ void poly_Rq_sum_zero_frombytes(poly *r, const unsigned char *a)
       r->coeffs[8*i+1] = (a[11*i+ 1] >> 3) | (((uint16_t)a[11*i+ 2] & 0x3f) << 5);
       r->coeffs[8*i+0] = (a[11*i+ 0] >> 0) | (((uint16_t)a[11*i+ 1] & 0x07) << 8);
   }
+}
+
+void poly_Rq_sum_zero_tobytes(unsigned char *r, const poly *a)
+{
+  poly_Sq_tobytes(r, a);
+}
+
+void poly_Rq_sum_zero_frombytes(poly *r, const unsigned char *a)
+{
+  int i;
+  poly_Sq_frombytes(r,a);
+
   /* Set r[n-1] so that the sum of coefficients is zero mod q */
   r->coeffs[NTRU_N-1] = 0;
   for(i=0;i<NTRU_PACK_DEG;i++)
