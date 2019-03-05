@@ -55,8 +55,8 @@ int main()
   unsigned char* pks = (unsigned char*) malloc(NTESTS*NTRU_PUBLICKEYBYTES);
   unsigned char* sks = (unsigned char*) malloc(NTESTS*NTRU_SECRETKEYBYTES);
   unsigned char* cts = (unsigned char*) malloc(NTESTS*NTRU_CIPHERTEXTBYTES);
-  unsigned char uniformbytes[2*NTRU_SAMPLE_IID_BYTES+NTRU_SAMPLE_FT_BYTES];
-  unsigned char seed[NTRU_SEEDBYTES];
+  unsigned char fgbytes[NTRU_SAMPLE_FG_BYTES];
+  unsigned char rmbytes[NTRU_SAMPLE_RM_BYTES];
   unsigned long long t[NTESTS];
   uint16_t a1 = 0;
   int i;
@@ -87,9 +87,8 @@ int main()
 
   printf("-- internals --\n\n");
 
-  randombytes(uniformbytes, sizeof(uniformbytes));
-  sample_iid(&a, uniformbytes);
-  sample_iid(&b, uniformbytes+NTRU_SAMPLE_IID_BYTES);
+  randombytes(fgbytes, sizeof(fgbytes));
+  sample_fg(&a, &b, fgbytes);
   poly_Z3_to_Zq(&a);
   poly_Z3_to_Zq(&b);
 
@@ -136,30 +135,42 @@ int main()
   for(i=0; i<NTESTS; i++)
   {
     t[i] = cpucycles();
-    sample_xof(uniformbytes, NTRU_SAMPLE_IID_BYTES, seed);
+    randombytes(fgbytes, NTRU_SAMPLE_FG_BYTES);
   }
-  print_results("sample_xof (for iid poly_S3): ", t, NTESTS);
+  print_results("randombytes for fg: ", t, NTESTS);
+
 
   for(i=0; i<NTESTS; i++)
   {
     t[i] = cpucycles();
-    sample_xof(uniformbytes, NTRU_SAMPLE_FT_BYTES, seed);
+    randombytes(rmbytes, NTRU_SAMPLE_RM_BYTES);
   }
-  print_results("sample_xof (for fixed type poly_S3): ", t, NTESTS);
+  print_results("randombytes for rm: ", t, NTESTS);
 
   for(i=0; i<NTESTS; i++)
   {
     t[i] = cpucycles();
-    sample_iid(&a, uniformbytes);
+    sample_iid(&a, fgbytes);
   }
   print_results("sample_iid: ", t, NTESTS);
 
+#ifdef NTRU_HRSS
   for(i=0; i<NTESTS; i++)
   {
     t[i] = cpucycles();
-    sample_fixed_type(&a, uniformbytes);
+    sample_iid_plus(&a, fgbytes);
+  }
+  print_results("sample_iid_plus: ", t, NTESTS);
+#endif
+
+#ifdef NTRU_HPS
+  for(i=0; i<NTESTS; i++)
+  {
+    t[i] = cpucycles();
+    sample_fixed_type(&a, fgbytes);
   }
   print_results("sample_fixed_type: ", t, NTESTS);
+#endif
 
   for(i=0; i<NTESTS; i++)
   {
