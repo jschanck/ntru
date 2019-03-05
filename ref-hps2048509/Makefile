@@ -8,8 +8,6 @@ all: test/test_poly \
      test/test_polymul \
      test/test_ntru \
      test/test_pack \
-     test/test_cshake \
-     test/test_shake \
      test/ram \
      test/speed \
      test/encap \
