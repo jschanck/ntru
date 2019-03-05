@@ -20,7 +20,6 @@ OBJS += poly_s3_inv.s poly_rq_to_s3.s poly_s3_to_rq.s
 all: test/test_polymul \
      test/test_ntru \
      test/test_pack \
-     test/test_cshake \
      test/speed \
      test/ram \
      test/encap \
