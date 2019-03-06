@@ -4,8 +4,7 @@ CFLAGS = -Wall -Wextra -Wpedantic -O3
 SOURCES = crypto_sort.c poly.c pack3.c packq.c fips202.c randombytes.c sample.c verify.c owcpa.c kem.c
 HEADERS = crypto_sort.h params.h poly.h randombytes.h sample.h verify.h owcpa.h kem.h
 
-all: test/test_poly \
-     test/test_polymul \
+all: test/test_polymul \
      test/test_ntru \
      test/test_pack \
      test/ram \
@@ -17,9 +16,6 @@ all: test/test_poly \
 
 test/test_polymul: $(SOURCES) $(HEADERS) test/test_polymul.c
 	$(CC) $(CFLAGS) -o $@ $(SOURCES) test/test_polymul.c
-
-test/test_poly: $(SOURCES) $(HEADERS) test/test_poly.c
-	$(CC) $(CFLAGS) -o $@ $(SOURCES) test/test_poly.c
 
 test/test_ntru: $(SOURCES) $(HEADERS) test/test_ntru.c
 	$(CC) $(CFLAGS) -o $@ $(SOURCES) test/test_ntru.c
@@ -48,7 +44,6 @@ test/keypair: $(SOURCES) $(HEADERS) test/keypair.c
 .PHONY: clean test
 
 test:
-	./test/test_poly
 	./test/test_polymul
 	./test/test_ntru
 	./test/test_pack
@@ -57,7 +52,6 @@ test:
 
 clean:
 	-$(RM) *.o
-	-$(RM) -r test/test_poly
 	-$(RM) -r test/test_polymul
 	-$(RM) -r test/test_ntru
 	-$(RM) -r test/test_pack

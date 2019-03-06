@@ -44,7 +44,6 @@ test/keypair: $(SOURCES) $(HEADERS) test/keypair.c
 .PHONY: clean test
 
 test:
-	./test/test_poly
 	./test/test_polymul
 	./test/test_ntru
 	./test/test_pack
@@ -53,7 +52,6 @@ test:
 
 clean:
 	-$(RM) *.o
-	-$(RM) -r test/test_poly
 	-$(RM) -r test/test_polymul
 	-$(RM) -r test/test_ntru
 	-$(RM) -r test/test_pack
