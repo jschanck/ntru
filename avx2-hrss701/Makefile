@@ -69,9 +69,6 @@ test/speed: $(SOURCES) $(OBJS) $(HEADERS) cpucycles.h cpucycles.c test/speed.c
 test/speed_r2_inv: $(SOURCES) $(OBJS) $(HEADERS) cpucycles.h cpucycles.c test/speed_r2_inv.c
 	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(OBJS) cpucycles.c test/speed_r2_inv.c
 
-test/test_cshake: fips202.h fips202.c test/test_cshake.c
-	$(CC) $(CFLAGS) -o $@ fips202.c test/test_cshake.c
-
 test/encap: $(SOURCES) $(OBJS) $(HEADERS) test/encap.c
 	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(OBJS) test/encap.c
 
@@ -90,7 +87,6 @@ test:
 	./test/test_polymul
 	./test/test_ntru
 	./test/test_pack
-	./test/test_cshake
 	./test/speed
 	./test/speed_r2_inv
 
@@ -102,7 +98,6 @@ clean:
 	-$(RM) -r test/test_polymul
 	-$(RM) -r test/test_ntru
 	-$(RM) -r test/test_pack
-	-$(RM) -r test/test_cshake
 	-$(RM) -r test/speed
 	-$(RM) -r test/ram
 	-$(RM) -r test/encap

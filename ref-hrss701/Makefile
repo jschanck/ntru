@@ -29,12 +29,6 @@ test/speed: $(SOURCES) $(HEADERS) cpucycles.h cpucycles.c test/speed.c
 test/ram: $(SOURCES) $(OBJS) $(HEADERS) test/ram.c
 	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(OBJS) test/ram.c
 
-test/test_cshake: fips202.h fips202.c test/test_cshake.c
-	$(CC) $(CFLAGS) -o $@ fips202.c test/test_cshake.c
-
-test/test_shake: fips202.h fips202.c test/test_shake.c
-	$(CC) $(CFLAGS) -o $@ fips202.c test/test_shake.c
-
 test/gen_owcpa_vecs: test/gen_owcpa_vecs.c
 	$(CC) $(CFLAGS) -o $@ $(SOURCES) test/gen_owcpa_vecs.c
 
@@ -54,8 +48,6 @@ test:
 	./test/test_polymul
 	./test/test_ntru
 	./test/test_pack
-	./test/test_cshake
-	./test/test_shake
 	./test/speed
 	./test/ram
 
@@ -65,8 +57,6 @@ clean:
 	-$(RM) -r test/test_polymul
 	-$(RM) -r test/test_ntru
 	-$(RM) -r test/test_pack
-	-$(RM) -r test/test_cshake
-	-$(RM) -r test/test_shake
 	-$(RM) -r test/speed
 	-$(RM) -r test/ram
 	-$(RM) -r test/encap
