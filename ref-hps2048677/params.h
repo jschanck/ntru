@@ -2,14 +2,10 @@
 #define PARAMS_H
 
 #define NTRU_HPS
-
-/* New parameter sets need the following three values. */
-/* The rest of the parameters are derived from these.  */
-
 #define NTRU_N 677
 #define NTRU_LOGQ 11
 
-/**/
+/* Do not modify below this line */
 
 #define NTRU_Q (1 << NTRU_LOGQ)
 #define NTRU_WEIGHT (NTRU_Q/8 - 2)

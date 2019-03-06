@@ -2,14 +2,10 @@
 #define PARAMS_H
 
 #define NTRU_HRSS
-
-/* New parameter sets need the following three values. */
-/* The rest of the parameters are derived from these.  */
-
 #define NTRU_N 701
 #define NTRU_LOGQ 13
 
-/**/
+/* Do not modify below this line */
 
 #define NTRU_Q (1 << NTRU_LOGQ)
 
