@@ -72,16 +72,24 @@ void sample_iid_plus(poly *r, const unsigned char uniformbytes[NTRU_SAMPLE_IID_B
 #include "crypto_sort.h"
 void sample_fixed_type(poly *r, const unsigned char u[NTRU_SAMPLE_FT_BYTES])
 {
-  // XXX: Assumes NTRU_SAMPLE_FT_BYTES = 4*N - 4.
+  // Assumes NTRU_SAMPLE_FT_BYTES = ceil(30*(n-1)/8)
 
   int32_t s[NTRU_N-1];
   int i;
 
-  for (i = 0; i < NTRU_N-1; i++)
+  // Use 30 bits of u per word
+  for (i = 0; i < (NTRU_N-1)/4; i++)
   {
-    s[i] = u[4*i+0] + (u[4*i+1] << 8) + (u[4*i+2] << 16) + (u[4*i+3] << 24);
-    s[i] &= -4;
+    s[4*i+0] =                              (u[16*i+ 0] << 2) + (u[16*i+ 1] << 10) + (u[16*i+ 2] << 18) + (u[16*i+ 3] << 26);
+    s[4*i+1] = ((u[16*i+ 3] & 0xc0) >> 4) + (u[16*i+ 4] << 4) + (u[16*i+ 5] << 12) + (u[16*i+ 6] << 20) + (u[16*i+ 7] << 28);
+    s[4*i+2] = ((u[16*i+ 7] & 0xf0) >> 2) + (u[16*i+ 8] << 6) + (u[16*i+ 9] << 14) + (u[16*i+10] << 22) + (u[16*i+11] << 30);
+    s[4*i+3] =  (u[16*i+11] & 0xfc)       + (u[16*i+12] << 8) + (u[16*i+13] << 16) + (u[16*i+14] << 24);
   }
+#if (NTRU_N - 1) > ((NTRU_N - 1) / 4) * 4 // (N-1) = 2 mod 4
+  i = (NTRU_N-1)/4;
+  s[4*i+0] =                              (u[16*i+ 0] << 2) + (u[16*i+ 1] << 10) + (u[16*i+ 2] << 18) + (u[16*i+ 3] << 26);
+  s[4*i+1] = ((u[16*i+ 3] & 0xc0) >> 4) + (u[16*i+ 4] << 4) + (u[16*i+ 5] << 12) + (u[16*i+ 6] << 20) + (u[16*i+ 7] << 28);
+#endif
 
   for (i = 0; i<NTRU_WEIGHT/2; i++) s[i] |=  1;
 
