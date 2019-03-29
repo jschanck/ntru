@@ -1,0 +1,1 @@
+../ref-common/PQCgenKAT_kem.c
