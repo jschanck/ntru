@@ -37,7 +37,6 @@ int crypto_kem_dec(unsigned char *k, const unsigned char *c, const unsigned char
   int i, fail;
   unsigned char rm[NTRU_OWCPA_MSGBYTES];
   unsigned char buf[NTRU_PRFKEYBYTES+NTRU_CIPHERTEXTBYTES];
-  unsigned char *cmp = buf+NTRU_PRFKEYBYTES;
 
   fail = owcpa_dec(rm, c, sk);
   /* If fail = 0 then c = Enc(h, rm), there is no need to re-encapsulate. */
@@ -49,8 +48,8 @@ int crypto_kem_dec(unsigned char *k, const unsigned char *c, const unsigned char
   for(i=0;i<NTRU_PRFKEYBYTES;i++)
     buf[i] = sk[i+NTRU_OWCPA_SECRETKEYBYTES];
   for(i=0;i<NTRU_CIPHERTEXTBYTES;i++)
-    cmp[i] = c[i];
-  sha3_256(rm, cmp, NTRU_PRFKEYBYTES+NTRU_CIPHERTEXTBYTES);
+    buf[NTRU_PRFKEYBYTES + i] = c[i];
+  sha3_256(rm, buf, NTRU_PRFKEYBYTES+NTRU_CIPHERTEXTBYTES);
 
   cmov(k, rm, NTRU_SHAREDKEYBYTES, fail);
 
