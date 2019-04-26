@@ -16,7 +16,7 @@ all: test/test_polymul \
      test/keypair \
      test/gen_owcpa_vecs
 
-poly_rq_mul.s: asmgen/rq_mul/poly_rq_mul.py asmgen/rq_mul/K2_schoolbook_64x11.py asmgen/rq_mul/K2_K2_64x44.py
+poly_rq_mul.s: asmgen/rq_mul/poly_rq_mul.py asmgen/rq_mul/K2_schoolbook_64x8.py asmgen/rq_mul/K2_K2_64x32.py
 	python3 $^ > $@
 
 %.s: asmgen/%.py

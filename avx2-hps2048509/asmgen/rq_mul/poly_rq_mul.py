@@ -1,25 +1,24 @@
 
-from K2_K2_64x44 import K2_K2_transpose_64x44
+from K2_K2_64x32 import K2_K2_transpose_64x32
 
 p = print
 
-
 def karatsuba_eval(dst, dst_off, coeff, src, t0, t1):
     """ t1 can overlap with any source register, but not t0 """
-    p("vmovdqa %ymm{}, {}({})".format(src[0], (dst_off+3*0+coeff)*32, dst))  # a[0:]
-    p("vmovdqa %ymm{}, {}({})".format(src[1], (dst_off+3*1+coeff)*32, dst))  # a[44:]
+    p("vmovdqa %ymm{}, {}({})".format(src[0], (dst_off+2*0+coeff)*32, dst))  # a[0:]
+    p("vmovdqa %ymm{}, {}({})".format(src[1], (dst_off+2*1+coeff)*32, dst))  # a[32:]
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(src[0], src[1], t0))
-    p("vmovdqa %ymm{}, {}({})".format(t0,     (dst_off+3*2+coeff)*32, dst))  # s1[0:]
-    p("vmovdqa %ymm{}, {}({})".format(src[2], (dst_off+3*3+coeff)*32, dst))  # a[88:]
-    p("vmovdqa %ymm{}, {}({})".format(src[3], (dst_off+3*4+coeff)*32, dst))  # a[132:]
+    p("vmovdqa %ymm{}, {}({})".format(t0,     (dst_off+2*2+coeff)*32, dst))  # s1[0:]
+    p("vmovdqa %ymm{}, {}({})".format(src[2], (dst_off+2*3+coeff)*32, dst))  # a[64:]
+    p("vmovdqa %ymm{}, {}({})".format(src[3], (dst_off+2*4+coeff)*32, dst))  # a[96:]
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(src[2], src[3], t0))
-    p("vmovdqa %ymm{}, {}({})".format(t0,     (dst_off+3*5+coeff)*32, dst))  # s2[0:]
+    p("vmovdqa %ymm{}, {}({})".format(t0,     (dst_off+2*5+coeff)*32, dst))  # s2[0:]
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(src[0], src[2], t0))
-    p("vmovdqa %ymm{}, {}({})".format(t0,     (dst_off+3*6+coeff)*32, dst))  # s0[0:]
+    p("vmovdqa %ymm{}, {}({})".format(t0,     (dst_off+2*6+coeff)*32, dst))  # s0[0:]
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(src[1], src[3], t1))
-    p("vmovdqa %ymm{}, {}({})".format(t1,     (dst_off+3*7+coeff)*32, dst))  # s0[44:]
+    p("vmovdqa %ymm{}, {}({})".format(t1,     (dst_off+2*7+coeff)*32, dst))  # s0[32:]
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(t0, t1, t0))
-    p("vmovdqa %ymm{}, {}({})".format(t0,     (dst_off+3*8+coeff)*32, dst))  # s3[0:]
+    p("vmovdqa %ymm{}, {}({})".format(t0,     (dst_off+2*8+coeff)*32, dst))  # s3[0:]
 
 
 def karatsuba_interpolate(dst, dst_off, src, src_off, coeff):
@@ -28,42 +27,42 @@ def karatsuba_interpolate(dst, dst_off, src, src_off, coeff):
     way to save any high-coefficients results. """
 
     def addr(i, off):
-        return '{}({})'.format((src_off+3*(2*i+off//44)+coeff)*32, src)
+        return '{}({})'.format((src_off+2*(2*i+off//32)+coeff)*32, src)
 
-    r0_44 = 0
-    p("vmovdqa {}, %ymm{}".format(addr(0, 44), r0_44))
-    out0_44 = r0_44
-    p("vpsubw {}, %ymm{}, %ymm{}".format(addr(1, 0), r0_44, out0_44))
-    r2_44 = 1
-    p("vmovdqa {}, %ymm{}".format(addr(2, 44), r2_44))
-    out1_0 = r2_44
-    p("vpsubw %ymm{}, %ymm{}, %ymm{}".format(out0_44, r2_44, out1_0))
-    p("vpsubw {}, %ymm{}, %ymm{}".format(addr(1, 44), out1_0, out1_0))
-    p("vpsubw {}, %ymm{}, %ymm{}".format(addr(0, 0), out0_44, out0_44))
-    p("vpaddw {}, %ymm{}, %ymm{}".format(addr(2, 0), out0_44, out0_44))
+    r0_32 = 0
+    p("vmovdqa {}, %ymm{}".format(addr(0, 32), r0_32))
+    out0_32 = r0_32
+    p("vpsubw {}, %ymm{}, %ymm{}".format(addr(1, 0), r0_32, out0_32))
+    r2_32 = 1
+    p("vmovdqa {}, %ymm{}".format(addr(2, 32), r2_32))
+    out1_0 = r2_32
+    p("vpsubw %ymm{}, %ymm{}, %ymm{}".format(out0_32, r2_32, out1_0))
+    p("vpsubw {}, %ymm{}, %ymm{}".format(addr(1, 32), out1_0, out1_0))
+    p("vpsubw {}, %ymm{}, %ymm{}".format(addr(0, 0), out0_32, out0_32))
+    p("vpaddw {}, %ymm{}, %ymm{}".format(addr(2, 0), out0_32, out0_32))
 
-    r3_44 = 2
-    p("vmovdqa {}, %ymm{}".format(addr(3, 44), r3_44))
-    out2_44 = r3_44
-    p("vpsubw {}, %ymm{}, %ymm{}".format(addr(4, 0), r3_44, out2_44))
-    r5_44 = 3
-    p("vmovdqa {}, %ymm{}".format(addr(5, 44), r5_44))
-    out3_0 = r5_44
-    p("vpsubw %ymm{}, %ymm{}, %ymm{}".format(out2_44, r5_44, out3_0))
-    p("vpsubw {}, %ymm{}, %ymm{}".format(addr(4, 44), out3_0, out3_0))
-    p("vpsubw {}, %ymm{}, %ymm{}".format(addr(3, 0), out2_44, out2_44))
-    p("vpaddw {}, %ymm{}, %ymm{}".format(addr(5, 0), out2_44, out2_44))
+    r3_32 = 2
+    p("vmovdqa {}, %ymm{}".format(addr(3, 32), r3_32))
+    out2_32 = r3_32
+    p("vpsubw {}, %ymm{}, %ymm{}".format(addr(4, 0), r3_32, out2_32))
+    r5_32 = 3
+    p("vmovdqa {}, %ymm{}".format(addr(5, 32), r5_32))
+    out3_0 = r5_32
+    p("vpsubw %ymm{}, %ymm{}, %ymm{}".format(out2_32, r5_32, out3_0))
+    p("vpsubw {}, %ymm{}, %ymm{}".format(addr(4, 32), out3_0, out3_0))
+    p("vpsubw {}, %ymm{}, %ymm{}".format(addr(3, 0), out2_32, out2_32))
+    p("vpaddw {}, %ymm{}, %ymm{}".format(addr(5, 0), out2_32, out2_32))
 
-    r6_44 = 4
-    p("vmovdqa {}, %ymm{}".format(addr(6, 44), r6_44))
-    p("vpsubw {}, %ymm{}, %ymm{}".format(addr(7, 0), r6_44, r6_44))
-    r8_44 = 5
-    p("vmovdqa {}, %ymm{}".format(addr(8, 44), r8_44))
-    r7_0 = r8_44
-    p("vpsubw %ymm{}, %ymm{}, %ymm{}".format(r6_44, r8_44, r7_0))
-    p("vpsubw {}, %ymm{}, %ymm{}".format(addr(7, 44), r7_0, r7_0))
-    p("vpsubw {}, %ymm{}, %ymm{}".format(addr(6, 0), r6_44, r6_44))
-    p("vpaddw {}, %ymm{}, %ymm{}".format(addr(8, 0), r6_44, r6_44))
+    r6_32 = 4
+    p("vmovdqa {}, %ymm{}".format(addr(6, 32), r6_32))
+    p("vpsubw {}, %ymm{}, %ymm{}".format(addr(7, 0), r6_32, r6_32))
+    r8_32 = 5
+    p("vmovdqa {}, %ymm{}".format(addr(8, 32), r8_32))
+    r7_0 = r8_32
+    p("vpsubw %ymm{}, %ymm{}, %ymm{}".format(r6_32, r8_32, r7_0))
+    p("vpsubw {}, %ymm{}, %ymm{}".format(addr(7, 32), r7_0, r7_0))
+    p("vpsubw {}, %ymm{}, %ymm{}".format(addr(6, 0), r6_32, r6_32))
+    p("vpaddw {}, %ymm{}, %ymm{}".format(addr(8, 0), r6_32, r6_32))
 
     p("vpsubw {}, %ymm{}, %ymm{}".format(addr(3, 0), out1_0, out1_0))
     out2_0 = r7_0
@@ -72,46 +71,46 @@ def karatsuba_interpolate(dst, dst_off, src, src_off, coeff):
     p("vpsubw {}, %ymm{}, %ymm{}".format(addr(0, 0), out1_0, out1_0))
     p("vpaddw {}, %ymm{}, %ymm{}".format(addr(6, 0), out1_0, out1_0))
 
-    r1_44 = 6
-    p("vmovdqa {}, %ymm{}".format(addr(1, 44), r1_44))
-    out1_44 = 7
-    p("vpsubw %ymm{}, %ymm{}, %ymm{}".format(out2_44, r1_44, out1_44))
-    r7_44 = out2_44
-    p("vmovdqa {}, %ymm{}".format(addr(7, 44), r7_44))
-    p("vpsubw %ymm{}, %ymm{}, %ymm{}".format(out1_44, r7_44, out2_44))
-    p("vpsubw {}, %ymm{}, %ymm{}".format(addr(4, 44), out2_44, out2_44))
-    p("vpsubw %ymm{}, %ymm{}, %ymm{}".format(out0_44, out1_44, out1_44))
-    p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(r6_44, out1_44, out1_44))
+    r1_32 = 6
+    p("vmovdqa {}, %ymm{}".format(addr(1, 32), r1_32))
+    out1_32 = 7
+    p("vpsubw %ymm{}, %ymm{}, %ymm{}".format(out2_32, r1_32, out1_32))
+    r7_32 = out2_32
+    p("vmovdqa {}, %ymm{}".format(addr(7, 32), r7_32))
+    p("vpsubw %ymm{}, %ymm{}, %ymm{}".format(out1_32, r7_32, out2_32))
+    p("vpsubw {}, %ymm{}, %ymm{}".format(addr(4, 32), out2_32, out2_32))
+    p("vpsubw %ymm{}, %ymm{}, %ymm{}".format(out0_32, out1_32, out1_32))
+    p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(r6_32, out1_32, out1_32))
 
     # TODO can get rid of these by fetching them from the right place during Toom4 eval
     out0_0 = 8
-    out3_44 = 9
+    out3_32 = 9
     p("vmovdqa {}, %ymm{}".format(addr(0, 0), out0_0))
-    p("vmovdqa {}, %ymm{}".format(addr(4, 44), out3_44))
+    p("vmovdqa {}, %ymm{}".format(addr(4, 32), out3_32))
 
     # TODO should move these up in between computations for better pipelining?
     p("vmovdqa %ymm{}, {}({})".format(out0_0,  (dst_off+2*0+0)*32, dst))
-    p("vmovdqa %ymm{}, {}({})".format(out0_44, (dst_off+2*0+1)*32, dst))
+    p("vmovdqa %ymm{}, {}({})".format(out0_32, (dst_off+2*0+1)*32, dst))
     p("vmovdqa %ymm{}, {}({})".format(out1_0,  (dst_off+2*1+0)*32, dst))
-    p("vmovdqa %ymm{}, {}({})".format(out1_44, (dst_off+2*1+1)*32, dst))
+    p("vmovdqa %ymm{}, {}({})".format(out1_32, (dst_off+2*1+1)*32, dst))
     p("vmovdqa %ymm{}, {}({})".format(out2_0,  (dst_off+2*2+0)*32, dst))
-    p("vmovdqa %ymm{}, {}({})".format(out2_44, (dst_off+2*2+1)*32, dst))
+    p("vmovdqa %ymm{}, {}({})".format(out2_32, (dst_off+2*2+1)*32, dst))
     p("vmovdqa %ymm{}, {}({})".format(out3_0,  (dst_off+2*3+0)*32, dst))
-    p("vmovdqa %ymm{}, {}({})".format(out3_44, (dst_off+2*3+1)*32, dst))
+    p("vmovdqa %ymm{}, {}({})".format(out3_32, (dst_off+2*3+1)*32, dst))
 
 
 def idx2off(i):
-    """ Produces [0, 32, 64,   88, 120, 152,   176, 208, 240,   264, 296, 328]
-    These are the byte offsets when dividing into 44-coeff chunks"""
-    return i * 32 - (8 * (i//3))
+    """ Produces [0, 32,   64, 96,   128, 160,   192, 224]
+    These are the byte offsets when dividing into 32-coeff chunks"""
+    return i * 32
 
 
 if __name__ == '__main__':
     p(".data")
     p(".align 32")
 
-    p("mask_low9words:")
-    for i in [65535]*9 + [0]*7:
+    p("mask_low13words:")
+    for i in [65535]*13 + [0]*3:
         p(".word 0x{:x}".format(i))
 
     p("const3:")
@@ -134,7 +133,7 @@ if __name__ == '__main__':
     for i in range(16):
         p(".word 43691")
 
-    p("const5_inv:")  # inverse of 3 mod 2**16
+    p("const5_inv:")  # inverse of 5 mod 2**16
     for i in range(16):
         p(".word 52429")
 
@@ -143,17 +142,9 @@ if __name__ == '__main__':
         for i in range(16):
             p(".byte {}".format((i - 6) % 16))
 
-    p("shuf48_12:")
-    for i in range(16):
-        p(".byte {}".format((i - 6) % 16))
-    for i in range(8):
-        p(".byte 255")
-    for i in range(8):
-        p(".byte {}".format((i - 6) % 8))
-
-    p("shufmin1_mask3:")
+    p("shufmin5_mask3:")
     for i in range(6):
-        p(".byte {}".format((i + 2) % 16))
+        p(".byte {}".format((i + 10) % 16))
     for i in range(26):
         p(".byte 255")
 
@@ -170,24 +161,15 @@ if __name__ == '__main__':
     for i in range(16):
         p(".word {}".format(65535 if i % 8 < 3 else 0))
 
-    p("mask3_5_4_3_1:")
-    for i in range(8):
-        p(".word {}".format(65535 if i % 8 < 3 else 0))
-    for i in range(4):
-        p(".word 0")
-    for i in range(3):
-        p(".word 65535")
-    p(".word 0")
-
     p("mask_keephigh:")
     for i in range(8):
         p(".word 0")
     for i in range(8):
         p(".word 65535")
 
-    p("mask_mod8192:")
+    p("mask_mod2048:")
     for i in range(16):
-        p(".word 8191")
+        p(".word 2047")
 
     p(".text")
     p(".global poly_Rq_mul")
@@ -212,49 +194,49 @@ if __name__ == '__main__':
     p("andq $-32, %rsp")  # Align rsp to the next 32-byte value, for vmovdqa.
 
     # allocate destination block for prepared a
-    p("subq ${}, %rsp".format((64 * 48 // 16) * 32))
+    p("subq ${}, %rsp".format((64 * 32 // 16) * 32))
     p("mov %rsp, {}".format(a_prep))
     # allocate destination block for prepared b
-    p("subq ${}, %rsp".format((64 * 48 // 16) * 32))
+    p("subq ${}, %rsp".format((64 * 32 // 16) * 32))
     p("mov %rsp, {}".format(b_prep))
     # allocate destination block for resulting r
-    p("subq ${}, %rsp".format((64 * 96 // 16) * 32))
+    p("subq ${}, %rsp".format((64 * 64 // 16) * 32))
     p("mov %rsp, {}".format(r_out))
 
     # allocate some space for f0-f3
     p("subq ${}, %rsp".format(16 * 32))
 
     ###### evaluate Toom4 / K2 / K2
-    # think of blocks of 44 coefficients, for karatsuba preparation
-    # we evaluate for first 16 coefficients of each block, then 16, then 12
+    # think of blocks of 32 coefficients, for karatsuba preparation
+    # we evaluate for first 16 coefficients of each block, then 16 remaining coefficients
 
     const_3 = 3
     p("vmovdqa const3, %ymm{}".format(const_3))
 
     for (prep, real) in [(a_prep, a_real), (b_prep, b_real)]:
-        for coeff in range(3):
+        for coeff in range(2):
             f0 = [0, 1, 2, 12]  # we already have const_3 in 3 (keeping it saves 5 loads)
-            # TODO replace vmovdqu with vmovdqa when possible
+            # All of these loads are aligned due to working with 32 coefficients (we can load exactly 16 per loop)
             for i, r in enumerate(f0):
-                p("vmovdqu {}({}), %ymm{}".format(0*11*32+idx2off(i*3+coeff), real, r))
+                p("vmovdqa {}({}), %ymm{}".format(0*8*32+idx2off(i*2+coeff), real, r))
 
             f3 = [4, 5, 6, 7]
             for i, r in enumerate(f3):
-                p("vmovdqu {}({}), %ymm{}".format(3*11*32+idx2off(i*3+coeff), real, r))
-            # there are 701 coefficients, not 704;
-            # mask out the final 7 (3 since of mod 701, and 4 because 44, not 48)
-            if coeff == 2:
-                p("vpand mask_low9words, %ymm{}, %ymm{}".format(f3[3], f3[3]))
+                p("vmovdqa {}({}), %ymm{}".format(3*8*32+idx2off(i*2+coeff), real, r))
+            # there are 509 coefficients, not 512;
+            # mask out the final 3 (because of 512 mod 509)
+            if coeff == 1:
+                p("vpand mask_low13words, %ymm{}, %ymm{}".format(f3[3], f3[3]))
 
-            # retrieve f1 so we can store it in the stack and use for vpadd
+            # retrieve f1 so we can store it on the stack and use for vpadd
             f1 = [8, 9, 10, 11]
             for i, r in enumerate(f1):
-                p("vmovdqu {}({}), %ymm{}".format(1*11*32+idx2off(i*3+coeff), real, r))
+                p("vmovdqa {}({}), %ymm{}".format(1*8*32+idx2off(i*2+coeff), real, r))
 
             t0 = 14
             t1 = 15
-            karatsuba_eval(prep, dst_off=0*9*3, src=f0, t0=t0, t1=t1, coeff=coeff)
-            karatsuba_eval(prep, dst_off=6*9*3, src=f3, t0=t0, t1=t1, coeff=coeff)
+            karatsuba_eval(prep, dst_off=0*9*2, src=f0, t0=t0, t1=t1, coeff=coeff)
+            karatsuba_eval(prep, dst_off=6*9*2, src=f3, t0=t0, t1=t1, coeff=coeff)
 
             # store f0 and f1 so we can use those registers (storing guarantees alignment)
             for i, r in enumerate(f0):
@@ -267,7 +249,7 @@ if __name__ == '__main__':
 
             for i in range(4):
                 f2_i = 0
-                p("vmovdqu {}({}), %ymm{}".format(2*11*32+idx2off(i*3+coeff), real, f2_i))
+                p("vmovdqa {}({}), %ymm{}".format(2*8*32+idx2off(i*2+coeff), real, f2_i))
                 f0f2_i = 1
                 p("vpaddw {}(%rsp), %ymm{}, %ymm{}".format((0*4+i)*32, f2_i, f0f2_i))
                 f1f3_i = 2
@@ -279,8 +261,8 @@ if __name__ == '__main__':
 
             t0 = 0
             t1 = 1
-            karatsuba_eval(prep, dst_off=1*9*3, src=x1, t0=t0, t1=t1, coeff=coeff)
-            karatsuba_eval(prep, dst_off=2*9*3, src=x2, t0=t0, t1=t1, coeff=coeff)
+            karatsuba_eval(prep, dst_off=1*9*2, src=x1, t0=t0, t1=t1, coeff=coeff)
+            karatsuba_eval(prep, dst_off=2*9*2, src=x2, t0=t0, t1=t1, coeff=coeff)
 
             x3 = [8, 9, 10, 11]
             x4 = [12, 13, 14, 15]
@@ -303,8 +285,8 @@ if __name__ == '__main__':
 
             t0 = 0
             t1 = 1
-            karatsuba_eval(prep, dst_off=3*9*3, src=x3, t0=t0, t1=t1, coeff=coeff)
-            karatsuba_eval(prep, dst_off=4*9*3, src=x4, t0=t0, t1=t1, coeff=coeff)
+            karatsuba_eval(prep, dst_off=3*9*2, src=x3, t0=t0, t1=t1, coeff=coeff)
+            karatsuba_eval(prep, dst_off=4*9*2, src=x4, t0=t0, t1=t1, coeff=coeff)
 
             x5 = [12, 13, 14, 15]
 
@@ -321,17 +303,17 @@ if __name__ == '__main__':
                 p("vpmullw %ymm{}, %ymm{}, %ymm{}".format(const_3, f1f2_3f3_9_i, f1_3f2_9f3_27_i))
                 p("vpaddw {}(%rsp), %ymm{}, %ymm{}".format((0*4+i)*32, f1_3f2_9f3_27_i, x5[i]))
 
-            karatsuba_eval(prep, dst_off=5*9*3, src=x5, t0=t0, t1=t1, coeff=coeff)
+            karatsuba_eval(prep, dst_off=5*9*2, src=x5, t0=t0, t1=t1, coeff=coeff)
 
-    K2_K2_transpose_64x44(r_out, a_prep, b_prep)
+    K2_K2_transpose_64x32(r_out, a_prep, b_prep)
 
     ###### interpolate Toom4 / K2 / K2
 
     # we could have probably left something in registers after the transpose
-    #   but that is extremely messy and would've maybe saved ten cycles at most
+    #   but that is extremely messy and would've maybe saved a few cycles at most
 
-    # we get 8 44-bit chunks per interpolated result, of which we have 7;
-    #   (352 / 44 = 8,  3-way sequential over coefficients => 8 registers)
+    # we get 8 32-bit chunks per interpolated result, of which we have 7;
+    #   (256 / 32 = 8,  3-way sequential over coefficients => 8 registers)
     # there are already 16 registers available from f0-f3, so allocate 40 more
     # we also allocate 4x8 registers-worth for the words that drop out of h3,
     #   h4, h5 and h6 during composition / reduction, which need to be added later
@@ -369,14 +351,14 @@ if __name__ == '__main__':
     # consider swapping this around for more closely linked memory access
     # they're somewhat spread around because of how the transpose worked, but
     #   staying sane while incrementally writing/testing this is also important
-    for coeff in range(3):
+    for coeff in range(2):
         for i in range(7):
-            karatsuba_interpolate(dst='%rsp', dst_off=i*4*2, src=r_out, src_off=i*9*6, coeff=coeff)
+            karatsuba_interpolate(dst='%rsp', dst_off=i*4*2, src=r_out, src_off=i*6*6, coeff=coeff)
 
         # after interpolating, we can even go 24-way sequential;
-        # none of the 44-coefficient chunks interact anymore before reduction
+        # none of the 32-coefficient chunks interact anymore before reduction
 
-        for j in range(8): # for each 16 (or 12) coefficient chunk
+        for j in range(8): # for each 16 coefficient chunk
             def limb(i):
                 # TODO see above; for case j in {0, 8}, make an exception
                 return '{}(%rsp)'.format((i*8+j)*32)
@@ -578,36 +560,28 @@ if __name__ == '__main__':
 
             h = [h0, h1, h2, h3, h4, h5, h6]
 
-            # TODO replace vmovdqu with vmovdqa when possible (calculate alignment?)
             def get_limb(limbreg, i, j):
-                p("vmovdqu {}({}), %ymm{}".format((i*176 + j * 44 + coeff*16) * 2, r_real, limbreg))
+                # This is guaranteed to be always aligned since we're dealing with blocks of 32 coefficients
+                p("vmovdqa {}({}), %ymm{}".format((i*128 + j * 32 + coeff*16) * 2, r_real, limbreg))
 
             def store_limb(limbreg, i, j):
-                if coeff == 2:
-                    if i == 3 and j >= 4:  # this part exceeds 704
-                        return
-                    p("vpand mask_mod8192, %ymm{}, %ymm{}".format(limbreg, limbreg))
-                    p("vmovdqu %xmm{}, {}({})".format(limbreg, (i*176 + j * 44 + coeff*16) * 2, r_real))
-                    p("vextracti128 $1, %ymm{}, %xmm{}".format(limbreg, limbreg, limbreg))
-                    p("vmovq %xmm{}, {}({})".format(limbreg, (i*176 + j * 44 + coeff*16 + 8) * 2, r_real))
+                if i == 3 and j >= 4:  # this part exceeds 512
+                    return
+                p("vpand mask_mod2048, %ymm{}, %ymm{}".format(limbreg, limbreg))
+                p("vmovdqa %ymm{}, {}({})".format(limbreg, (i*128 + j * 32 + coeff*16) * 2, r_real))
 
-                    if j == 3:  # these are bits 701 to 704, which we must spill into stack
-                        p("vpshufb shufmin1_mask3, %ymm{}, %ymm{}".format(limbreg, limbreg))
-                        # p("vpand mask3_5_4_3_1, %ymm{}, %ymm{}".format(limbreg, limbreg))
-                        p("vmovdqa %xmm{}, {}(%rsp)".format(limbreg, (compose_offset+0*8+j-(3-i))*32))
-                else:
-                    if i == 3 and j >= 4:  # this part exceeds 704
-                        return
-                    p("vpand mask_mod8192, %ymm{}, %ymm{}".format(limbreg, limbreg))
-                    p("vmovdqu %ymm{}, {}({})".format(limbreg, (i*176 + j * 44 + coeff*16) * 2, r_real))
+                if coeff == 1 and j == 3: # these are bits 509 to 512, which we must spill into stack
+                    p("vextracti128 $1, %ymm{}, %xmm{}".format(limbreg, limbreg, limbreg))
+                    p("vpshufb shufmin5_mask3, %ymm{}, %ymm{}".format(limbreg, limbreg))
+                    p("vmovdqa %xmm{}, {}(%rsp)".format(limbreg, (compose_offset+0*8+j-(3-i))*32))
 
             # these exceptional cases have bits overflowing into two limbs over;
             # 2 bits from h2 go into h0 (wrapped around), h3 into h1, h4 into h2
-            if j == 7 and coeff == 2:
+            if j == 7 and coeff == 1:
                 for i in [2, 3, 4]:
                     tmp = alloc()
                     p("vextracti128 $1, %ymm{}, %xmm{}".format(h[i], tmp))
-                    p("vpshufb shufmin1_mask3, %ymm{}, %ymm{}".format(tmp, tmp))
+                    p("vpshufb shufmin5_mask3, %ymm{}, %ymm{}".format(tmp, tmp))
                     p("vmovdqa %ymm{}, {}(%rsp)".format(tmp, (far_spill_offset+i-2)*32))
                     free(tmp)
 
@@ -625,6 +599,7 @@ if __name__ == '__main__':
 
             if j < 8:
                 for i in range(-1, 3):
+                    #p("val j:{}, val i:{}".format(j,i))
                     if j < 4 and i == -1:
                         # h3 is special; only the high 4 limbs are added to h0.
                         continue
@@ -632,18 +607,11 @@ if __name__ == '__main__':
                     temp2 = alloc()
                     # rotate by 3 words in each lane
                     p("vpshufb shuf48_16, %ymm{}, %ymm{}".format(h[i+4], h[i+4]))
-                    if coeff < 2:
-                        mask = 'mask3_5_3_5'
-                        permutation = '11001110'
-                    elif coeff == 2:
-                        mask = 'mask3_5_4_3_1'
-                        # now '10' is the zero-quadword and 11 contains the 3 words
-                        permutation = '10001011'
-                    p("vpand {}, %ymm{}, %ymm{}".format(mask, h[i+4], temp))
+                    p("vpand {}, %ymm{}, %ymm{}".format('mask3_5_3_5', h[i+4], temp))
                     # clear the 2x 3 words so that they can be added in later
                     p("vpand mask5_3_5_3, %ymm{}, %ymm{}".format(h[i+4], h[i+4]))
                     # grab the 3 words and put into position for adding them in
-                    p("vpermq ${}, %ymm{}, %ymm{}".format(int(permutation, 2), temp, temp))
+                    p("vpermq ${}, %ymm{}, %ymm{}".format(int('11001110', 2), temp, temp))
                     # add in the 3 low words that stay within this 16-word chunk
                     p("vpand mask_keephigh, %ymm{}, %ymm{}".format(temp, temp2))
                     p("vpor %ymm{}, %ymm{}, %ymm{}".format(temp2, h[i+4], h[i+4]))
@@ -685,11 +653,10 @@ if __name__ == '__main__':
             # exception case for two coefficients flowing from h2 into h0, h3 into h1, h4 into h2
             if j == 0 and i in [0, 1, 2]:
                 p("vpaddw {}(%rsp), %ymm{}, %ymm{}".format((far_spill_offset+i)*32, htemp, htemp))
-            p("vpand mask_mod8192, %ymm{}, %ymm{}".format(htemp, htemp))
-            p("vmovdqu %ymm{}, {}({})".format(htemp, (i*176 + j * 44 + coeff*16) * 2, r_real))
+            p("vpand mask_mod2048, %ymm{}, %ymm{}".format(htemp, htemp))
+            p("vmovdqa %ymm{}, {}({})".format(htemp, (i*128 + j * 32 + coeff*16) * 2, r_real))
             free(htemp)
 
     p("mov %r8, %rsp")
     p("pop %r12")  # restore callee-saved r12
     p("ret")
-
