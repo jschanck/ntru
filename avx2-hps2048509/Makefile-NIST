@@ -1,0 +1,16 @@
+CC=/usr/bin/gcc
+CFLAGS=-O3 -fomit-frame-pointer -march=native -no-pie
+LDFLAGS=-lcrypto
+
+SOURCES = crypto_sort.c fips202.c kem.c owcpa.c pack3.c packq.c poly.c sample.c verify.c rng.c PQCgenKAT_kem.c \
+					poly_rq_mul.s
+
+HEADERS = api.h crypto_sort.h fips202.h kem.h poly.h owcpa.h params.h sample.h verify.h rng.h
+
+PQCgenKAT_kem: $(HEADERS) $(SOURCES)
+	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(LDFLAGS)
+
+.PHONY: clean
+
+clean:
+	-rm PQCgenKAT_kem
