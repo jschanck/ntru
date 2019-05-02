@@ -4,6 +4,7 @@
 
 extern void poly_Rq_mul(poly *r, const poly *a, const poly *b);
 extern void poly_S3_mul(poly *r, const poly *a, const poly *b);
+extern void poly_Rq_mul_x_minus_1(poly *r, const poly *a);
 
 uint16_t mod3(uint16_t a)
 {
@@ -43,17 +44,6 @@ void poly_Sq_mul(poly *r, const poly *a, const poly *b)
   poly_Rq_mul(r, a, b);
   for(i=0; i<NTRU_N; i++)
     r->coeffs[i] = MODQ(r->coeffs[i] - r->coeffs[NTRU_N-1]);
-}
-
-void poly_Rq_mul_x_minus_1(poly *r, const poly *a)
-{
-  int i;
-  uint16_t last_coeff = a->coeffs[NTRU_N-1];
-
-  for (i = NTRU_N - 1; i > 0; i--) {
-    r->coeffs[i] = MODQ(a->coeffs[i-1] + (NTRU_Q - a->coeffs[i]));
-  }
-  r->coeffs[0] = MODQ(last_coeff + (NTRU_Q - a->coeffs[0]));
 }
 
 #ifdef NTRU_HPS
