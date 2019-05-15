@@ -1,10 +1,10 @@
 CC = /usr/bin/cc
 CFLAGS = -Wall -Wextra -Wpedantic -O3 -fomit-frame-pointer -march=native -no-pie
 
-SOURCES = crypto_sort.c poly.c pack3.c packq.c fips202.c randombytes.c sample.c verify.c owcpa.c kem.c
-HEADERS = crypto_sort.h params.h poly.h randombytes.h sample.h verify.h owcpa.h kem.h
+SOURCES = crypto_sort.c djbsort/sort.c poly.c poly_s3_inv.c pack3.c packq.c fips202.c randombytes.c sample.c verify.c owcpa.c kem.c
+HEADERS = crypto_sort.h djbsort/int32_sort.h poly_s3_inv.h params.h poly.h randombytes.h sample.h verify.h owcpa.h kem.h
 
-OBJS = poly_rq_mul.s
+OBJS = poly_rq_mul.s poly_s3_mul.s poly_rq_mul_x_minus_1.s
 
 all: test/test_polymul \
      test/test_ntru \
