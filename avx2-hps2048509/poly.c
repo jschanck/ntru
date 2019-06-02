@@ -1,6 +1,7 @@
 #include "poly.h"
 #include "fips202.h"
 #include "verify.h"
+#include "poly_r2_inv.h"
 #include "poly_s3_inv.h"
 
 extern void poly_Rq_mul(poly *r, const poly *a, const poly *b);
@@ -47,7 +48,6 @@ void poly_Sq_mul(poly *r, const poly *a, const poly *b)
     r->coeffs[i] = MODQ(r->coeffs[i] - r->coeffs[NTRU_N-1]);
 }
 
-#ifdef NTRU_HPS
 void poly_lift(poly *r, const poly *a)
 {
   int i;
@@ -55,60 +55,6 @@ void poly_lift(poly *r, const poly *a)
     r->coeffs[i] = a->coeffs[i];
   poly_Z3_to_Zq(r);
 }
-#endif
-
-#ifdef NTRU_HRSS
-void poly_lift(poly *r, const poly *a)
-{
-  /* NOTE: Assumes input is in {0,1,2}^N */
-  /*       Produces output in [0,Q-1]^N */
-  int i;
-  poly b;
-  uint16_t t, zj;
-
-  /* Define z by <z*x^i, x-1> = delta_{i,0} mod 3:      */
-  /*   t      = -1/N mod p = -N mod 3                   */
-  /*   z[0]   = 2 - t mod 3                             */
-  /*   z[1]   = 0 mod 3                                 */
-  /*   z[j]   = z[j-1] + t mod 3                        */
-  /* We'll compute b = a/(x-1) mod (3, Phi) using       */
-  /*   b[0] = <z, a>, b[1] = <z*x,a>, b[2] = <z*x^2,a>  */
-  /*   b[i] = b[i-3] - (a[i] + a[i-1] + a[i-2])         */
-  t = 3 - (NTRU_N % 3);
-  b.coeffs[0] = a->coeffs[0] * (2-t) + a->coeffs[1] * 0 + a->coeffs[2] * t;
-  b.coeffs[1] = a->coeffs[1] * (2-t) + a->coeffs[2] * 0;
-  b.coeffs[2] = a->coeffs[2] * (2-t);
-
-  zj = 0; /* z[1] */
-  for(i=3; i<NTRU_N; i++)
-  {
-    b.coeffs[0] += a->coeffs[i] * (zj + 2*t);
-    b.coeffs[1] += a->coeffs[i] * (zj + t);
-    b.coeffs[2] += a->coeffs[i] * zj;
-    zj = (zj + t) % 3;
-  }
-  b.coeffs[1] += a->coeffs[0] * (zj + t);
-  b.coeffs[2] += a->coeffs[0] * zj;
-  b.coeffs[2] += a->coeffs[1] * (zj + t);
-
-  b.coeffs[0] = b.coeffs[0];
-  b.coeffs[1] = b.coeffs[1];
-  b.coeffs[2] = b.coeffs[2];
-  for(i=3; i<NTRU_N; i++)
-    b.coeffs[i] =
-      b.coeffs[i-3] + 2*(a->coeffs[i] + a->coeffs[i-1] + a->coeffs[i-2]);
-
-  /* Finish reduction mod Phi by subtracting Phi * b[N-1] */
-  for(i=0; i<NTRU_N; i++)
-    b.coeffs[i] = mod3(b.coeffs[i] + 2*b.coeffs[NTRU_N-1]);
-
-  /* Switch from {0,1,2} to {0,1,q-1} coefficient representation */
-  poly_Z3_to_Zq(&b);
-
-  /* Multiply by (x-1) */
-  poly_Rq_mul_x_minus_1(r, &b);
-}
-#endif
 
 void poly_Rq_to_S3(poly *r, const poly *a)
 {
@@ -126,119 +72,6 @@ void poly_Rq_to_S3(poly *r, const poly *a)
   r->coeffs[NTRU_N-1] = mod3(r->coeffs[NTRU_N-1]);
   for(i=0; i<NTRU_N; i++)
     r->coeffs[i] = mod3(r->coeffs[i] + 2*r->coeffs[NTRU_N-1]);
-}
-
-#define POLY_R2_ADD(I,A,B,S)        \
-   for(I=0; I<NTRU_N; I++)        \
-   { A.coeffs[I] ^= B.coeffs[I] * S;  }
-
-#define POLY_S3_FMADD(I,A,B,S)                    \
-   for(I=0; I<NTRU_N; I++)                            \
-   { A.coeffs[I] = mod3(A.coeffs[I] + S * B.coeffs[I]); }
-
-static void cswappoly(poly *a, poly *b, int swap)
-{
-  int i;
-  uint16_t t;
-  swap = -swap;
-  for(i=0;i<NTRU_N;i++)
-  {
-    t = (a->coeffs[i] ^ b->coeffs[i]) & swap;
-    a->coeffs[i] ^= t;
-    b->coeffs[i] ^= t;
-  }
-}
-
-static inline void poly_divx(poly *a, int s)
-{
-  int i;
-
-  for(i=1; i<NTRU_N; i++)
-    a->coeffs[i-1] = (s * a->coeffs[i]) | (!s * a->coeffs[i-1]);
-  a->coeffs[NTRU_N-1] = (!s * a->coeffs[NTRU_N-1]);
-}
-
-static inline void poly_mulx(poly *a, int s)
-{
-  int i;
-
-  for(i=1; i<NTRU_N; i++)
-    a->coeffs[NTRU_N-i] = (s * a->coeffs[NTRU_N-i-1]) | (!s * a->coeffs[NTRU_N-i]);
-  a->coeffs[0] = (!s * a->coeffs[0]);
-}
-
-static void poly_R2_inv(poly *r, const poly *a)
-{
-  /* Schroeppel--Orman--O'Malley--Spatscheck
-   * "Almost Inverse" algorithm as described
-   * by Silverman in NTRU Tech Report #14 */
-  // with several modifications to make it run in constant-time
-  int i, j;
-  int k = 0;
-  uint16_t degf = NTRU_N-1;
-  uint16_t degg = NTRU_N-1;
-  int sign, t, swap;
-  int done = 0;
-  poly b, f, g;
-  poly *c = r; // save some stack space
-  poly *temp_r = &f;
-
-  /* b(X) := 1 */
-  for(i=1; i<NTRU_N; i++)
-    b.coeffs[i] = 0;
-  b.coeffs[0] = 1;
-
-  /* c(X) := 0 */
-  for(i=0; i<NTRU_N; i++)
-    c->coeffs[i] = 0;
-
-  /* f(X) := a(X) */
-  for(i=0; i<NTRU_N; i++)
-    f.coeffs[i] = a->coeffs[i] & 1;
-
-  /* g(X) := 1 + X + X^2 + ... + X^{N-1} */
-  for(i=0; i<NTRU_N; i++)
-    g.coeffs[i] = 1;
-
-  for(j=0;j<2*(NTRU_N-1)-1;j++)
-  {
-    sign = f.coeffs[0];
-    swap = sign & !done & ((degf - degg) >> 15);
-
-    cswappoly(&f, &g, swap);
-    cswappoly(&b, c, swap);
-    t = (degf ^ degg) & (-swap);
-    degf ^= t;
-    degg ^= t;
-
-    POLY_R2_ADD(i, f, g, sign*(!done));
-    POLY_R2_ADD(i, b, (*c), sign*(!done));
-
-    poly_divx(&f, !done);
-    poly_mulx(c, !done);
-    degf -= !done;
-    k += !done;
-
-    done = 1 - (((uint16_t)-degf) >> 15);
-  }
-
-  k = k - NTRU_N*((uint16_t)(NTRU_N - k - 1) >> 15);
-
-    /* Return X^{N-k} * b(X) */
-  /* This is a k-coefficient rotation. We do this by looking at the binary
-     representation of k, rotating for every power of 2, and performing a cmov
-     if the respective bit is set. */
-  for (i = 0; i < NTRU_N; i++)
-    r->coeffs[i] = b.coeffs[i];
-
-  for (i = 0; i < 10; i++) {
-    for (j = 0; j < NTRU_N; j++) {
-      temp_r->coeffs[j] = r->coeffs[(j + (1 << i)) % NTRU_N];
-    }
-    cmov((unsigned char *)&(r->coeffs),
-         (unsigned char *)&(temp_r->coeffs), sizeof(uint16_t) * NTRU_N, k & 1);
-    k >>= 1;
-  }
 }
 
 static void poly_R2_inv_to_Rq_inv(poly *r, const poly *ai, const poly *a)
