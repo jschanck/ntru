@@ -94,7 +94,7 @@ if __name__ == '__main__':
     p("mask1000:")
     for i in [0]*12 + [65535]*4:
         p(".word {}".format(i))
-    p("mask0001:")
+    p("mask0111:")
     for i in [65535]*12 + [0]*4:
         p(".word {}".format(i))
     p("low189:")
@@ -212,7 +212,7 @@ if __name__ == '__main__':
         p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t1, w[i], w[i]))
 
         p("vpand mask1000, %ymm{}, %ymm{}".format(w[i+2], t1))
-        p("vpand mask0001, %ymm{}, %ymm{}".format(w[i+3], t2))
+        p("vpand mask0111, %ymm{}, %ymm{}".format(w[i+3], t2))
         p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t1, t2, t1))
 
         p("vpsllq ${}, %ymm{}, %ymm{}".format(3, t1, t1))

@@ -2,8 +2,16 @@ CC=/usr/bin/gcc
 CFLAGS=-O3 -fomit-frame-pointer -march=native -no-pie
 LDFLAGS=-lcrypto
 
-SOURCES = crypto_sort.c djbsort/sort.c fips202.c kem.c owcpa.c pack3.c packq.c poly.c poly_s3_inv.c sample.c verify.c \
-		rng.c PQCgenKAT_kem.c poly_rq_mul.s poly_s3_mul.s poly_rq_mul_x_minus_1.s
+SOURCES = crypto_sort.c djbsort/sort.c fips202.c kem.c owcpa.c pack3.c packq.c poly.c poly_r2_inv.c poly_s3_inv.c \
+		sample.c verify.c rng.c PQCgenKAT_kem.c poly_rq_mul.s poly_r2_mul.s poly_s3_mul.s poly_rq_mul_x_minus_1.s \
+		square_1_509_patience.s \
+		square_3_509_patience.s \
+		square_6_509_patience.s \
+		square_15_509_shufbytes.s \
+		square_30_509_shufbytes.s \
+		square_63_509_shufbytes.s \
+		square_126_509_shufbytes.s \
+		square_252_509_shufbytes.s
 
 HEADERS = api.h crypto_sort.h djbsort/int32_sort.h fips202.h kem.h poly.h poly_s3_inv.h owcpa.h params.h sample.h verify.h rng.h
 
