@@ -1,0 +1,5 @@
+test/*
+!test/*.c
+!test/*.h
+*.s
+__pycache__/
