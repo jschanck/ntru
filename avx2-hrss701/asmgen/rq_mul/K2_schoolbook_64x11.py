@@ -109,10 +109,13 @@ def K2_schoolbook_64x11(r_mem, a_mem, b_mem, r_off=0, a_off=0, b_off=0, additive
 
 if __name__ == '__main__':
     p(".data")
+    p(".section .rodata")
     p(".align 32")
 
     p(".text")
+    p(".hidden K2_schoolbook_64x11")
     p(".global K2_schoolbook_64x11")
+    p(".hidden K2_schoolbook_64x11_additive")
     p(".global K2_schoolbook_64x11_additive")
     p(".att_syntax prefix")
 

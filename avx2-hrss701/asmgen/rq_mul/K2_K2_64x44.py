@@ -184,10 +184,13 @@ def K2_K2_transpose_64x44(r_real='%rdi', a_real='%rsi', b_real='%rdx', coeffs=44
 
 if __name__ == '__main__':
     p(".data")
+    p(".section .rodata")
     p(".align 32")
 
     p(".text")
+    p(".hidden K2_K2_schoolbook_64x44coef")
     p(".global K2_K2_schoolbook_64x44coef")
+    p(".hidden K2_K2_schoolbook_64x44coef_transpose")
     p(".global K2_K2_schoolbook_64x44coef_transpose")
     p(".att_syntax prefix")
 

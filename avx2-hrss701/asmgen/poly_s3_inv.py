@@ -5,12 +5,12 @@ p = print
 # This does not perform a full 16 bit reduction; assumes input is 4 bits.
 def fourbit_mod3(a, r=13, t=14, c=15):
     # r = (r >> 2) + (r & 0x3); // r' mod 3 == r mod 3
-    p("vpand mask_3, %ymm{}, %ymm{}".format(a, r))
+    p("vpand mask_3(%rip), %ymm{}, %ymm{}".format(a, r))
     p("vpsrlw $2, %ymm{}, %ymm{}".format(a, a))
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(a, r, r))
 
     #   t = r - 3;
-    p("vpsubw mask_3, %ymm{}, %ymm{}".format(r, t))
+    p("vpsubw mask_3(%rip), %ymm{}, %ymm{}".format(r, t))
     #   c = t >> 15;  t is signed, so shift arithmetic
     p("vpsraw $15, %ymm{}, %ymm{}".format(t, c))
 
@@ -98,6 +98,7 @@ def poly_s3_fmadd(a, b, s, t0=13, t1=14, t2=15, b_from_mem=False):
 
 if __name__ == '__main__':
     p(".data")
+    p(".section .rodata")
     p(".align 32")
 
     p("mask_3:")
@@ -252,6 +253,7 @@ if __name__ == '__main__':
         p(".word 0")
 
     p(".text")
+    p(".hidden poly_S3_inv")
     p(".global poly_S3_inv")
     p(".att_syntax prefix")
 
@@ -289,7 +291,7 @@ if __name__ == '__main__':
             rt1 = 'cx'
             p("mov {}(%rsi), %r{}".format((i*16 + j)*8, rt0))
             if i * 64 + j * 4 == 700:  # zero out anything from x^701 onwards
-                p("and low16, %r{}".format(rt0))
+                p("and low16(%rip), %r{}".format(rt0))
             p("pext %r{}, %r{}, %r{}".format(lowmask, rt0, rt1))
             p("pext %r{}, %r{}, %r{}".format(highmask, rt0, rt0))
             if j > 0:
@@ -314,12 +316,12 @@ if __name__ == '__main__':
         p("vmovdqa %ymm{}, {}(%rsp)".format(zero, c_rsp + i*32))
 
     ## init g
-    p("vmovdqa const_all_1s, %ymm2")
+    p("vmovdqa const_all_1s(%rip), %ymm2")
     for i in range(3, 6):
         p("vmovdqa %ymm{}, {}(%rsp)".format(zero, g_rsp + i*32))
     for i in range(0, 2):
         p("vmovdqa %ymm2, {}(%rsp)".format(g_rsp + i*32))
-    p("vmovdqa const_all_but_high_67, %ymm2")
+    p("vmovdqa const_all_but_high_67(%rip), %ymm2")
     p("vmovdqa %ymm2, {}(%rsp)".format(g_rsp + 2*32))
 
     degf = 9  # r9
@@ -380,8 +382,8 @@ if __name__ == '__main__':
         sign = sign[1], sign[0]  # a bit swap is mul by 2, mod 3
 
         # now we expand this to the full registers for parallelism
-        p("vpand const_1, %ymm{}, %ymm{}".format(sign[0], sign[0]))
-        p("vpand const_1, %ymm{}, %ymm{}".format(sign[1], sign[1]))
+        p("vpand const_1(%rip), %ymm{}, %ymm{}".format(sign[0], sign[0]))
+        p("vpand const_1(%rip), %ymm{}, %ymm{}".format(sign[1], sign[1]))
         p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt0, vt0, vt0))
         p("vpsubq %ymm{}, %ymm{}, %ymm{}".format(sign[0], vt0, sign[0]))
         p("vpsubq %ymm{}, %ymm{}, %ymm{}".format(sign[1], vt0, sign[1]))
@@ -467,8 +469,8 @@ if __name__ == '__main__':
             p("vpermq ${}, %ymm{}, %ymm{}".format(int('10010011', 2), vt1, cout[0]))
             p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt0, cout[0], cout[0]))
             if climbs >= 2:
-                p("vpand const_1, %ymm{}, %ymm{}".format(cout[0], vt2))
-            p("vpand const_all_but_1, %ymm{}, %ymm{}".format(cout[0], cout[0]))
+                p("vpand const_1(%rip), %ymm{}, %ymm{}".format(cout[0], vt2))
+            p("vpand const_all_but_1(%rip), %ymm{}, %ymm{}".format(cout[0], cout[0]))
 
             if climbs >= 2:
                 p("vpsllq $1, %ymm{}, %ymm{}".format(c[1], vt0))
@@ -476,8 +478,8 @@ if __name__ == '__main__':
                 p("vpermq ${}, %ymm{}, %ymm{}".format(int('10010011', 2), vt1, cout[1]))
                 p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt0, cout[1], cout[1]))
                 if climbs >= 2:
-                    p("vpand const_1, %ymm{}, %ymm{}".format(cout[1], vt0))
-                p("vpand const_all_but_1, %ymm{}, %ymm{}".format(cout[1], cout[1]))
+                    p("vpand const_1(%rip), %ymm{}, %ymm{}".format(cout[1], vt0))
+                p("vpand const_all_but_1(%rip), %ymm{}, %ymm{}".format(cout[1], cout[1]))
                 p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt2, cout[1], cout[1]))  # insert high out from c[0]
 
             if climbs >= 3:
@@ -485,7 +487,7 @@ if __name__ == '__main__':
                 p("vpsrlq $63, %ymm{}, %ymm{}".format(c[2], vt1))
                 p("vpermq ${}, %ymm{}, %ymm{}".format(int('10010011', 2), vt1, cout[2]))
                 p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt2, cout[2], cout[2]))
-                p("vpand const_all_but_1, %ymm{}, %ymm{}".format(cout[2], cout[2]))
+                p("vpand const_all_but_1(%rip), %ymm{}, %ymm{}".format(cout[2], cout[2]))
                 p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt0, cout[2], cout[2]))  # insert high out from c[1]
 
             # now we do half a cswap with c using vnotdone as signal
@@ -504,16 +506,16 @@ if __name__ == '__main__':
                 p("vpsllq $63, %ymm{}, %ymm{}".format(f[2], vt1))
                 p("vpermq ${}, %ymm{}, %ymm{}".format(int('00111001', 2), vt1, fout[2]))
                 p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt0, fout[2], fout[2]))
-                p("vpand const_high_1, %ymm{}, %ymm{}".format(fout[2], vt2))
-                p("vpand const_all_but_high_67, %ymm{}, %ymm{}".format(fout[2], fout[2]))
+                p("vpand const_high_1(%rip), %ymm{}, %ymm{}".format(fout[2], vt2))
+                p("vpand const_all_but_high_67(%rip), %ymm{}, %ymm{}".format(fout[2], fout[2]))
 
             if flimbs >= 2:
                 p("vpsrlq $1, %ymm{}, %ymm{}".format(f[1], vt0))
                 p("vpsllq $63, %ymm{}, %ymm{}".format(f[1], vt1))
                 p("vpermq ${}, %ymm{}, %ymm{}".format(int('00111001', 2), vt1, fout[1]))
                 p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt0, fout[1], fout[1]))
-                p("vpand const_high_1, %ymm{}, %ymm{}".format(fout[1], vt0))
-                p("vpand const_all_but_high_1, %ymm{}, %ymm{}".format(fout[1], fout[1]))
+                p("vpand const_high_1(%rip), %ymm{}, %ymm{}".format(fout[1], vt0))
+                p("vpand const_all_but_high_1(%rip), %ymm{}, %ymm{}".format(fout[1], fout[1]))
             if flimbs >= 3:
                 p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt2, fout[1], fout[1]))  # insert high out from f[2]
 
@@ -521,7 +523,7 @@ if __name__ == '__main__':
             p("vpsllq $63, %ymm{}, %ymm{}".format(f[0], vt1))
             p("vpermq ${}, %ymm{}, %ymm{}".format(int('00111001', 2), vt1, fout[0]))
             p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt2, fout[0], fout[0]))
-            p("vpand const_all_but_high_1, %ymm{}, %ymm{}".format(fout[0], fout[0]))
+            p("vpand const_all_but_high_1(%rip), %ymm{}, %ymm{}".format(fout[0], fout[0]))
             if flimbs >= 2:
                 p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt0, fout[0], fout[0]))  # insert high out from f[1]
 
@@ -549,8 +551,8 @@ if __name__ == '__main__':
     f_low = [f_regs[0], f_regs[3]]
 
     # expand the low bit of f to all bits
-    p("vpand const_1, %ymm{}, %ymm{}".format(f_low[0], f_low[0]))
-    p("vpand const_1, %ymm{}, %ymm{}".format(f_low[1], f_low[1]))
+    p("vpand const_1(%rip), %ymm{}, %ymm{}".format(f_low[0], f_low[0]))
+    p("vpand const_1(%rip), %ymm{}, %ymm{}".format(f_low[1], f_low[1]))
     p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt0, vt0, vt0))
     p("vpsubq %ymm{}, %ymm{}, %ymm{}".format(f_low[0], vt0, f_low[0]))
     p("vpsubq %ymm{}, %ymm{}, %ymm{}".format(f_low[1], vt0, f_low[1]))
@@ -601,7 +603,7 @@ if __name__ == '__main__':
             p("vmovdqa {}(%rsp), %ymm{}".format(b_rsp + i*32 + offset, b[i]))
 
         def cmov_b_vksignal():
-            p("vpand const_1, %ymm{}, %ymm{}".format(vk, vksignal))
+            p("vpand const_1(%rip), %ymm{}, %ymm{}".format(vk, vksignal))
             p("vpsubq %ymm{}, %ymm{}, %ymm{}".format(vksignal, zero, vksignal))
             p("vbroadcastsd %xmm{}, %ymm{}".format(vksignal, vksignal))
             for i in range(3):
@@ -618,23 +620,23 @@ if __name__ == '__main__':
             p("vpsllq ${}, %ymm{}, %ymm{}".format(64-r, b[2], vt1))
             p("vpermq ${}, %ymm{}, %ymm{}".format(int('00111001', 2), vt1, bout[2]))
             p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt0, bout[2], bout[2]))
-            p("vpand const_high_{}, %ymm{}, %ymm{}".format(r, bout[2], vt2))
-            p("vpand const_all_but_high_{}, %ymm{}, %ymm{}".format(66+r, bout[2], bout[2]))
+            p("vpand const_high_{}(%rip), %ymm{}, %ymm{}".format(r, bout[2], vt2))
+            p("vpand const_all_but_high_{}(%rip), %ymm{}, %ymm{}".format(66+r, bout[2], bout[2]))
 
             p("vpsrlq ${}, %ymm{}, %ymm{}".format(r, b[1], vt0))
             p("vpsllq ${}, %ymm{}, %ymm{}".format(64-r, b[1], vt1))
             p("vpermq ${}, %ymm{}, %ymm{}".format(int('00111001', 2), vt1, bout[1]))
             p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt0, bout[1], bout[1]))
-            p("vpand const_high_{}, %ymm{}, %ymm{}".format(r, bout[1], vt0))
-            p("vpand const_all_but_high_{}, %ymm{}, %ymm{}".format(r, bout[1], bout[1]))
+            p("vpand const_high_{}(%rip), %ymm{}, %ymm{}".format(r, bout[1], vt0))
+            p("vpand const_all_but_high_{}(%rip), %ymm{}, %ymm{}".format(r, bout[1], bout[1]))
             p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt2, bout[1], bout[1]))  # insert high out from b[2]
 
             p("vpsrlq ${}, %ymm{}, %ymm{}".format(r, b[0], vt2))
             p("vpsllq ${}, %ymm{}, %ymm{}".format(64-r, b[0], vt1))
             p("vpermq ${}, %ymm{}, %ymm{}".format(int('00111001', 2), vt1, bout[0]))
             p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt2, bout[0], bout[0]))
-            p("vpand const_high_{}, %ymm{}, %ymm{}".format(r, bout[0], vt2))
-            p("vpand const_all_but_high_{}, %ymm{}, %ymm{}".format(r, bout[0], bout[0]))
+            p("vpand const_high_{}(%rip), %ymm{}, %ymm{}".format(r, bout[0], vt2))
+            p("vpand const_all_but_high_{}(%rip), %ymm{}, %ymm{}".format(r, bout[0], bout[0]))
             p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt0, bout[0], bout[0]))  # insert high out from b[1]
 
             # the high bits we want to insert needs to be moved 67 places down
@@ -652,17 +654,17 @@ if __name__ == '__main__':
         # the next few rotations are not really suited for a generic approach
         # ROTATE RIGHT BY 64 BITS
         p("vpermq ${}, %ymm{}, %ymm{}".format(int('00111001', 2), b[2], vt0))
-        p("vpand const_high_64, %ymm{}, %ymm{}".format(vt0, vt1))
-        p("vpand const_all_but_high_64, %ymm{}, %ymm{}".format(vt0, bout[2]))
+        p("vpand const_high_64(%rip), %ymm{}, %ymm{}".format(vt0, vt1))
+        p("vpand const_all_but_high_64(%rip), %ymm{}, %ymm{}".format(vt0, bout[2]))
 
         p("vpermq ${}, %ymm{}, %ymm{}".format(int('00111001', 2), b[1], vt0))
-        p("vpand const_high_64, %ymm{}, %ymm{}".format(vt0, vt2))
-        p("vpand const_all_but_high_64, %ymm{}, %ymm{}".format(vt0, bout[1]))
+        p("vpand const_high_64(%rip), %ymm{}, %ymm{}".format(vt0, vt2))
+        p("vpand const_all_but_high_64(%rip), %ymm{}, %ymm{}".format(vt0, bout[1]))
         p("vpxor %ymm{}, %ymm{}, %ymm{}".format(bout[1], vt1, bout[1]))  # insert high out from b[2]
 
         p("vpermq ${}, %ymm{}, %ymm{}".format(int('00111001', 2), b[0], vt0))
-        p("vpand const_high_64, %ymm{}, %ymm{}".format(vt0, vt1))
-        p("vpand const_all_but_high_64, %ymm{}, %ymm{}".format(vt0, bout[1]))
+        p("vpand const_high_64(%rip), %ymm{}, %ymm{}".format(vt0, vt1))
+        p("vpand const_all_but_high_64(%rip), %ymm{}, %ymm{}".format(vt0, bout[1]))
         p("vpxor %ymm{}, %ymm{}, %ymm{}".format(bout[0], vt2, bout[0]))  # insert high out from b[1]
 
         # high bits we want to insert need to be spread across the xmm lane..
@@ -708,8 +710,8 @@ if __name__ == '__main__':
         p("vpsllq ${}, %ymm{}, %ymm{}".format(61, vt0, vt2))
         p("vpermq ${}, %ymm{}, %ymm{}".format(int('00111001', 2), vt2, vt0))
         p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt1, vt0, vt0))
-        p("vpand const_all_but_high_67, %ymm{}, %ymm{}".format(vt0, bout[2]))
-        p("vpand const_high_67, %ymm{}, %ymm{}".format(vt0, vt0))
+        p("vpand const_all_but_high_67(%rip), %ymm{}, %ymm{}".format(vt0, bout[2]))
+        p("vpand const_high_67(%rip), %ymm{}, %ymm{}".format(vt0, vt0))
         p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt0, bout[1], bout[1]))
 
         p("vpsrlq $1, %ymm{}, %ymm{}".format(vk, vk))
@@ -723,16 +725,16 @@ if __name__ == '__main__':
         p("vpsrlq ${}, %ymm{}, %ymm{}".format(3, bout[0], vt2))
         p("vpermq ${}, %ymm{}, %ymm{}".format(int('10010011', 2), vt2, vt2))
         p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt1, vt2, bout[0]))
-        p("vpand const_all_but_high_67, %ymm{}, %ymm{}".format(bout[0], vt0))
-        p("vpand const_high_67, %ymm{}, %ymm{}".format(bout[0], bout[0]))
+        p("vpand const_all_but_high_67(%rip), %ymm{}, %ymm{}".format(bout[0], vt0))
+        p("vpand const_high_67(%rip), %ymm{}, %ymm{}".format(bout[0], bout[0]))
 
         p("vpermq ${}, %ymm{}, %ymm{}".format(int('01001110', 2), b[1], bout[2]))  # that's 128
         p("vpsllq ${}, %ymm{}, %ymm{}".format(61, bout[2], vt1))
         p("vpsrlq ${}, %ymm{}, %ymm{}".format(3, bout[2], vt2))
         p("vpermq ${}, %ymm{}, %ymm{}".format(int('10010011', 2), vt2, vt2))
         p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt1, vt2, bout[2]))
-        p("vpand const_high_67, %ymm{}, %ymm{}".format(bout[2], bout[1]))
-        p("vpand const_all_but_high_67, %ymm{}, %ymm{}".format(bout[2], bout[2]))
+        p("vpand const_high_67(%rip), %ymm{}, %ymm{}".format(bout[2], bout[1]))
+        p("vpand const_all_but_high_67(%rip), %ymm{}, %ymm{}".format(bout[2], bout[2]))
         p("vpxor %ymm{}, %ymm{}, %ymm{}".format(vt0, bout[1], bout[1]))
 
         p("vpxor %ymm{}, %ymm{}, %ymm{}".format(b[2], bout[0], bout[0]))

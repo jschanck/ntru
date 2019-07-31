@@ -6,23 +6,23 @@ p = print
 def mod3(a, r=13, t=14, c=15):
     # r = (a >> 8) + (a & 0xff); // r mod 255 == a mod 255
     p("vpsrlw $8, %ymm{}, %ymm{}".format(a, r))
-    p("vpand mask_ff, %ymm{}, %ymm{}".format(a, a))
+    p("vpand mask_ff(%rip), %ymm{}, %ymm{}".format(a, a))
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(r, a, r))
 
     # r = (r >> 4) + (r & 0xf); // r' mod 15 == r mod 15
-    p("vpand mask_f, %ymm{}, %ymm{}".format(r, a))
+    p("vpand mask_f(%rip), %ymm{}, %ymm{}".format(r, a))
     p("vpsrlw $4, %ymm{}, %ymm{}".format(r, r))
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(r, a, r))
 
     # r = (r >> 2) + (r & 0x3); // r' mod 3 == r mod 3
     # r = (r >> 2) + (r & 0x3); // r' mod 3 == r mod 3
     for _ in range(2):
-        p("vpand mask_3, %ymm{}, %ymm{}".format(r, a))
+        p("vpand mask_3(%rip), %ymm{}, %ymm{}".format(r, a))
         p("vpsrlw $2, %ymm{}, %ymm{}".format(r, r))
         p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(r, a, r))
 
     #   t = r - 3;
-    p("vpsubw mask_3, %ymm{}, %ymm{}".format(r, t))
+    p("vpsubw mask_3(%rip), %ymm{}, %ymm{}".format(r, t))
     #   c = t >> 15;  t is signed, so shift arithmetic
     p("vpsraw $15, %ymm{}, %ymm{}".format(t, c))
 
@@ -35,6 +35,7 @@ def mod3(a, r=13, t=14, c=15):
 
 if __name__ == '__main__':
     p(".data")
+    p(".section .rodata")
     p(".align 32")
 
     p("mask_ff:")
@@ -116,6 +117,7 @@ if __name__ == '__main__':
         p(".word 0")
 
     p(".text")
+    p(".hidden poly_lift")
     p(".global poly_lift")
     p(".att_syntax prefix")
 
@@ -135,14 +137,14 @@ if __name__ == '__main__':
     # b.coeffs[2] = - a->coeffs[2] - a->coeffs[1] - a->coeffs[0];
     p("vmovdqa {}(%rsi), %ymm{}".format(0, a))
     p("vpxor %ymm{}, %ymm{}, %ymm{}".format(zero, zero, zero))
-    p("vpand coeff_0, %ymm{}, %ymm{}".format(a, t))
+    p("vpand coeff_0(%rip), %ymm{}, %ymm{}".format(a, t))
     p("vpsubw %ymm{}, %ymm{}, %ymm{}".format(t, zero, b[0]))
     p("vpsubw %ymm{}, %ymm{}, %ymm{}".format(t, zero, b[1]))
     p("vpsubw %ymm{}, %ymm{}, %ymm{}".format(t, zero, b[2]))
-    p("vpand coeff_1, %ymm{}, %ymm{}".format(a, t))
+    p("vpand coeff_1(%rip), %ymm{}, %ymm{}".format(a, t))
     p("vpsubw %ymm{}, %ymm{}, %ymm{}".format(t, b[1], b[1]))
     p("vpsubw %ymm{}, %ymm{}, %ymm{}".format(t, b[2], b[2]))
-    p("vpand coeff_2, %ymm{}, %ymm{}".format(a, t))
+    p("vpand coeff_2(%rip), %ymm{}, %ymm{}".format(a, t))
     p("vpsubw %ymm{}, %ymm{}, %ymm{}".format(t, b[2], b[2]))
 
     masks = ['100', '010', '001']
@@ -158,21 +160,21 @@ if __name__ == '__main__':
             masks = ['100_701', '010_701', '001_701']
         p("vmovdqa {}(%rsi), %ymm{}".format((i*16) * 2, a))
 
-        p("vpand mask{}, %ymm{}, %ymm{}".format(masks[(2 - i) % 3], a, t))
+        p("vpand mask{}(%rip), %ymm{}, %ymm{}".format(masks[(2 - i) % 3], a, t))
         p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(t, b[0], b[0]))
-        p("vpand mask{}, %ymm{}, %ymm{}".format(masks[(0 - i) % 3], a, t))
+        p("vpand mask{}(%rip), %ymm{}, %ymm{}".format(masks[(0 - i) % 3], a, t))
         p("vpsllw $1, %ymm{}, %ymm{}".format(t, t))
         p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(t, b[0], b[0]))
 
-        p("vpand mask{}, %ymm{}, %ymm{}".format(masks[(0 - i) % 3], a, t))
+        p("vpand mask{}(%rip), %ymm{}, %ymm{}".format(masks[(0 - i) % 3], a, t))
         p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(t, b[1], b[1]))
-        p("vpand mask{}, %ymm{}, %ymm{}".format(masks[(1 - i) % 3], a, t))
+        p("vpand mask{}(%rip), %ymm{}, %ymm{}".format(masks[(1 - i) % 3], a, t))
         p("vpsllw $1, %ymm{}, %ymm{}".format(t, t))
         p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(t, b[1], b[1]))
 
-        p("vpand mask{}, %ymm{}, %ymm{}".format(masks[(1 - i) % 3], a, t))
+        p("vpand mask{}(%rip), %ymm{}, %ymm{}".format(masks[(1 - i) % 3], a, t))
         p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(t, b[2], b[2]))
-        p("vpand mask{}, %ymm{}, %ymm{}".format(masks[(2 - i) % 3], a, t))
+        p("vpand mask{}(%rip), %ymm{}, %ymm{}".format(masks[(2 - i) % 3], a, t))
         p("vpsllw $1, %ymm{}, %ymm{}".format(t, t))
         p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(t, b[2], b[2]))
 
@@ -180,33 +182,33 @@ if __name__ == '__main__':
 
     p("vextracti128 $1, %ymm{}, %xmm{}".format(b[0], t))
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(t, b[0], b[0]))
-    p("vpshufb shuf_128_to_64, %ymm{}, %ymm{}".format(b[0], t))
+    p("vpshufb shuf_128_to_64(%rip), %ymm{}, %ymm{}".format(b[0], t))
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(t, b[0], b[0]))
     p("vpsrlq $32, %ymm{}, %ymm{}".format(b[0], t))
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(t, b[0], b[0]))
     p("vpsrlq $16, %ymm{}, %ymm{}".format(b[0], t))
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(t, b[0], b[0]))
-    p("vpand coeff_0, %ymm{}, %ymm{}".format(b[0], b[0]))
+    p("vpand coeff_0(%rip), %ymm{}, %ymm{}".format(b[0], b[0]))
 
     p("vextracti128 $1, %ymm{}, %xmm{}".format(b[1], t))
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(t, b[1], b[1]))
-    p("vpshufb shuf_128_to_64, %ymm{}, %ymm{}".format(b[1], t))
+    p("vpshufb shuf_128_to_64(%rip), %ymm{}, %ymm{}".format(b[1], t))
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(t, b[1], b[1]))
     p("vpsrlq $32, %ymm{}, %ymm{}".format(b[1], t))
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(t, b[1], b[1]))
     p("vpsllq $16, %ymm{}, %ymm{}".format(b[1], t))
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(t, b[1], b[1]))
-    p("vpand coeff_1, %ymm{}, %ymm{}".format(b[1], b[1]))
+    p("vpand coeff_1(%rip), %ymm{}, %ymm{}".format(b[1], b[1]))
 
     p("vextracti128 $1, %ymm{}, %xmm{}".format(b[2], t))
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(t, b[2], b[2]))
-    p("vpshufb shuf_128_to_64, %ymm{}, %ymm{}".format(b[2], t))
+    p("vpshufb shuf_128_to_64(%rip), %ymm{}, %ymm{}".format(b[2], t))
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(t, b[2], b[2]))
     p("vpsllq $32, %ymm{}, %ymm{}".format(b[2], t))
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(t, b[2], b[2]))
     p("vpsrlq $16, %ymm{}, %ymm{}".format(b[2], t))
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(t, b[2], b[2]))
-    p("vpand coeff_2, %ymm{}, %ymm{}".format(b[2], b[2]))
+    p("vpand coeff_2(%rip), %ymm{}, %ymm{}".format(b[2], b[2]))
 
     p("vpor %ymm{}, %ymm{}, %ymm{}".format(b[0], b[1], t))
     p("vpor %ymm{}, %ymm{}, %ymm{}".format(t, b[2], t))
@@ -232,7 +234,7 @@ if __name__ == '__main__':
 
     # from 691 to 701 we cannot use the same loop, as we would exceed bounds
     p("vmovdqa {}(%rsi), %ymm{}".format((0 + 43*16) * 2, a))
-    p("vpand mask_701, %ymm{}, %ymm{}".format(a, a))
+    p("vpand mask_701(%rip), %ymm{}, %ymm{}".format(a, a))
     p("vmovdqu {}(%rsi), %ymm{}".format((-1 + 43*16) * 2, amin1))
     p("vmovdqu {}(%rsi), %ymm{}".format((-2 + 43*16) * 2, amin2))
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(amin1, a, a))
@@ -275,8 +277,8 @@ if __name__ == '__main__':
         # b.coeffs[i] = ZP_TO_ZQ(b.coeffs[i]);
         p("vpsrlq $1, %ymm{}, %ymm{}".format(retval, t))
         p("vpsubw %ymm{}, %ymm{}, %ymm{}".format(t, zero, t))
-        p("vpand const_8191s, %ymm{}, %ymm{}".format(t, t))
-        p("vpand const_1s, %ymm{}, %ymm{}".format(retval, retval))
+        p("vpand const_8191s(%rip), %ymm{}, %ymm{}".format(t, t))
+        p("vpand const_1s(%rip), %ymm{}, %ymm{}".format(retval, retval))
         p("vpor %ymm{}, %ymm{}, %ymm{}".format(retval, t, retval))
         p("vmovdqa %ymm{}, {}(%rsp)".format(retval, i*32))
 
