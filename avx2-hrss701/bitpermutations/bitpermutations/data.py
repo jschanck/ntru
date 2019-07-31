@@ -186,10 +186,10 @@ class Mask(DataFragment):
         DATASECTION.append(self)
 
     def __str__(self):
-        return "mask_{}_{}".format(self.maskindex, SALT)
+        return "mask_{}_{}(%rip)".format(self.maskindex, SALT)
 
     def data(self):
-        output = "{}:\n".format(str(self))
+        output = "mask_{}_{}:\n".format(self.maskindex, SALT)
         if self.size % 16 != 0:
             raise NotImplementedError("Can only divide masks into words")
         # TODO this can be optimized by dividing into order sizes
@@ -260,7 +260,7 @@ class IndicesMask(Mask):
         return self.size // 8
 
     def data(self):
-        output = "{}:\n".format(str(self))
+        output = "mask_{}_{}:\n".format(self.maskindex, SALT)
         # TODO we still assume bytewise indices
         for i in self.indices:
             if i is None:

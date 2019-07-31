@@ -11,9 +11,9 @@ def mult_128x128(xy, x, y, t1, t2):
     p("vinserti128 $1, %xmm{}, %ymm{}, %ymm{}".format(t2, t2, t2))  # move low of t2 to high
 
     # TODO can we do this without masks?
-    p("vpand mask0011, %ymm{}, %ymm{}".format(t0, t0))
-    p("vpand mask0110, %ymm{}, %ymm{}".format(t1, t1))
-    p("vpand mask1100, %ymm{}, %ymm{}".format(t2, t2))
+    p("vpand mask0011(%rip), %ymm{}, %ymm{}".format(t0, t0))
+    p("vpand mask0110(%rip), %ymm{}, %ymm{}".format(t1, t1))
+    p("vpand mask1100(%rip), %ymm{}, %ymm{}".format(t2, t2))
 
     p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t0, t1, t1))
     p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t1, t2, xy))
@@ -52,6 +52,7 @@ p = print
 
 if __name__ == '__main__':
     p(".data")
+    p(".section .rodata")
     p(".align 32")
     p("mask1100:")
     for i in [0]*8 + [65535]*8:
@@ -73,6 +74,7 @@ if __name__ == '__main__':
         p(".word {}".format(i))
 
     p(".text")
+    p(".hidden poly_R2_mul")
     p(".global poly_R2_mul")
     p(".att_syntax prefix")
 
@@ -124,8 +126,8 @@ if __name__ == '__main__':
     # accounts for the fact that the polynomial only has 509 coefficients and not 512.
     # (So x^509 instead of x^512 needs to be added to x^0)
     for i, word in enumerate(w[:2]):
-        p("vpand mask1000, %ymm{}, %ymm{}".format(w[i+1], t2))
-        p("vpand mask0111, %ymm{}, %ymm{}".format(w[i+2], t1))
+        p("vpand mask1000(%rip), %ymm{}, %ymm{}".format(w[i+1], t2))
+        p("vpand mask0111(%rip), %ymm{}, %ymm{}".format(w[i+2], t1))
         p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t1, t2, t1))
 
         p("vpsrlq ${}, %ymm{}, %ymm{}".format(61, t1, t1))
@@ -136,7 +138,7 @@ if __name__ == '__main__':
         p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t1, w[i], w[i]))
 
     # Get rid of the last three bits (509 coefficients and not 512)
-    p("vpand low253, %ymm{}, %ymm{}".format(w1, w1))
+    p("vpand low253(%rip), %ymm{}, %ymm{}".format(w1, w1))
 
     p("vmovdqa %ymm{}, {}(%rdi)".format(w0, 0))
     p("vmovdqa %ymm{}, {}(%rdi)".format(w1, 32))
