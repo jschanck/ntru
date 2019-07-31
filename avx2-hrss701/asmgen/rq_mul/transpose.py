@@ -152,12 +152,17 @@ def transpose_16x96_to_96x16(dst, src, src_off=0, dst_off=0):
 
 if __name__ == '__main__':
     p(".data")
+    p(".section .rodata")
     p(".align 32")
 
     p(".text")
+    p(".hidden transpose_48x16_to_16x44")
     p(".global transpose_48x16_to_16x44")
+    p(".hidden transpose_48x16_to_16x44_stackbased")
     p(".global transpose_48x16_to_16x44_stackbased")
+    p(".hidden transpose_16x96_to_96x16")
     p(".global transpose_16x96_to_96x16")
+    p(".hidden transpose_16x96_to_96x16_stackbased")
     p(".global transpose_16x96_to_96x16_stackbased")
     p(".att_syntax prefix")
 
