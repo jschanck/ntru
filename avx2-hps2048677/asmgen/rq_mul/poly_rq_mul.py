@@ -598,79 +598,51 @@ if __name__ == '__main__':
             p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(tmp, h[1], tmp))
             store_limb(tmp, 1, j, off=0)
 
-            if j < 7 or (j==7 and coeff == 0):
-                get_limb(tmp, 2, j, off=0)
-                p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(tmp, h[2], tmp))
-                store_limb(tmp, 2, j, off=0)
+            # Handle portions of h[2] and h[3] that do not wrap around
+            for i in [2,3]:
+              if j < (7-4*(i-2)) or (j==(7-4*(i-2)) and coeff == 0):
+                  get_limb(tmp, i, j, off=0)
+                  p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(tmp, h[i], tmp))
+                  store_limb(tmp, i, j, off=0)
 
-            if j == 7 and coeff == 1:
-                # Add the low word to result[676]
-                tmp2 = alloc()
-                get_limb(tmp, 2, j, off=0)
-                p("vpand mask_1_15, %ymm{}, %ymm{}".format(h[2], tmp2))
-                p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(tmp, tmp2, tmp))
-                store_limb(tmp, 2, j, off=0)
+            # Handle portions of h[2] and h[3] where limb wraps
+            for i in [2,3]:
+              # h[i] holds a segment aligned to result 528:703
+              #      starting at 528 + 44*j + (0,16,16)[coeff]
+              #      and of length (16,16,12)[coeff]
+              # 677 = 528 + 44*3 + 16 + 1
+              # wrap when j=3, coeff=1
+              if j == (7-4*(i-2)) and coeff == 1:
+                  # Add the low word to result[676]
+                  tmp2 = alloc()
+                  get_limb(tmp, i, j, off=0)
+                  p("vpand mask_1_15, %ymm{}, %ymm{}".format(h[i], tmp2))
+                  p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(tmp, tmp2, tmp))
+                  store_limb(tmp, i, j, off=0)
+                  free(tmp2)
 
-                # Add the high 15 words to result[0:14]
-                # rotate left by 1 word, then mask
-                #   1) rotate left by 1 word in each lane
-                p("vpshufb rol_rol_16, %ymm{}, %ymm{}".format(h[2], h[2]))
-                #   2) swap quadwords on lane boundary -- words (4, 5, 6, 7) with (8, 9, 10, 11)
-                p("vpermq ${}, %ymm{}, %ymm{}".format(int('11' '01' '10' '00', 2), h[2], h[2]))
-                #   3) swap words 11 and 15
-                p("vpshufb id_braid_16, %ymm{}, %ymm{}".format(h[2], h[2]))
-                #   4) swap quadwords on lane boundary
-                p("vpermq ${}, %ymm{}, %ymm{}".format(int('11' '01' '10' '00', 2), h[2], h[2]))
-                # zero word 15
-                p("vpand mask_15_1, %ymm{}, %ymm{}".format(h[2], tmp2))
-                get_limb(tmp, 0, 0, off=(0-16*coeff))
-                p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(tmp, tmp2, tmp))
-                store_limb(tmp, 0, 0, off=(0-16*coeff))
-                free(tmp2)
+                  # Add the high 15 words to result[0:14]
+                  # rotate left by 1 word, then mask
+                  #   1) rotate left by 1 word in each lane
+                  p("vpshufb rol_rol_16, %ymm{}, %ymm{}".format(h[i], h[i]))
+                  #   2) swap quadwords on lane boundary -- words (4, 5, 6, 7) with (8, 9, 10, 11)
+                  p("vpermq ${}, %ymm{}, %ymm{}".format(int('11' '01' '10' '00', 2), h[i], h[i]))
+                  #   3) swap words 11 and 15
+                  p("vpshufb id_braid_16, %ymm{}, %ymm{}".format(h[i], h[i]))
+                  #   4) swap quadwords on lane boundary
+                  p("vpermq ${}, %ymm{}, %ymm{}".format(int('11' '01' '10' '00', 2), h[i], h[i]))
+                  # zero word 15
+                  p("vpand mask_15_1, %ymm{}, %ymm{}".format(h[i], h[i]))
+                  get_limb(tmp, 0, 0, off=(0-16*coeff))
+                  p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(tmp, h[i], tmp))
+                  store_limb(tmp, 0, 0, off=(0-16*coeff))
 
-            if j == 7 and coeff == 2:
-                get_limb(tmp, 0, 0, off=(15-16*coeff))
-                p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(tmp, h[2], tmp))
-                store_limb(tmp, 0, 0, off=(15-16*coeff))
-
-            # h[3] holds a segment aligned to result 528:703
-            #      starting at 528 + 44*j + (0,16,16)[coeff]
-            #      and of length (16,16,12)[coeff]
-            # 677 = 528 + 44*3 + 16 + 1
-            # wrap when j=3, coeff=1
-            if j < 3 or (j == 3 and coeff == 0):
-                get_limb(tmp, 3, j, off=0)
-                p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(h[3], tmp, h[3]))
-                store_limb(h[3], 3, j, off=0)
-
-            if j == 3 and coeff == 1:
-                # Write the low word to result[676]
-                tmp2 = alloc()
-                get_limb(tmp, 3, j, off=0)
-                p("vpand mask_1_15, %ymm{}, %ymm{}".format(h[3], tmp2))
-                p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(tmp, tmp2, tmp))
-                store_limb(tmp, 3, j, off=0)
-                free(tmp2)
-
-                # rotate left by 1 word
-                #   1) rotate left by 1 word in each lane
-                p("vpshufb rol_rol_16, %ymm{}, %ymm{}".format(h[3], h[3]))
-                #   2) swap quadwords on lane boundary -- words (4, 5, 6, 7) with (8, 9, 10, 11)
-                p("vpermq ${}, %ymm{}, %ymm{}".format(int('11' '01' '10' '00', 2), h[3], h[3]))
-                #   3) swap words 11 and 15
-                p("vpshufb id_braid_16, %ymm{}, %ymm{}".format(h[3], h[3]))
-                #   4) swap quadwords on lane boundary
-                p("vpermq ${}, %ymm{}, %ymm{}".format(int('11' '01' '10' '00', 2), h[3], h[3]))
-                # zero word 15
-                p("vpand mask_15_1, %ymm{}, %ymm{}".format(h[3], h[3]))
-                get_limb(tmp, 0, 0, off=(0-16*coeff))
-                p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(tmp, h[3], tmp))
-                store_limb(tmp, 0, 0, off=(0-16*coeff))
-
-            if j == 3 and coeff == 2:
-                get_limb(tmp, 0, 0, off=(15-16*coeff))
-                p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(tmp, h[3], tmp))
-                store_limb(tmp, 0, 0, off=(15-16*coeff))
+            # Handle portions of h[2] and h[3] after limb wrap
+            for i in [2,3]:
+              if j == (7-4*(i-2)) and coeff == 2:
+                  get_limb(tmp, 0, 0, off=(15-16*coeff))
+                  p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(tmp, h[i], tmp))
+                  store_limb(tmp, 0, 0, off=(15-16*coeff))
 
             if j >= 4:
                 get_limb(tmp, 0, j-4, off=27)
