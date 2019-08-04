@@ -70,11 +70,11 @@ if __name__ == '__main__':
     last = 4
     retval = 5
     p("vmovdqa const_3_repeating, %ymm{}".format(threes))
-    p("vmovdqa {}(%rsi), %ymm{}".format((ceil(701 / 16) - 1)*32, last))
+    p("vmovdqa {}(%rsi), %ymm{}".format((ceil(677 / 16) - 1)*32, last))
 
-    p("vpsrlw $12, %ymm{}, %ymm{}".format(last, r))
+    p("vpsrlw $10, %ymm{}, %ymm{}".format(last, r))
     p("vpxor %ymm{}, %ymm{}, %ymm{}".format(threes, r, r))
-    p("vpsllw $13, %ymm{}, %ymm{}".format(r, r))
+    p("vpsllw $11, %ymm{}, %ymm{}".format(r, r))
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(last, r, last))
 
     mod3(last, retval)
@@ -83,11 +83,11 @@ if __name__ == '__main__':
     p("vpshufb shuf_b8_to_low_doubleword, %ymm{}, %ymm{}".format(last, last))
     p("vinserti128 $1, %xmm{}, %ymm{}, %ymm{}".format(last, last, last))
 
-    for i in range(ceil(701 / 16)):
+    for i in range(ceil(677/ 16)):
         p("vmovdqa {}(%rsi), %ymm{}".format(i*32, a))
-        p("vpsrlw $12, %ymm{}, %ymm{}".format(a, r))
+        p("vpsrlw $10, %ymm{}, %ymm{}".format(a, r))
         p("vpxor %ymm{}, %ymm{}, %ymm{}".format(threes, r, r))
-        p("vpsllw $13, %ymm{}, %ymm{}".format(r, r))
+        p("vpsllw $11, %ymm{}, %ymm{}".format(r, r))
         p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(a, r, r))
         p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(last, r, r))
         mod3(r, retval)

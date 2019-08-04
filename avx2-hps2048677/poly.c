@@ -64,23 +64,6 @@ void poly_lift(poly *r, const poly *a)
   poly_Z3_to_Zq(r);
 }
 
-void poly_Rq_to_S3(poly *r, const poly *a)
-{
-  /* NOTE: Assumes input is in [0,Q-1]^N */
-  /*       Produces output in {0,1,2}^N */
-  int i;
-
-  /* Center coeffs around 3Q: [0, Q-1] -> [3Q - Q/2, 3Q + Q/2) */
-  for(i=0; i<NTRU_N; i++)
-  {
-    r->coeffs[i] = ((a->coeffs[i] >> (NTRU_LOGQ-1)) ^ 3) << NTRU_LOGQ;
-    r->coeffs[i] += a->coeffs[i];
-  }
-  /* Reduce mod (3, Phi) */
-  r->coeffs[NTRU_N-1] = mod3(r->coeffs[NTRU_N-1]);
-  for(i=0; i<NTRU_N; i++)
-    r->coeffs[i] = mod3(r->coeffs[i] + 2*r->coeffs[NTRU_N-1]);
-}
 static void poly_R2_inv_to_Rq_inv(poly *r, const poly *ai, const poly *a)
 {
 #if NTRU_Q <= 256 || NTRU_Q >= 65536
