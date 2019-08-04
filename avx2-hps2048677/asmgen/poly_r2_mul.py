@@ -97,8 +97,8 @@ if __name__ == '__main__':
     p("mask0111:")
     for i in [65535]*12 + [0]*4:
         p(".word {}".format(i))
-    p("low189:")
-    for i in [65535]*11 + [8191] + [0]*4:
+    p("low165:")
+    for i in [65535]*10 + [31] + [0]*4:
         p(".word {}".format(i))
 
     p(".text")
@@ -207,19 +207,19 @@ if __name__ == '__main__':
         p("vpand mask0011, %ymm{}, %ymm{}".format(w[i+3], t1))
         p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t1, t2, t1))
 
-        p("vpsrlq ${}, %ymm{}, %ymm{}".format(61, t1, t1))
-        p("vpermq ${}, %ymm{}, %ymm{}".format(int('01001110', 2), t1, t1))
+        p("vpsrlq ${}, %ymm{}, %ymm{}".format(37, t1, t1))
+        p("vpermq ${}, %ymm{}, %ymm{}".format(int('01' '00' '11' '10', 2), t1, t1))
         p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t1, w[i], w[i]))
 
         p("vpand mask1000, %ymm{}, %ymm{}".format(w[i+2], t1))
         p("vpand mask0111, %ymm{}, %ymm{}".format(w[i+3], t2))
         p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t1, t2, t1))
 
-        p("vpsllq ${}, %ymm{}, %ymm{}".format(3, t1, t1))
-        p("vpermq ${}, %ymm{}, %ymm{}".format(int('10010011', 2), t1, t1))
+        p("vpsllq ${}, %ymm{}, %ymm{}".format(27, t1, t1))
+        p("vpermq ${}, %ymm{}, %ymm{}".format(int('10' '01' '00' '11', 2), t1, t1))
         p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t1, w[i], w[i]))
 
-    p("vpand low189, %ymm{}, %ymm{}".format(w2, w2))
+    p("vpand low165, %ymm{}, %ymm{}".format(w2, w2))
 
     p("vmovdqa %ymm{}, {}(%rdi)".format(w0, 0))
     p("vmovdqa %ymm{}, {}(%rdi)".format(w1, 32))

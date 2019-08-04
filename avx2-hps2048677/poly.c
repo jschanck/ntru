@@ -37,43 +37,12 @@ void poly_trinary_Zq_to_Z3(poly *r)
     r->coeffs[i] = 3 & (r->coeffs[i] ^ (r->coeffs[i]>>(NTRU_LOGQ-1)));
 }
 
-void poly_Rq_mul(poly *r, const poly *a, const poly *b)
-{
-  int k,i;
-
-  for(k=0; k<NTRU_N; k++)
-  {
-    r->coeffs[k] = 0;
-    for(i=1; i<NTRU_N-k; i++)
-      r->coeffs[k] += a->coeffs[k+i] * b->coeffs[NTRU_N-i];
-    for(i=0; i<k+1; i++)
-      r->coeffs[k] += a->coeffs[k-i] * b->coeffs[i];
-    r->coeffs[k] = MODQ(r->coeffs[k]);
-  }
-}
-
 void poly_Sq_mul(poly *r, const poly *a, const poly *b)
 {
   int i;
   poly_Rq_mul(r, a, b);
   for(i=0; i<NTRU_N; i++)
     r->coeffs[i] = MODQ(r->coeffs[i] - r->coeffs[NTRU_N-1]);
-}
-
-void poly_S3_mul(poly *r, const poly *a, const poly *b)
-{
-  int k,i;
-
-  for(k=0; k<NTRU_N; k++)
-  {
-    r->coeffs[k] = 0;
-    for(i=1; i<NTRU_N-k; i++)
-      r->coeffs[k] += a->coeffs[k+i] * b->coeffs[NTRU_N-i];
-    for(i=0; i<k+1; i++)
-      r->coeffs[k] += a->coeffs[k-i] * b->coeffs[i];
-  }
-  for(k=0; k<NTRU_N; k++)
-    r->coeffs[k] = mod3(r->coeffs[k] + 2*r->coeffs[NTRU_N-1]);
 }
 
 void poly_Rq_mul_x_minus_1(poly *r, const poly *a)

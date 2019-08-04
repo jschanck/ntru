@@ -14,7 +14,7 @@ def print_memfunc(f, in_size, out_size, per_reg=256, initialize=False):
     out_data = [MemoryFragment(per_reg, '{}(%rdi)'.format(per_reg*i // 8))
                 for i in range(in_size)]
     if initialize:
-        utils.sequence_to_values(in_data, range(0, 701), padding=ZERO)
+        utils.sequence_to_values(in_data, range(0, 677), padding=ZERO)
 
     instructions.reset()
     data.reset()
