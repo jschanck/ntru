@@ -1,9 +1,5 @@
 #include "poly.h"
-#include "verify.h"
 #include "poly_r2_inv.h"
-#include "poly_s3_inv.h"
-
-extern int __poly_S3_inv(unsigned char *outbytes,const unsigned char *inbytes,const unsigned char *kbytes,const unsigned char *cbytes);
 
 uint16_t mod3(uint16_t a)
 {

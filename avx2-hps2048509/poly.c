@@ -1,13 +1,5 @@
 #include "poly.h"
-#include "fips202.h"
-#include "verify.h"
 #include "poly_r2_inv.h"
-#include "poly_s3_inv.h"
-
-extern void poly_Rq_mul(poly *r, const poly *a, const poly *b);
-extern void poly_S3_mul(poly *r, const poly *a, const poly *b);
-extern void poly_Rq_mul_x_minus_1(poly *r, const poly *a);
-extern void poly_Rq_to_S3(poly *r, const poly *a);
 
 uint16_t mod3(uint16_t a)
 {
