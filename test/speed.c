@@ -87,7 +87,7 @@ int main()
 
   printf("-- internals --\n\n");
 
-  randombytes(fgbytes, sizeof(fgbytes));
+  LONGRANDOMBYTES(fgbytes, sizeof(fgbytes));
   sample_fg(&a, &b, fgbytes);
   poly_Z3_to_Zq(&a);
   poly_Z3_to_Zq(&b);
@@ -135,7 +135,7 @@ int main()
   for(i=0; i<NTESTS; i++)
   {
     t[i] = cpucycles();
-    randombytes(fgbytes, NTRU_SAMPLE_FG_BYTES);
+    LONGRANDOMBYTES(fgbytes, NTRU_SAMPLE_FG_BYTES);
   }
   print_results("randombytes for fg: ", t, NTESTS);
 
@@ -143,7 +143,7 @@ int main()
   for(i=0; i<NTESTS; i++)
   {
     t[i] = cpucycles();
-    randombytes(rmbytes, NTRU_SAMPLE_RM_BYTES);
+    LONGRANDOMBYTES(rmbytes, NTRU_SAMPLE_RM_BYTES);
   }
   print_results("randombytes for rm: ", t, NTESTS);
 

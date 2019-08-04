@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include "fips202.h"
 #include "randombytes.h"
 
 static int fd = -1;
@@ -32,3 +33,9 @@ void randombytes(unsigned char *x,unsigned long long xlen)
   }
 }
 
+void fastrandombytes(unsigned char *x,unsigned long long xlen)
+{
+  unsigned char seed[32];
+  randombytes(seed, 32);
+  shake256(x, xlen, seed, 32);
+}

@@ -4,15 +4,20 @@
 #include "verify.h"
 #include "owcpa.h"
 
+#ifndef LONGRANDOMBYTES
+#define LONGRANDOMBYTES randombytes
+#define SHORTRANDOMBYTES randombytes
+#endif
+
 // API FUNCTIONS 
 int crypto_kem_keypair(unsigned char *pk, unsigned char *sk)
 {
   unsigned char seed[NTRU_SAMPLE_FG_BYTES];
 
-  randombytes(seed, NTRU_SAMPLE_FG_BYTES);
+  LONGRANDOMBYTES(seed, NTRU_SAMPLE_FG_BYTES);
   owcpa_keypair(pk, sk, seed);
 
-  randombytes(sk+NTRU_OWCPA_SECRETKEYBYTES, NTRU_PRFKEYBYTES);
+  SHORTRANDOMBYTES(sk+NTRU_OWCPA_SECRETKEYBYTES, NTRU_PRFKEYBYTES);
 
   return 0;
 }
@@ -22,7 +27,7 @@ int crypto_kem_enc(unsigned char *c, unsigned char *k, const unsigned char *pk)
   unsigned char rm[NTRU_OWCPA_MSGBYTES];
   unsigned char rm_seed[NTRU_SAMPLE_RM_BYTES];
 
-  randombytes(rm_seed, NTRU_SAMPLE_RM_BYTES);
+  LONGRANDOMBYTES(rm_seed, NTRU_SAMPLE_RM_BYTES);
   owcpa_samplemsg(rm, rm_seed);
 
   sha3_256(k, rm, NTRU_OWCPA_MSGBYTES);
