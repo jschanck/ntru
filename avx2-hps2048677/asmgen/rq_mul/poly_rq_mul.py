@@ -108,6 +108,7 @@ def idx2off(i):
 
 if __name__ == '__main__':
     p(".data")
+    p(".section .rodata")
     p(".align 32")
 
     p("mask_low9words:")
@@ -175,6 +176,7 @@ if __name__ == '__main__':
         p(".word 2047")
 
     p(".text")
+    p(".hidden poly_Rq_mul")
     p(".global poly_Rq_mul")
     p(".att_syntax prefix")
 
@@ -219,7 +221,7 @@ if __name__ == '__main__':
     # we evaluate for first 16 coefficients of each block, then 16, then 12
 
     const_3 = 3
-    p("vmovdqa const3, %ymm{}".format(const_3))
+    p("vmovdqa const3(%rip), %ymm{}".format(const_3))
 
     for (prep, real) in [(a_prep, a_real), (b_prep, b_real)]:
         for coeff in range(3):
@@ -234,7 +236,7 @@ if __name__ == '__main__':
             # there are 677 coefficients, not 704;
             # mask out the final 31 (27 for 704-677, and 4 for 48-44)
             if coeff == 1:
-                p("vpand mask_1_15, %ymm{}, %ymm{}".format(f3[3], f3[3]))
+                p("vpand mask_1_15(%rip), %ymm{}, %ymm{}".format(f3[3], f3[3]))
             # the last 12 are all zeros
             if coeff == 2:
                 p("vpxor %ymm{}, %ymm{}, %ymm{}".format(f3[3], f3[3], f3[3]))
@@ -351,13 +353,13 @@ if __name__ == '__main__':
         return registers.pop()
 
     const729 = alloc()
-    p("vmovdqa const729, %ymm{}".format(const729))
+    p("vmovdqa const729(%rip), %ymm{}".format(const729))
     const3_inv = alloc()
-    p("vmovdqa const3_inv, %ymm{}".format(const3_inv))
+    p("vmovdqa const3_inv(%rip), %ymm{}".format(const3_inv))
     const5_inv = alloc()
-    p("vmovdqa const5_inv, %ymm{}".format(const5_inv))
+    p("vmovdqa const5_inv(%rip), %ymm{}".format(const5_inv))
     const9 = alloc()
-    p("vmovdqa const9, %ymm{}".format(const9))
+    p("vmovdqa const9(%rip), %ymm{}".format(const9))
 
     # consider swapping this around for more closely linked memory access
     # they're somewhat spread around because of how the transpose worked, but
@@ -378,8 +380,8 @@ if __name__ == '__main__':
             p("vmovdqa {}, %ymm{}".format(limb(0), h0))
             h0lo = alloc()
             h0hi = alloc()
-            p("vpunpcklwd const0, %ymm{}, %ymm{}".format(h0, h0lo))
-            p("vpunpckhwd const0, %ymm{}, %ymm{}".format(h0, h0hi))
+            p("vpunpcklwd const0(%rip), %ymm{}, %ymm{}".format(h0, h0lo))
+            p("vpunpckhwd const0(%rip), %ymm{}, %ymm{}".format(h0, h0hi))
             free(h0lo)
             h0_2lo = alloc()
             p("vpslld $1, %ymm{}, %ymm{}".format(h0lo, h0_2lo))
@@ -390,18 +392,18 @@ if __name__ == '__main__':
             t1 = alloc()
             p("vmovdqa {}, %ymm{}".format(limb(1), t1))
             t1lo = alloc()
-            p("vpunpcklwd const0, %ymm{}, %ymm{}".format(t1, t1lo))
+            p("vpunpcklwd const0(%rip), %ymm{}, %ymm{}".format(t1, t1lo))
             free(t1)
             t1hi = alloc()
-            p("vpunpckhwd const0, %ymm{}, %ymm{}".format(t1, t1hi))
+            p("vpunpckhwd const0(%rip), %ymm{}, %ymm{}".format(t1, t1hi))
 
             t2 = alloc()
             p("vmovdqa {}, %ymm{}".format(limb(2), t2))
             t2lo = alloc()
-            p("vpunpcklwd const0, %ymm{}, %ymm{}".format(t2, t2lo))
+            p("vpunpcklwd const0(%rip), %ymm{}, %ymm{}".format(t2, t2lo))
             free(t2)
             t2hi = alloc()
-            p("vpunpckhwd const0, %ymm{}, %ymm{}".format(t2, t2hi))
+            p("vpunpckhwd const0(%rip), %ymm{}, %ymm{}".format(t2, t2hi))
 
             t11lo = alloc()
             p("vpaddd %ymm{}, %ymm{}, %ymm{}".format(t2lo, t1lo, t11lo))
@@ -424,8 +426,8 @@ if __name__ == '__main__':
             p("vpsrld $1, %ymm{}, %ymm{}".format(t12lo, t12lo))
             p("vpsrld $1, %ymm{}, %ymm{}".format(t12hi, t12hi))
 
-            p("vpand mask32_to_16, %ymm{}, %ymm{}".format(t12lo, t12lo))
-            p("vpand mask32_to_16, %ymm{}, %ymm{}".format(t12hi, t12hi))
+            p("vpand mask32_to_16(%rip), %ymm{}, %ymm{}".format(t12lo, t12lo))
+            p("vpand mask32_to_16(%rip), %ymm{}, %ymm{}".format(t12hi, t12hi))
             free(t12lo, t12hi)
             r11s = alloc()
             p("vpackusdw %ymm{}, %ymm{}, %ymm{}".format(t12hi, t12lo, r11s))
@@ -433,9 +435,9 @@ if __name__ == '__main__':
             h6 = alloc()
             p("vmovdqa {}, %ymm{}".format(limb(6), h6))
             h6lo = alloc()
-            p("vpunpcklwd const0, %ymm{}, %ymm{}".format(h6, h6lo))
+            p("vpunpcklwd const0(%rip), %ymm{}, %ymm{}".format(h6, h6lo))
             h6hi = alloc()
-            p("vpunpckhwd const0, %ymm{}, %ymm{}".format(h6, h6hi))
+            p("vpunpckhwd const0(%rip), %ymm{}, %ymm{}".format(h6, h6hi))
             free(h6lo)
             h6_2lo = alloc()
             p("vpslld $1, %ymm{}, %ymm{}".format(h6lo, h6_2lo))
@@ -453,8 +455,8 @@ if __name__ == '__main__':
             p("vpsrld $1, %ymm{}, %ymm{}".format(t11c2lo, t11c2lo))
             p("vpsrld $1, %ymm{}, %ymm{}".format(t11c2hi, t11c2hi))
 
-            p("vpand mask32_to_16, %ymm{}, %ymm{}".format(t11c2lo, t11c2lo))
-            p("vpand mask32_to_16, %ymm{}, %ymm{}".format(t11c2hi, t11c2hi))
+            p("vpand mask32_to_16(%rip), %ymm{}, %ymm{}".format(t11c2lo, t11c2lo))
+            p("vpand mask32_to_16(%rip), %ymm{}, %ymm{}".format(t11c2hi, t11c2hi))
             free(t11c2lo, t11c2hi)
             r11 = alloc()
             p("vpackusdw %ymm{}, %ymm{}, %ymm{}".format(t11c2hi, t11c2lo, r11))
@@ -579,14 +581,14 @@ if __name__ == '__main__':
                 if coeff == 2:
                     if i == 3 and j >= 4:  # this part exceeds 704
                         return
-                    p("vpand mask_mod2048, %ymm{}, %ymm{}".format(limbreg, limbreg))
+                    p("vpand mask_mod2048(%rip), %ymm{}, %ymm{}".format(limbreg, limbreg))
                     p("vmovdqu %xmm{}, {}({})".format(limbreg, (off + i*176 + j * 44 + coeff*16) * 2, r_real))
                     p("vextracti128 $1, %ymm{}, %xmm{}".format(limbreg, limbreg, limbreg))
                     p("vmovq %xmm{}, {}({})".format(limbreg, (off + i*176 + j * 44 + coeff*16 + 8) * 2, r_real))
                 else:
                     if i == 3 and j >= 4:  # this part exceeds 704
                         return
-                    p("vpand mask_mod2048, %ymm{}, %ymm{}".format(limbreg, limbreg))
+                    p("vpand mask_mod2048(%rip), %ymm{}, %ymm{}".format(limbreg, limbreg))
                     p("vmovdqu %ymm{}, {}({})".format(limbreg, (off + i*176 + j * 44 + coeff*16) * 2, r_real))
 
             tmp = alloc()
@@ -616,7 +618,7 @@ if __name__ == '__main__':
                   # Add the low word to result[676]
                   tmp2 = alloc()
                   get_limb(tmp, i, j, off=0)
-                  p("vpand mask_1_15, %ymm{}, %ymm{}".format(h[i], tmp2))
+                  p("vpand mask_1_15(%rip), %ymm{}, %ymm{}".format(h[i], tmp2))
                   p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(tmp, tmp2, tmp))
                   store_limb(tmp, i, j, off=0)
                   free(tmp2)
@@ -624,15 +626,15 @@ if __name__ == '__main__':
                   # Add the high 15 words to result[0:14]
                   # rotate left by 1 word, then mask
                   #   1) rotate left by 1 word in each lane
-                  p("vpshufb rol_rol_16, %ymm{}, %ymm{}".format(h[i], h[i]))
+                  p("vpshufb rol_rol_16(%rip), %ymm{}, %ymm{}".format(h[i], h[i]))
                   #   2) swap quadwords on lane boundary -- words (4, 5, 6, 7) with (8, 9, 10, 11)
                   p("vpermq ${}, %ymm{}, %ymm{}".format(int('11' '01' '10' '00', 2), h[i], h[i]))
                   #   3) swap words 11 and 15
-                  p("vpshufb id_braid_16, %ymm{}, %ymm{}".format(h[i], h[i]))
+                  p("vpshufb id_braid_16(%rip), %ymm{}, %ymm{}".format(h[i], h[i]))
                   #   4) swap quadwords on lane boundary
                   p("vpermq ${}, %ymm{}, %ymm{}".format(int('11' '01' '10' '00', 2), h[i], h[i]))
                   # zero word 15
-                  p("vpand mask_15_1, %ymm{}, %ymm{}".format(h[i], h[i]))
+                  p("vpand mask_15_1(%rip), %ymm{}, %ymm{}".format(h[i], h[i]))
                   get_limb(tmp, 0, 0, off=(0-16*coeff))
                   p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(tmp, h[i], tmp))
                   store_limb(tmp, 0, 0, off=(0-16*coeff))
