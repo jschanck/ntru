@@ -1,0 +1,27 @@
+CC=/usr/bin/gcc
+CFLAGS=-O3 -fomit-frame-pointer -march=native -no-pie
+LDFLAGS=-lcrypto
+
+SOURCES = crypto_sort.c djbsort/sort.c fips202.c kem.c owcpa.c pack3.c packq.c poly.c poly_r2_inv.c poly_s3_inv.c \
+		sample.c verify.c rng.c PQCgenKAT_kem.c poly_rq_mul.s poly_r2_mul.s poly_s3_mul.s \
+		poly_rq_to_s3.s \
+		square_1_677_patience.s \
+		square_2_677_patience.s \
+		square_3_677_patience.s \
+		square_5_677_patience.s \
+		square_10_677_shufbytes.s \
+		square_21_677_shufbytes.s \
+		square_42_677_shufbytes.s \
+		square_84_677_shufbytes.s \
+		square_168_677_shufbytes.s \
+		square_336_677_shufbytes.s
+
+HEADERS = api.h crypto_sort.h crypto_int8.h djbsort/int32_sort.h fips202.h kem.h poly.h poly_s3_inv.h owcpa.h params.h sample.h verify.h rng.h
+
+PQCgenKAT_kem: $(HEADERS) $(SOURCES)
+	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(LDFLAGS)
+
+.PHONY: clean
+
+clean:
+	-rm PQCgenKAT_kem
