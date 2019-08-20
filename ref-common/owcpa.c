@@ -42,17 +42,6 @@ static int owcpa_check_m(const poly *m)
 }
 #endif
 
-void owcpa_samplemsg(unsigned char msg[NTRU_OWCPA_MSGBYTES],
-                     const unsigned char seed[NTRU_SAMPLE_RM_BYTES])
-{
-  poly r, m;
-
-  sample_rm(&r, &m, seed);
-
-  poly_S3_tobytes(msg, &r);
-  poly_S3_tobytes(msg+NTRU_PACK_TRINARY_BYTES, &m);
-}
-
 void owcpa_keypair(unsigned char *pk,
                    unsigned char *sk,
                    const unsigned char seed[NTRU_SAMPLE_FG_BYTES])
@@ -104,23 +93,19 @@ void owcpa_keypair(unsigned char *pk,
 
 
 void owcpa_enc(unsigned char *c,
-               const unsigned char *rm,
+               const poly *r,
+               const poly *m,
                const unsigned char *pk)
 {
   int i;
-  poly x1, x2, x3;
+  poly x1, x2;
   poly *h = &x1, *liftm = &x1;
-  poly *r = &x2, *m = &x2;
-  poly *ct = &x3;
+  poly *ct = &x2;
 
   poly_Rq_sum_zero_frombytes(h, pk);
 
-  poly_S3_frombytes(r, rm);
-  poly_Z3_to_Zq(r);
-
   poly_Rq_mul(ct, r, h);
 
-  poly_S3_frombytes(m, rm+NTRU_PACK_TRINARY_BYTES);
   poly_lift(liftm, m);
   for(i=0; i<NTRU_N; i++)
     ct->coeffs[i] = MODQ(ct->coeffs[i] + liftm->coeffs[i]);

@@ -2,6 +2,7 @@
 #include "fips202.h"
 #include "params.h"
 #include "verify.h"
+#include "sample.h"
 #include "owcpa.h"
 
 #ifndef LONGRANDOMBYTES
@@ -24,15 +25,20 @@ int crypto_kem_keypair(unsigned char *pk, unsigned char *sk)
 
 int crypto_kem_enc(unsigned char *c, unsigned char *k, const unsigned char *pk)
 {
+  poly r, m;
   unsigned char rm[NTRU_OWCPA_MSGBYTES];
   unsigned char rm_seed[NTRU_SAMPLE_RM_BYTES];
 
   LONGRANDOMBYTES(rm_seed, NTRU_SAMPLE_RM_BYTES);
-  owcpa_samplemsg(rm, rm_seed);
 
+  sample_rm(&r, &m, rm_seed);
+
+  poly_S3_tobytes(rm, &r);
+  poly_S3_tobytes(rm+NTRU_PACK_TRINARY_BYTES, &m);
   sha3_256(k, rm, NTRU_OWCPA_MSGBYTES);
 
-  owcpa_enc(c, rm, pk);
+  poly_Z3_to_Zq(&r); // XXX: Should be in owcpa_enc
+  owcpa_enc(c, &r, &m, pk);
 
   return 0;
 }
