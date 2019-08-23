@@ -1,1 +1,1 @@
-../ref-hrss701/sample.c
+../ref-common/sample.c

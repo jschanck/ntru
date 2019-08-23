@@ -7,6 +7,8 @@
 
 /* Do not modify below this line */
 
+#define PAD32(X) (((X + 31)/32)*32)
+
 #define NTRU_Q (1 << NTRU_LOGQ)
 #define NTRU_WEIGHT (NTRU_Q/8 - 2)
 
@@ -14,7 +16,7 @@
 #define NTRU_PRFKEYBYTES     32
 #define NTRU_SHAREDKEYBYTES  32
 
-#define NTRU_SAMPLE_IID_BYTES  (NTRU_N-1)
+#define NTRU_SAMPLE_IID_BYTES  (PAD32(NTRU_N-1))
 #define NTRU_SAMPLE_FT_BYTES   ((30*(NTRU_N-1)+7)/8)
 #define NTRU_SAMPLE_FG_BYTES   (NTRU_SAMPLE_IID_BYTES+NTRU_SAMPLE_FT_BYTES)
 #define NTRU_SAMPLE_RM_BYTES   (NTRU_SAMPLE_IID_BYTES+NTRU_SAMPLE_FT_BYTES)

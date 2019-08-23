@@ -2,7 +2,6 @@
 #define POLY_H
 
 #include <stdint.h>
-#include <stdlib.h>
 #include "params.h"
 
 #define MODQ(X) ((X) & (NTRU_Q-1))
@@ -11,7 +10,7 @@ uint16_t mod3(uint16_t a);
 typedef struct{
   // round to nearest multiple of 32 to make it easier to load into vector
   //   registers without having to do bound checks
-  #define NTRU_N_32 ((NTRU_N + 31) / 32) * 32
+  #define NTRU_N_32 PAD32(NTRU_N)
   uint16_t coeffs[NTRU_N_32] __attribute__((aligned(32)));
 } poly;
 
