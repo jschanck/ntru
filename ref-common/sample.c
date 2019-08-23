@@ -1,5 +1,4 @@
 #include "sample.h"
-#include "fips202.h"
 
 void sample_fg(poly *f, poly *g, const unsigned char uniformbytes[NTRU_SAMPLE_FG_BYTES])
 {
@@ -25,16 +24,6 @@ void sample_rm(poly *r, poly *m, const unsigned char uniformbytes[NTRU_SAMPLE_RM
   sample_iid(r,uniformbytes);
   sample_fixed_type(m,uniformbytes+NTRU_SAMPLE_IID_BYTES);
 #endif
-}
-
-void sample_iid(poly *r, const unsigned char uniformbytes[NTRU_SAMPLE_IID_BYTES])
-{
-  int i;
-  /* {0,1,...,255} -> {0,1,2}; Pr[0] = 86/256, Pr[1] = Pr[-1] = 85/256 */
-  for(i=0; i<NTRU_N-1; i++)
-    r->coeffs[i] = mod3(uniformbytes[i]);
-
-  r->coeffs[NTRU_N-1] = 0;
 }
 
 #ifdef NTRU_HRSS
