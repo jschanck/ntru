@@ -33,11 +33,11 @@ def registers_to_sequence(registers):
     return result
 
 
-def square_677_patience(out_data, in_data, n, callee_saved=0):
-    x = list(range(677)) + 27*[ZERO]
+def square_821_patience(out_data, in_data, n, callee_saved=0):
+    x = list(range(821)) + 203*[ZERO]
     regs = split_in_size_n(x, 64)
 
-    seq = gen_sequence(n, 677) + 27*[ZERO]
+    seq = gen_sequence(n, 821) + 203*[ZERO]
     seq_r = split_in_size_n(seq, 64)
 
     moved = [False] * len(seq_r)
@@ -126,7 +126,9 @@ def square_677_patience(out_data, in_data, n, callee_saved=0):
                 else:
                     x86.mov(out_data[i], t1)
                     moved[i] = True
-    x86.movq(out_data[11], 0)  # to fill up all 768 bits
+    x86.movq(out_data[13], 0)  # to fill up all 1024 bits
+    x86.movq(out_data[14], 0)  # to fill up all 1024 bits
+    x86.movq(out_data[15], 0)  # to fill up all 1024 bits
 
     for mask in maskcache.values():
         mask.free()
@@ -135,10 +137,10 @@ def square_677_patience(out_data, in_data, n, callee_saved=0):
         x86.pop_callee_saved(64)
 
 
-def square_677_shufbytes(out_data, in_data, n):
+def square_821_shufbytes(out_data, in_data, n):
     r = Register()
-    out = [Register() for _ in range(3)]
-    moved = [False] * 3
+    out = [Register() for _ in range(4)]
+    moved = [False] * 4
 
     t1 = Register()
     t2 = Register()
@@ -146,7 +148,7 @@ def square_677_shufbytes(out_data, in_data, n):
     t4 = Register()
     t5 = Register()
 
-    seq = gen_sequence(n, 677) + 91*[ZERO]
+    seq = gen_sequence(n, 821) + 203*[ZERO]
     seq_regvalues = split_in_size_n(seq, 256)
 
     for in_data_fragment in in_data:
@@ -245,28 +247,28 @@ if __name__ == '__main__':
     parser.add_argument('--shufbytes', dest='shufbytes', action='store_true',
                         help='always use the shufbytes method')
     parser.add_argument('--raw-name', dest='raw_name', action='store_true',
-                        help='use minimal function name (square_N_677)')
+                        help='use minimal function name (square_N_821)')
     parser.set_defaults(patience=False)
 
     args = parser.parse_args()
     if args.shufbytes:
-        f = functools.partial(square_677_shufbytes, n=args.no_of_squarings)
+        f = functools.partial(square_821_shufbytes, n=args.no_of_squarings)
         if args.raw_name:
-            f.__name__ = "square_{}_677".format(args.no_of_squarings)
+            f.__name__ = "square_{}_821".format(args.no_of_squarings)
         else:
-            f.__name__ = "square_{}_677_shufbytes".format(args.no_of_squarings)
-        print_memfunc(f, 3, 3, initialize=True)
+            f.__name__ = "square_{}_821_shufbytes".format(args.no_of_squarings)
+        print_memfunc(f, 4, 4, initialize=True)
     elif args.patience:
-        f = functools.partial(square_677_patience,
+        f = functools.partial(square_821_patience,
                               n=args.no_of_squarings, callee_saved=args.callee)
         if args.raw_name:
-            f.__name__ = "square_{}_677".format(args.no_of_squarings)
+            f.__name__ = "square_{}_821".format(args.no_of_squarings)
         else:
-            f.__name__ = "square_{}_677_patience".format(args.no_of_squarings)
-        print_memfunc(f, 12, 12, per_reg=64)
+            f.__name__ = "square_{}_821_patience".format(args.no_of_squarings)
+        print_memfunc(f, 16, 16, per_reg=64)
     elif args.no_of_squarings in permutations:
         f = permutations[args.no_of_squarings]
-        print_memfunc(f, 3, 3)
+        print_memfunc(f, 4, 4)
     else:
         raise NotImplementedError(
             "There is no dedicated implementation for {} squarings. "

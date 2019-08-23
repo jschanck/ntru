@@ -4,6 +4,17 @@ CFLAGS = -Wall -Wextra -Wpedantic -O3 -fomit-frame-pointer -march=native -fPIC -
 SOURCES = crypto_sort.c djbsort/sort.c poly.c poly_s3_inv.c poly_r2_inv.c pack3.c packq.c fips202.c randombytes.c sample.c verify.c owcpa.c kem.c
 HEADERS = crypto_sort.h djbsort/int32_sort.h poly_s3_inv.h poly_r2_inv.h params.h poly.h randombytes.h sample.h verify.h owcpa.h kem.h
 
+OBJS = square_1_821_patience.s \
+	     square_3_821_patience.s \
+	     square_6_821_patience.s \
+	     square_12_821_shufbytes.s \
+	     square_24_821_shufbytes.s \
+	     square_48_821_shufbytes.s \
+	     square_51_821_shufbytes.s \
+	     square_102_821_shufbytes.s \
+	     square_204_821_shufbytes.s \
+	     square_408_821_shufbytes.s
+#OBJS += poly_r2_mul.s poly_rq_mul.s poly_s3_mul.s poly_rq_to_s3.s
 
 all: test/test_polymul \
      test/test_ntru \
@@ -14,6 +25,24 @@ all: test/test_polymul \
      test/decap \
      test/keypair \
      test/gen_owcpa_vecs
+
+poly_rq_mul.s: asmgen/rq_mul/poly_rq_mul.py asmgen/rq_mul/K2_schoolbook_64x11.py asmgen/rq_mul/K2_K2_64x44.py
+	python3 $^ > $@
+
+%.s: asmgen/%.py
+	python3 $^ > $@
+
+square_%_821_shufbytes.s: $(wildcard bitpermutations/*)
+	PYTHONPATH=bitpermutations \
+	 python3 bitpermutations/applications/squaring_mod_GF2N.py \
+	 --shufbytes --raw-name $(word 2, $(subst _, ,$@)) \
+	 > $@
+
+square_%_821_patience.s: $(wildcard bitpermutations/*)
+	PYTHONPATH=bitpermutations \
+	 python3 bitpermutations/applications/squaring_mod_GF2N.py \
+	 --patience --callee 6 --raw-name $(word 2, $(subst _, ,$@)) \
+	 > $@
 
 test/test_polymul: $(SOURCES) $(OBJS) $(HEADERS) test/test_polymul.c
 	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(OBJS) test/test_polymul.c
