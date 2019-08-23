@@ -46,6 +46,7 @@ ONLYHPS677=(
 
 ONLYHPS821=(
   poly_lift.c
+  poly_rq_mul.c
   poly_s3_inv.c
   poly_r2_inv.c
   poly_r2_inv.h

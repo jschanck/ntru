@@ -1,0 +1,26 @@
+CC=/usr/bin/gcc
+LDFLAGS=-lcrypto
+
+SOURCES = crypto_sort.c fips202.c kem.c owcpa.c pack3.c packq.c poly.c sample.c verify.c rng.c PQCgenKAT_kem.c \
+					square_1_821_patience.s \
+					square_3_821_patience.s \
+					square_6_821_patience.s \
+					square_12_821_shufbytes.s \
+					square_24_821_shufbytes.s \
+					square_48_821_shufbytes.s \
+					square_51_821_shufbytes.s \
+					square_102_821_shufbytes.s \
+					square_204_821_shufbytes.s \
+					square_408_821_shufbytes.s \
+					sample_iid.s
+
+HEADERS = api.h crypto_sort.h fips202.h kem.h poly.h owcpa.h params.h sample.h verify.h rng.h
+
+PQCgenKAT_kem: $(HEADERS) $(SOURCES)
+	$(CC) -o $@ $(SOURCES) $(LDFLAGS)
+
+.PHONY: clean
+
+clean:
+	-rm PQCgenKAT_kem
+
