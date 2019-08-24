@@ -14,6 +14,7 @@ OBJS = square_1_821_patience.s \
 	     square_102_821_shufbytes.s \
 	     square_204_821_shufbytes.s \
 	     square_408_821_shufbytes.s
+OBJS += sample_iid.s
 #OBJS += poly_r2_mul.s poly_rq_mul.s poly_s3_mul.s poly_rq_to_s3.s
 
 all: test/test_polymul \
