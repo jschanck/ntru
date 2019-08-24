@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include "../params.h"
 #include "../poly.h"
+#include "../sample.h"
+#include "../fips202.h"
+#include "../randombytes.h"
 #include "../owcpa.h"
 #include "../kem.h"
 
@@ -40,27 +43,30 @@ static void unpack_message(poly *r, poly *m, const unsigned char *message)
 int main(void)
 {
   unsigned char key_seed[32] = "ntruhrss701 owcpa test seed #000";
-  unsigned char rm_seed[32] = "ntruhrss701 owcpa test seed #001";
+  unsigned char msg_seed[32] = "ntruhrss701 owcpa test seed #001";
+  unsigned char key_random_bytes[NTRU_SAMPLE_FG_BYTES];
+  unsigned char msg_random_bytes[NTRU_SAMPLE_RM_BYTES];
   unsigned char packed_pk[NTRU_OWCPA_PUBLICKEYBYTES];
   unsigned char packed_sk[NTRU_OWCPA_SECRETKEYBYTES];
-  unsigned char packed_rmA[NTRU_OWCPA_MSGBYTES];
-  unsigned char packed_rmB[NTRU_OWCPA_MSGBYTES];
   unsigned char packed_ct[NTRU_OWCPA_BYTES];
-  unsigned char packed_ct2[NTRU_OWCPA_BYTES];
-  poly pk, f, finv3, hq, rA, mA, ct, rB, mB;
+  unsigned char packed_rm[NTRU_OWCPA_MSGBYTES];
+  poly pk, f, finv3, hq, rA, mA, rB, mB, ct;
 
-  owcpa_keypair(packed_pk, packed_sk, key_seed);
-  owcpa_samplemsg(packed_rmA, rm_seed);
-  owcpa_enc(packed_ct, packed_rmA, packed_pk);
-  owcpa_dec(packed_ct2, packed_ct, packed_sk);
+  shake256(key_random_bytes, sizeof(key_random_bytes), key_seed, sizeof(key_seed));
+  shake256(msg_random_bytes, sizeof(msg_random_bytes), msg_seed, sizeof(msg_seed));
+
+  owcpa_keypair(packed_pk, packed_sk, key_random_bytes);
+  sample_rm(&rA, &mA, msg_random_bytes);
+
+  owcpa_enc(packed_ct, &rA, &mA, packed_pk);
+  owcpa_dec(packed_rm, packed_ct, packed_sk);
 
   FILE *out = fopen("owcpa_vecs.txt", "w");
 
   unpack_pk(&pk, packed_pk);
   unpack_sk(&f, &finv3, &hq, packed_sk);
   unpack_ciphertext(&ct, packed_ct);
-  unpack_message(&rA, &mA, packed_rmA);
-  unpack_message(&rB, &mB, packed_rmB);
+  unpack_message(&rB, &mB, packed_rm);
 
   poly_write(out, &f, "f");
   poly_write(out, &finv3, "fp");
