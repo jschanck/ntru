@@ -20,6 +20,7 @@ void poly_Sq_frombytes(poly *r, const unsigned char *a)
     r->coeffs[2*i+0] = (a[3*i+ 0] >> 0) | (((uint16_t)a[3*i+ 1] & 0x0f) << 8);
     r->coeffs[2*i+1] = (a[3*i+ 1] >> 4) | (((uint16_t)a[3*i+ 2] & 0xff) << 4);
   }
+  r->coeffs[NTRU_N-1] = 0;
 }
 
 void poly_Rq_sum_zero_tobytes(unsigned char *r, const poly *a)

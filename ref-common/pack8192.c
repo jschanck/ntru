@@ -78,6 +78,7 @@ void poly_Sq_frombytes(poly *r, const unsigned char *a)
       r->coeffs[8*i+1] = (a[13*i+ 1] >> 5) | (((uint16_t)a[13*i+ 2]       ) << 3) | (((uint16_t)a[13*i+ 3] & 0x03) << 11);
       r->coeffs[8*i+0] =  a[13*i+ 0]       | (((uint16_t)a[13*i+ 1] & 0x1f) << 8);
   }
+  r->coeffs[NTRU_N-1]=0;
 }
 
 void poly_Rq_sum_zero_tobytes(unsigned char *r, const poly *a)
