@@ -2,22 +2,6 @@
 #include "fips202.h"
 #include "verify.h"
 
-uint16_t mod3(uint16_t a)
-{
-  uint16_t r;
-  int16_t t, c;
-
-  r = (a >> 8) + (a & 0xff); // r mod 255 == a mod 255
-  r = (r >> 4) + (r & 0xf); // r' mod 15 == r mod 15
-  r = (r >> 2) + (r & 0x3); // r' mod 3 == r mod 3
-  r = (r >> 2) + (r & 0x3); // r' mod 3 == r mod 3
-
-  t = r - 3;
-  c = t >> 15;
-
-  return (c&r) ^ (~c&t);
-}
-
 /* Map {0, 1, 2} -> {0,1,q-1} in place */
 void poly_Z3_to_Zq(poly *r)
 {
@@ -70,7 +54,8 @@ void poly_S3_mul(poly *r, const poly *a, const poly *b)
       r->coeffs[k] += a->coeffs[k-i] * b->coeffs[i];
   }
   for(k=0; k<NTRU_N; k++)
-    r->coeffs[k] = mod3(r->coeffs[k] + 2*r->coeffs[NTRU_N-1]);
+    r->coeffs[k] = r->coeffs[k] + 2*r->coeffs[NTRU_N-1];
+  poly_mod3(r);
 }
 
 void poly_Rq_mul_x_minus_1(poly *r, const poly *a)
@@ -137,7 +122,8 @@ void poly_lift(poly *r, const poly *a)
 
   /* Finish reduction mod Phi by subtracting Phi * b[N-1] */
   for(i=0; i<NTRU_N; i++)
-    b.coeffs[i] = mod3(b.coeffs[i] + 2*b.coeffs[NTRU_N-1]);
+    b.coeffs[i] = b.coeffs[i] + 2*b.coeffs[NTRU_N-1];
+  poly_mod3(&b);
 
   /* Switch from {0,1,2} to {0,1,q-1} coefficient representation */
   poly_Z3_to_Zq(&b);
@@ -160,9 +146,9 @@ void poly_Rq_to_S3(poly *r, const poly *a)
     r->coeffs[i] += a->coeffs[i];
   }
   /* Reduce mod (3, Phi) */
-  r->coeffs[NTRU_N-1] = mod3(r->coeffs[NTRU_N-1]);
   for(i=0; i<NTRU_N; i++)
-    r->coeffs[i] = mod3(r->coeffs[i] + 2*r->coeffs[NTRU_N-1]);
+    r->coeffs[i] = r->coeffs[i] + 2*r->coeffs[NTRU_N-1];
+  poly_mod3(r);
 }
 
 #define POLY_R2_ADD(I,A,B,S)        \
@@ -382,7 +368,8 @@ void poly_S3_inv(poly *r, const poly *a)
      representation of k, rotating for every power of 2, and performing a cmov
      if the respective bit is set. */
   for (i = 0; i < NTRU_N; i++)
-    r->coeffs[i] = mod3(fsign * b.coeffs[i]);
+    r->coeffs[i] = fsign * b.coeffs[i];
+  poly_mod3(r);
 
   for (i = 0; i < 10; i++) {
     for (j = 0; j < NTRU_N; j++) {
@@ -395,5 +382,6 @@ void poly_S3_inv(poly *r, const poly *a)
 
   /* Reduce modulo Phi_n */
   for(i=0; i<NTRU_N; i++)
-    r->coeffs[i] = mod3(r->coeffs[i] + 2*r->coeffs[NTRU_N-1]);
+    r->coeffs[i] = r->coeffs[i] + 2*r->coeffs[NTRU_N-1];
+  poly_mod3(r);
 }

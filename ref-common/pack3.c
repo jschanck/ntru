@@ -37,21 +37,22 @@ void poly_S3_frombytes(poly *r, const unsigned char msg[NTRU_OWCPA_MSGBYTES])
   for(i=0; i<NTRU_PACK_DEG/5; i++)
   {
     c = msg[i];
-    r->coeffs[5*i+0] = mod3(c);
-    r->coeffs[5*i+1] = mod3(c * 171 >> 9);  // this is division by 3
-    r->coeffs[5*i+2] = mod3(c * 57 >> 9);  // division by 3^2
-    r->coeffs[5*i+3] = mod3(c * 19 >> 9);  // division by 3^3
-    r->coeffs[5*i+4] = mod3(c * 203 >> 14);  // etc.
+    r->coeffs[5*i+0] = c;
+    r->coeffs[5*i+1] = c * 171 >> 9;  // this is division by 3
+    r->coeffs[5*i+2] = c * 57 >> 9;  // division by 3^2
+    r->coeffs[5*i+3] = c * 19 >> 9;  // division by 3^3
+    r->coeffs[5*i+4] = c * 203 >> 14;  // etc.
   }
 #if NTRU_PACK_DEG > (NTRU_PACK_DEG / 5) * 5  // if 5 does not divide NTRU_N-1
   i = NTRU_PACK_DEG/5;
   c = msg[i];
   for(j=0; (5*i+j)<NTRU_PACK_DEG; j++)
   {
-    r->coeffs[5*i+j] = mod3(c);
+    r->coeffs[5*i+j] = c;
     c = c * 171 >> 9;
   }
 #endif
+  poly_mod3(r);
   r->coeffs[NTRU_N-1] = 0;
 }
 

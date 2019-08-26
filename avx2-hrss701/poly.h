@@ -14,6 +14,8 @@ typedef struct{
   uint16_t coeffs[NTRU_N_32] __attribute__((aligned(32)));
 } poly;
 
+void poly_mod3(poly *r);
+
 void poly_Sq_tobytes(unsigned char *r, const poly *a);
 void poly_Sq_frombytes(poly *r, const unsigned char *a);
 
