@@ -30,6 +30,7 @@ void poly_S3_mul(poly *r, const poly *a, const poly *b);
 void poly_lift(poly *r, const poly *a);
 void poly_Rq_to_S3(poly *r, const poly *a);
 
+void poly_R2_inv(poly *r, const poly *a);
 void poly_Rq_inv(poly *r, const poly *a);
 void poly_S3_inv(poly *r, const poly *a);
 
