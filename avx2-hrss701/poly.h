@@ -5,7 +5,6 @@
 #include "params.h"
 
 #define MODQ(X) ((X) & (NTRU_Q-1))
-uint16_t mod3(uint16_t a);
 
 typedef struct{
   // round to nearest multiple of 32 to make it easier to load into vector
