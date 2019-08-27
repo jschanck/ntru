@@ -114,13 +114,6 @@ int main()
   for(i=0; i<NTESTS; i++)
   {
     t[i] = cpucycles();
-    poly_Rq_mul_x_minus_1(&r, &a);
-  }
-  print_results("poly_Rq_mul_x_minus_1: ", t, NTESTS);
-
-  for(i=0; i<NTESTS; i++)
-  {
-    t[i] = cpucycles();
     poly_Rq_inv(&r, &a);
   }
   print_results("poly_Rq_inv: ", t, NTESTS);

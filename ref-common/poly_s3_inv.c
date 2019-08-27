@@ -99,7 +99,7 @@ void poly_S3_inv(poly *r, const poly *a)
      if the respective bit is set. */
   for (i = 0; i < NTRU_N; i++)
     r->coeffs[i] = fsign * b.coeffs[i];
-  poly_mod3(r);
+  poly_mod_3_Phi_n(r);
 
   for (i = 0; i < 10; i++) {
     for (j = 0; j < NTRU_N; j++) {
@@ -111,7 +111,5 @@ void poly_S3_inv(poly *r, const poly *a)
   }
 
   /* Reduce modulo Phi_n */
-  for(i=0; i<NTRU_N; i++)
-    r->coeffs[i] = r->coeffs[i] + 2*r->coeffs[NTRU_N-1];
-  poly_mod3(r);
+  poly_mod_3_Phi_n(r);
 }

@@ -52,7 +52,7 @@ void poly_S3_frombytes(poly *r, const unsigned char msg[NTRU_OWCPA_MSGBYTES])
     c = c * 171 >> 9;
   }
 #endif
-  poly_mod3(r);
   r->coeffs[NTRU_N-1] = 0;
+  poly_mod_3_Phi_n(r);
 }
 

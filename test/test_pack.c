@@ -31,13 +31,15 @@ int main(void)
 
   sample_iid(&c,uniformbytes);
   poly_Z3_to_Zq(&c);
-  poly_Rq_mul_x_minus_1(&a,&c); // We can only pack vectors with 0 coeff sum
+  for(i=NTRU_N-1; i>0; i--)
+    a.coeffs[i] = (c.coeffs[i-1] - c.coeffs[i]);
+  a.coeffs[0] = -(c.coeffs[0]);
   //poly_print(&a);
   poly_Rq_sum_zero_tobytes(p1, &a);
   poly_Rq_sum_zero_frombytes(&b, p1);
   //poly_print(&b);
   for(i=0; i<NTRU_N; i++)
-    errorRq |= (a.coeffs[i] != b.coeffs[i]);
+    errorRq |= (MODQ(a.coeffs[i]) != MODQ(b.coeffs[i]));
 
   if(errorRq)
     printf("Pack Rq fails\n");
