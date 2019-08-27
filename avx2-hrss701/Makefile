@@ -1,31 +1,58 @@
 CC = /usr/bin/cc
-CFLAGS = -O3 -Wall -Wextra -fomit-frame-pointer -march=native -fPIC -fPIE -pie
+CFLAGS = -Wall -Wextra -Wpedantic -O3 -fomit-frame-pointer -march=native -fPIC -fPIE -pie
 
-SOURCES = poly.c pack3.c packq.c fips202.c randombytes.c sample.c verify.c owcpa.c kem.c poly_r2_inv.c
-HEADERS = params.h poly.h randombytes.h sample.h verify.h owcpa.h kem.h poly_r2_inv.h
+SOURCES = fips202.c \
+          randombytes.c \
+          poly.c \
+          poly_r2_inv.c \
+          pack3.c \
+          packq.c \
+          sample.c \
+          verify.c \
+          owcpa.c \
+          kem.c
+
+HEADERS = randombytes.h \
+          poly.h \
+          poly_r2_inv.h \
+          sample.h \
+          verify.h \
+          owcpa.h \
+          kem.h \
+          params.h
 
 OBJS = square_1_701_patience.s \
-	   square_3_701_patience.s \
-	   square_6_701_patience.s \
-	   square_12_701_shufbytes.s \
-	   square_15_701_shufbytes.s \
-	   square_27_701_shufbytes.s \
-	   square_42_701_shufbytes.s \
-	   square_84_701_shufbytes.s \
-	   square_168_701_shufbytes.s \
-	   square_336_701_shufbytes.s
-OBJS += poly_r2_mul.s poly_rq_mul.s poly_s3_mul.s poly_rq_mul_x_minus_1.s
-OBJS += poly_s3_inv.s poly_rq_to_s3.s poly_s3_to_rq.s sample_iid.s poly_mod3.s 
+       square_3_701_patience.s \
+       square_6_701_patience.s \
+       square_12_701_shufbytes.s \
+       square_15_701_shufbytes.s \
+       square_27_701_shufbytes.s \
+       square_42_701_shufbytes.s \
+       square_84_701_shufbytes.s \
+       square_168_701_shufbytes.s \
+       square_336_701_shufbytes.s
+
+OBJS += poly_rq_mul.s \
+        poly_r2_mul.s \
+        poly_rq_to_s3.s \
+        sample_iid.s \
+        poly_mod_3_Phi_n.s \
+        poly_mod_q_Phi_n.s \
+        poly_s3_to_rq.s \
+        poly_s3_inv.s \
+        poly_rq_mul_x_minus_1.s
 
 all: test/test_polymul \
      test/test_ntru \
      test/test_pack \
-     test/speed \
      test/ram \
+     test/speed \
      test/encap \
      test/decap \
      test/keypair \
-     test/speed_r2_inv \
+     test/speed_r2_inv
+
+
 
 poly_rq_mul.s: asmgen/rq_mul/poly_rq_mul.py asmgen/rq_mul/K2_schoolbook_64x11.py asmgen/rq_mul/K2_K2_64x44.py
 	python3 $^ > $@
@@ -33,19 +60,13 @@ poly_rq_mul.s: asmgen/rq_mul/poly_rq_mul.py asmgen/rq_mul/K2_schoolbook_64x11.py
 %.s: asmgen/%.py
 	python3 $^ > $@
 
-square_%_701.s: $(wildcard bitpermutations/*)
-	PYTHONPATH=bitpermutations \
-	 python3 bitpermutations/applications/squaring_mod_GF2N.py \
-	 --raw-name $(word 2, $(subst _, ,$@)) \
-	 > $@
-
-square_%_701_shufbytes.s: $(wildcard bitpermutations/*)
+square_%_shufbytes.s: $(wildcard bitpermutations/*)
 	PYTHONPATH=bitpermutations \
 	 python3 bitpermutations/applications/squaring_mod_GF2N.py \
 	 --shufbytes --raw-name $(word 2, $(subst _, ,$@)) \
 	 > $@
 
-square_%_701_patience.s: $(wildcard bitpermutations/*)
+square_%_patience.s: $(wildcard bitpermutations/*)
 	PYTHONPATH=bitpermutations \
 	 python3 bitpermutations/applications/squaring_mod_GF2N.py \
 	 --patience --callee 6 --raw-name $(word 2, $(subst _, ,$@)) \

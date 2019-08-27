@@ -1,36 +1,8 @@
-from math import ceil
-
 p = print
 
-
-def mod3(a, r=13, t=14, c=15):
-    # r = (a >> 8) + (a & 0xff); // r mod 255 == a mod 255
-    p("vpsrlw $8, %ymm{}, %ymm{}".format(a, r))
-    p("vpand mask_ff(%rip), %ymm{}, %ymm{}".format(a, a))
-    p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(r, a, r))
-
-    # r = (r >> 4) + (r & 0xf); // r' mod 15 == r mod 15
-    p("vpand mask_f(%rip), %ymm{}, %ymm{}".format(r, a))
-    p("vpsrlw $4, %ymm{}, %ymm{}".format(r, r))
-    p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(r, a, r))
-
-    # r = (r >> 2) + (r & 0x3); // r' mod 3 == r mod 3
-    # r = (r >> 2) + (r & 0x3); // r' mod 3 == r mod 3
-    for _ in range(2):
-        p("vpand mask_3(%rip), %ymm{}, %ymm{}".format(r, a))
-        p("vpsrlw $2, %ymm{}, %ymm{}".format(r, r))
-        p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(r, a, r))
-
-    #   t = r - 3;
-    p("vpsubw mask_3(%rip), %ymm{}, %ymm{}".format(r, t))
-    #   c = t >> 15;  t is signed, so shift arithmetic
-    p("vpsraw $15, %ymm{}, %ymm{}".format(t, c))
-
-    tmp = a
-    #   return (c&r) ^ (~c&t);
-    p("vpandn %ymm{}, %ymm{}, %ymm{}".format(t, c, tmp))
-    p("vpand %ymm{}, %ymm{}, %ymm{}".format(c, r, t))
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t, tmp, r))
+from params import *
+from mod3 import mod3, mod3_masks
+from math import ceil
 
 
 if __name__ == '__main__':
@@ -38,15 +10,7 @@ if __name__ == '__main__':
     p(".section .rodata")
     p(".align 32")
 
-    p("mask_ff:")
-    for i in range(16):
-        p(".word 0xff")
-    p("mask_f:")
-    for i in range(16):
-        p(".word 0xf")
-    p("mask_3:")
-    for i in range(16):
-        p(".word 0x03")
+    mod3_masks()
 
     p("coeff_0:")
     p(".word 0xFFFF")
@@ -106,11 +70,11 @@ if __name__ == '__main__':
     for i in range(16):
         p(".word 1")
 
-    p("const_8191s:")
+    p("const_modq:")
     for i in range(16):
-        p(".word 8191")
+        p(".word {}".format(NTRU_Q-1))
 
-    p("mask_701:")
+    p("mask_n:")
     for i in range(13):
         p(".word 0xFFFF")
     for i in range(3):
@@ -125,7 +89,7 @@ if __name__ == '__main__':
 
     p("mov %rsp, %r8")  # Use r8 to store the old stack pointer during execution.
     p("andq $-32, %rsp")  # Align rsp to the next 32-byte value, for vmovdqa.
-    p("subq ${}, %rsp".format(32 * ceil(701 / 16)))
+    p("subq ${}, %rsp".format(32 * ceil(NTRU_N / 16)))
 
     zero = 0
     a = 1
@@ -223,7 +187,7 @@ if __name__ == '__main__':
     # for(i=3; i<NTRU_N; i++)
     #   b.coeffs[i] = 2*(a->coeffs[i] + a->coeffs[i-1] + a->coeffs[i-2]);
 
-    for i in range(ceil(701 / 16) - 1):
+    for i in range(ceil(NTRU_N / 16) - 1):
         p("vmovdqu {}(%rsi), %ymm{}".format((3 + i*16) * 2, a))
         p("vmovdqu {}(%rsi), %ymm{}".format((2 + i*16) * 2, amin1))
         p("vmovdqu {}(%rsi), %ymm{}".format((1 + i*16) * 2, amin2))
@@ -234,7 +198,7 @@ if __name__ == '__main__':
 
     # from 691 to 701 we cannot use the same loop, as we would exceed bounds
     p("vmovdqa {}(%rsi), %ymm{}".format((0 + 43*16) * 2, a))
-    p("vpand mask_701(%rip), %ymm{}, %ymm{}".format(a, a))
+    p("vpand mask_n(%rip), %ymm{}, %ymm{}".format(a, a))
     p("vmovdqu {}(%rsi), %ymm{}".format((-1 + 43*16) * 2, amin1))
     p("vmovdqu {}(%rsi), %ymm{}".format((-2 + 43*16) * 2, amin2))
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(amin1, a, a))
@@ -277,7 +241,7 @@ if __name__ == '__main__':
         # b.coeffs[i] = ZP_TO_ZQ(b.coeffs[i]);
         p("vpsrlq $1, %ymm{}, %ymm{}".format(retval, t))
         p("vpsubw %ymm{}, %ymm{}, %ymm{}".format(t, zero, t))
-        p("vpand const_8191s(%rip), %ymm{}, %ymm{}".format(t, t))
+        p("vpand const_modq(%rip), %ymm{}, %ymm{}".format(t, t))
         p("vpand const_1s(%rip), %ymm{}, %ymm{}".format(retval, retval))
         p("vpor %ymm{}, %ymm{}, %ymm{}".format(retval, t, retval))
         p("vmovdqa %ymm{}, {}(%rsp)".format(retval, i*32))

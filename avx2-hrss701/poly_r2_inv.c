@@ -38,7 +38,7 @@ void poly_R2_frombytes(poly *a, const unsigned char *in)
   }
 }
 
-int poly_R2_inv(poly *r, const poly *a) {
+void poly_R2_inv(poly *r, const poly *a) {
     #if NTRU_N != 701
       #error This function requires NTRU_N = 701!
     #endif
@@ -76,5 +76,4 @@ int poly_R2_inv(poly *r, const poly *a) {
     square_1_701(squares[0], squares[12]);
 
     poly_R2_frombytes(r, squares[0]);
-    return 0;
 }
