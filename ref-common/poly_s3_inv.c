@@ -1,6 +1,22 @@
 #include "poly.h"
 #include "verify.h"
 
+static uint16_t mod3(uint16_t a)
+{
+  uint16_t r;
+  int16_t t, c;
+
+  r = (a >> 8) + (a & 0xff); // r mod 255 == a mod 255
+  r = (r >> 4) + (r & 0xf); // r' mod 15 == r mod 15
+  r = (r >> 2) + (r & 0x3); // r' mod 3 == r mod 3
+  r = (r >> 2) + (r & 0x3); // r' mod 3 == r mod 3
+
+  t = r - 3;
+  c = t >> 15;
+
+  return (c&r) ^ (~c&t);
+}
+
 #define POLY_S3_FMADD(I,A,B,S)                    \
    for(I=0; I<NTRU_N; I++)                            \
    { A.coeffs[I] = mod3(A.coeffs[I] + S * B.coeffs[I]); }

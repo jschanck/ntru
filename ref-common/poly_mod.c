@@ -1,6 +1,6 @@
 #include "poly.h"
 
-uint16_t mod3(uint16_t a)
+static uint16_t mod3(uint16_t a)
 {
   uint16_t r;
   int16_t t, c;

@@ -8,7 +8,7 @@ void poly_Sq_tobytes(unsigned char *r, const poly *a)
   for(i=0;i<NTRU_PACK_DEG/8;i++)
   {
     for(j=0;j<8;j++)
-      t[j] = a->coeffs[8*i+j];
+      t[j] = MODQ(a->coeffs[8*i+j]);
 
     r[13*i+ 0] =  t[0]        & 0xff;
     r[13*i+ 1] = (t[0] >>  8) | ((t[1] & 0x07) << 5);
@@ -26,7 +26,7 @@ void poly_Sq_tobytes(unsigned char *r, const poly *a)
   }
 
   for(j=0;j<NTRU_PACK_DEG-8*i;j++)
-    t[j] = a->coeffs[8*i+j];
+    t[j] = MODQ(a->coeffs[8*i+j]);
   for(; j<8; j++)
     t[j] = 0;
 
@@ -94,8 +94,5 @@ void poly_Rq_sum_zero_frombytes(poly *r, const unsigned char *a)
   /* Set r[n-1] so that the sum of coefficients is zero mod q */
   r->coeffs[NTRU_N-1] = 0;
   for(i=0;i<NTRU_PACK_DEG;i++)
-  {
-    r->coeffs[NTRU_N-1] += r->coeffs[i];
-  }
-  r->coeffs[NTRU_N-1] = MODQ(-(r->coeffs[NTRU_N-1]));
+    r->coeffs[NTRU_N-1] -= r->coeffs[i];
 }
