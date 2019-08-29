@@ -2,7 +2,9 @@ p = print
 
 from params import *
 from mod3 import mod3, mod3_masks
-from math import ceil
+
+LOGQ = 0
+while 2**LOGQ < NTRU_Q: LOGQ +=1
 
 if __name__ == '__main__':
     p(".data")
@@ -39,12 +41,12 @@ if __name__ == '__main__':
     modq = 6
     p("vmovdqa const_3_repeating(%rip), %ymm{}".format(threes))
     p("vmovdqa mask_modq(%rip), %ymm{}".format(modq))
-    p("vmovdqa {}(%rsi), %ymm{}".format((ceil(NTRU_N / 16) - 1)*32, last))
+    p("vmovdqa {}(%rsi), %ymm{}".format((NTRU_N32 // 16 - 1)*32, last))
     p("vpand %ymm{}, %ymm{}, %ymm{}".format(modq, last, last));
 
-    p("vpsrlw $10, %ymm{}, %ymm{}".format(last, r))
+    p("vpsrlw ${}, %ymm{}, %ymm{}".format(LOGQ-1, last, r))
     p("vpxor %ymm{}, %ymm{}, %ymm{}".format(threes, r, r))
-    p("vpsllw $11, %ymm{}, %ymm{}".format(r, r))
+    p("vpsllw ${}, %ymm{}, %ymm{}".format(LOGQ, r, r))
     p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(last, r, last))
 
     mod3(last, retval)
@@ -53,12 +55,12 @@ if __name__ == '__main__':
     p("vpshufb shuf_b8_to_low_doubleword(%rip), %ymm{}, %ymm{}".format(last, last))
     p("vinserti128 $1, %xmm{}, %ymm{}, %ymm{}".format(last, last, last))
 
-    for i in range(ceil(NTRU_N / 16)):
+    for i in range(NTRU_N32 // 16):
         p("vmovdqa {}(%rsi), %ymm{}".format(i*32, a))
         p("vpand %ymm{}, %ymm{}, %ymm{}".format(modq, a, a));
-        p("vpsrlw $10, %ymm{}, %ymm{}".format(a, r))
+        p("vpsrlw ${}, %ymm{}, %ymm{}".format(LOGQ-1, a, r))
         p("vpxor %ymm{}, %ymm{}, %ymm{}".format(threes, r, r))
-        p("vpsllw $11, %ymm{}, %ymm{}".format(r, r))
+        p("vpsllw ${}, %ymm{}, %ymm{}".format(LOGQ, r, r))
         p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(a, r, r))
         p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(last, r, r))
         mod3(r, retval)
