@@ -1,12 +1,28 @@
-/* This file is based on the output of D. J. Bernstein's r3_recipgen.py
- * The line
- *    f = [-1,-1] + [0]*(p-2) + [1]
- * was changed to
- *    f = [1]*(p+1)
- * The program was then run as
- *    python3 r3_recipgen.py 676
- */
+#!/usr/bin/env python3
 
+import re
+import sys
+from math import ceil
+
+p = int(sys.argv[1])
+numvec = ceil(p/256)
+ppad = 256*numvec
+
+# see comment below about order of coefficients
+f = [1]*(p+1)
+f = list(reversed(f))
+while len(f)%256: f += [0]
+f0 = []
+for j in range(len(f)//256):
+  for i in range(4):
+    for k in range(64):
+      f0 += [f[j*256+i+k*4]]
+f1 = [1 if f0i<0 else 0 for f0i in f0]
+f0 = [f0i&1 for f0i in f0]
+
+# ---------- utility functions
+
+out = """\
 #include "poly.h"
 
 #include <immintrin.h>
@@ -15,14 +31,14 @@
 #define int8 crypto_int8
 typedef int8 small;
 
-#define p 676
-#define ppad 768
-#define numvec 3
+#define p P
+#define ppad PPAD
+#define numvec NUMVEC
 
 typedef __m256i vec256;
 
 /*
-This code stores 768-coeff poly as vec256[3].
+This code stores PPAD-coeff poly as vec256[NUMVEC].
 Order of 256 coefficients in each vec256
 is optimized in light of costs of vector instructions:
   0,4,...,252 in 64-bit word;
@@ -239,115 +255,67 @@ static inline int vec256_bit0mask(vec256 *f)
   return -(_mm_cvtsi128_si32(_mm256_castsi256_si128(f[0])) & 1);
 }
 
-static inline void vec256_divx_1(vec256 *f)
-{
-  vec256 f0 = f[0];
+"""
 
-  unsigned long long low0 = _mm_cvtsi128_si64(_mm256_castsi256_si128(f0));
+# ---------- divx
 
-  low0 = low0 >> 1;
+for j in range(1,numvec+1):
+  out += 'static inline void vec256_divx_%d(vec256 *f)\n' % j
+  out += '{\n'
+  for i in range(j):
+    out += '  vec256 f%d = f[%d];\n' % (i,i)
+  out += '\n'
+  for i in range(j):
+    out += '  unsigned long long low%d = _mm_cvtsi128_si64(_mm256_castsi256_si128(f%d));\n' % (i,i)
+  out += '\n'
+  for i in range(j):
+    if i == j-1:
+      out += '  low%d = low%d >> 1;\n' % (i,i)
+    else:
+      out += '  low%d = (low%d >> 1) | (low%d << 63);\n' % (i,i,i+1)
+  out += '\n'
+  for i in range(j):
+    out += '  f%d = _mm256_blend_epi32(f%d,_mm256_set_epi64x(0,0,0,low%d),0x3);\n' % (i,i,i)
+  out += '\n'
+  for i in range(j):
+    out += '  f[%d] = _mm256_permute4x64_epi64(f%d,0x39);\n' % (i,i)
+  out += '}\n'
+  out += '\n'
 
-  f0 = _mm256_blend_epi32(f0,_mm256_set_epi64x(0,0,0,low0),0x3);
+# ----------
 
-  f[0] = _mm256_permute4x64_epi64(f0,0x39);
-}
+for j in range(1,numvec+1):
+  out += 'static inline void vec256_timesx_%d(vec256 *f)\n' % j
+  out += '{\n'
+  for i in range(j):
+    out += '  vec256 f%d = _mm256_permute4x64_epi64(f[%d],0x93);\n' % (i,i)
+  out += '\n'
+  for i in range(j):
+    if (j,i) in [(3,0),(3,1)]: # XXX: search through subsets for optimal timings
+      out += '  unsigned long long low%d = *(unsigned long long *) &f%d;\n' % (i,i)
+    else:
+      out += '  unsigned long long low%d = _mm_cvtsi128_si64(_mm256_castsi256_si128(f%d));\n' % (i,i)
+  out += '\n'
+  for i in reversed(range(j)):
+    if i == 0:
+      out += '  low%d = low%d << 1;\n' % (i,i)
+    else:
+      out += '  low%d = (low%d << 1) | (low%d >> 63);\n' % (i,i,i-1)
+  out += '\n'
+  for i in range(j):
+    if (j,i) in [(3,0),(3,1)]: # XXX: search through subsets for optimal timings
+      out += '  *(unsigned long long *) &f%d = low%d;\n' % (i,i)
+    else:
+      out += '  f%d = _mm256_blend_epi32(f%d,_mm256_set_epi64x(0,0,0,low%d),0x3);\n' % (i,i,i)
+  out += '\n'
+  for i in range(j):
+    out += '  f[%d] = f%d;\n' % (i,i)
+  out += '}\n'
+  out += '\n'
 
-static inline void vec256_divx_2(vec256 *f)
-{
-  vec256 f0 = f[0];
-  vec256 f1 = f[1];
+# ---------- reciprocal initialization
 
-  unsigned long long low0 = _mm_cvtsi128_si64(_mm256_castsi256_si128(f0));
-  unsigned long long low1 = _mm_cvtsi128_si64(_mm256_castsi256_si128(f1));
-
-  low0 = (low0 >> 1) | (low1 << 63);
-  low1 = low1 >> 1;
-
-  f0 = _mm256_blend_epi32(f0,_mm256_set_epi64x(0,0,0,low0),0x3);
-  f1 = _mm256_blend_epi32(f1,_mm256_set_epi64x(0,0,0,low1),0x3);
-
-  f[0] = _mm256_permute4x64_epi64(f0,0x39);
-  f[1] = _mm256_permute4x64_epi64(f1,0x39);
-}
-
-static inline void vec256_divx_3(vec256 *f)
-{
-  vec256 f0 = f[0];
-  vec256 f1 = f[1];
-  vec256 f2 = f[2];
-
-  unsigned long long low0 = _mm_cvtsi128_si64(_mm256_castsi256_si128(f0));
-  unsigned long long low1 = _mm_cvtsi128_si64(_mm256_castsi256_si128(f1));
-  unsigned long long low2 = _mm_cvtsi128_si64(_mm256_castsi256_si128(f2));
-
-  low0 = (low0 >> 1) | (low1 << 63);
-  low1 = (low1 >> 1) | (low2 << 63);
-  low2 = low2 >> 1;
-
-  f0 = _mm256_blend_epi32(f0,_mm256_set_epi64x(0,0,0,low0),0x3);
-  f1 = _mm256_blend_epi32(f1,_mm256_set_epi64x(0,0,0,low1),0x3);
-  f2 = _mm256_blend_epi32(f2,_mm256_set_epi64x(0,0,0,low2),0x3);
-
-  f[0] = _mm256_permute4x64_epi64(f0,0x39);
-  f[1] = _mm256_permute4x64_epi64(f1,0x39);
-  f[2] = _mm256_permute4x64_epi64(f2,0x39);
-}
-
-static inline void vec256_timesx_1(vec256 *f)
-{
-  vec256 f0 = _mm256_permute4x64_epi64(f[0],0x93);
-
-  unsigned long long low0 = _mm_cvtsi128_si64(_mm256_castsi256_si128(f0));
-
-  low0 = low0 << 1;
-
-  f0 = _mm256_blend_epi32(f0,_mm256_set_epi64x(0,0,0,low0),0x3);
-
-  f[0] = f0;
-}
-
-static inline void vec256_timesx_2(vec256 *f)
-{
-  vec256 f0 = _mm256_permute4x64_epi64(f[0],0x93);
-  vec256 f1 = _mm256_permute4x64_epi64(f[1],0x93);
-
-  unsigned long long low0 = _mm_cvtsi128_si64(_mm256_castsi256_si128(f0));
-  unsigned long long low1 = _mm_cvtsi128_si64(_mm256_castsi256_si128(f1));
-
-  low1 = (low1 << 1) | (low0 >> 63);
-  low0 = low0 << 1;
-
-  f0 = _mm256_blend_epi32(f0,_mm256_set_epi64x(0,0,0,low0),0x3);
-  f1 = _mm256_blend_epi32(f1,_mm256_set_epi64x(0,0,0,low1),0x3);
-
-  f[0] = f0;
-  f[1] = f1;
-}
-
-static inline void vec256_timesx_3(vec256 *f)
-{
-  vec256 f0 = _mm256_permute4x64_epi64(f[0],0x93);
-  vec256 f1 = _mm256_permute4x64_epi64(f[1],0x93);
-  vec256 f2 = _mm256_permute4x64_epi64(f[2],0x93);
-
-  unsigned long long low0 = *(unsigned long long *) &f0;
-  unsigned long long low1 = *(unsigned long long *) &f1;
-  unsigned long long low2 = _mm_cvtsi128_si64(_mm256_castsi256_si128(f2));
-
-  low2 = (low2 << 1) | (low1 >> 63);
-  low1 = (low1 << 1) | (low0 >> 63);
-  low0 = low0 << 1;
-
-  *(unsigned long long *) &f0 = low0;
-  *(unsigned long long *) &f1 = low1;
-  f2 = _mm256_blend_epi32(f2,_mm256_set_epi64x(0,0,0,low2),0x3);
-
-  f[0] = f0;
-  f[1] = f1;
-  f[2] = f2;
-}
-
-
+out += """
 int __poly_S3_inv(unsigned char *outbytes,const unsigned char *inbytes)
 { 
   small *out = (void *) outbytes;
@@ -368,30 +336,50 @@ int __poly_S3_inv(unsigned char *outbytes,const unsigned char *inbytes)
   vec256 swapvec;
 
   vec256_init(G0,G1,in);
-  F0[0] = _mm256_set_epi32(4294967295,4294967295,4294967295,4294967295,4294967295,4294967295,4294967295,4294967295);
-  F0[1] = _mm256_set_epi32(4294967295,4294967295,4294967295,4294967295,4294967295,4294967295,4294967295,4294967295);
-  F0[2] = _mm256_set_epi32(511,4294967295,511,4294967295,511,4294967295,1023,4294967295);
-  F1[0] = _mm256_set1_epi32(0);
-  F1[1] = _mm256_set1_epi32(0);
-  F1[2] = _mm256_set1_epi32(0);
+"""
 
-  V0[0] = _mm256_set1_epi32(0);
-  V1[0] = _mm256_set1_epi32(0);
-  V0[1] = _mm256_set1_epi32(0);
-  V1[1] = _mm256_set1_epi32(0);
-  V0[2] = _mm256_set1_epi32(0);
-  V1[2] = _mm256_set1_epi32(0);
+for name,bits in [('F0',f0),('F1',f1)]:
+  for j in range(len(bits)//256):
+    u = []
+    for k in range(j*256,j*256+256,32):
+      u = [sum(bits[k+i]<<i for i in range(32))] + u
+    if u == [0]*8:
+      out += '  %s[%d] = _mm256_set1_epi32(0);\n' % (name,j)
+    else:
+      u = ','.join(str(uk) for uk in u)
+      out += '  %s[%d] = _mm256_set_epi32(%s);\n' % (name,j,u)
 
-  R0[0] = _mm256_set_epi32(0,0,0,0,0,0,0,1);
-  R1[0] = _mm256_set1_epi32(0);
-  R0[1] = _mm256_set1_epi32(0);
-  R1[1] = _mm256_set1_epi32(0);
-  R0[2] = _mm256_set1_epi32(0);
-  R1[2] = _mm256_set1_epi32(0);
+out += '\n'
+for i in range(numvec):
+  out += '  V0[%d] = _mm256_set1_epi32(0);\n' % i
+  out += '  V1[%d] = _mm256_set1_epi32(0);\n' % i
 
-  for (loop = 256;loop > 0;--loop) {
-    vec256_timesx_1(V0);
-    vec256_timesx_1(V1);
+out += '\n'
+for i in range(numvec):
+  if i == 0:
+    out += '  R0[%d] = _mm256_set_epi32(0,0,0,0,0,0,0,1);\n' % i
+  else:
+    out += '  R0[%d] = _mm256_set1_epi32(0);\n' % i
+  out += '  R1[%d] = _mm256_set1_epi32(0);\n' % i
+
+# ---------- reciprocal main loop
+
+vvecgvec = []
+for loop in range(2*p-1):
+  vvec = min(numvec,1+loop//256)
+  gvec = min(numvec,1+(2*p-2-loop)//256)
+  vvecgvec += [(vvec,gvec)]
+
+while len(vvecgvec) > 0:
+  vvec,gvec = vvecgvec[0]
+  loops = 1
+  while loops < len(vvecgvec) and vvecgvec[loops] == (vvec,gvec):
+    loops += 1
+
+  out += """
+  for (loop = %d;loop > 0;--loop) {
+    vec256_timesx_%d(V0);
+    vec256_timesx_%d(V1);
     swapmask = negative_mask(minusdelta) & vec256_bit0mask(G0);
 
     c0 = vec256_bit0mask(F0) & vec256_bit0mask(G0);
@@ -402,133 +390,27 @@ int __poly_S3_inv(unsigned char *outbytes,const unsigned char *inbytes)
     minusdelta -= 1;
 
     swapvec = _mm256_set1_epi32(swapmask);
-    vec256_swap(F0,G0,3,swapvec);
-    vec256_swap(F1,G1,3,swapvec);
+    vec256_swap(F0,G0,%d,swapvec);
+    vec256_swap(F1,G1,%d,swapvec);
 
     c0vec = _mm256_set1_epi32(c0);
     c1vec = _mm256_set1_epi32(c1);
 
-    vec256_eliminate(F0,F1,G0,G1,3,c0vec,c1vec);
-    vec256_divx_3(G0);
-    vec256_divx_3(G1);
+    vec256_eliminate(F0,F1,G0,G1,%d,c0vec,c1vec);
+    vec256_divx_%d(G0);
+    vec256_divx_%d(G1);
 
-    vec256_swap(V0,R0,1,swapvec);
-    vec256_swap(V1,R1,1,swapvec);
-    vec256_eliminate(V0,V1,R0,R1,1,c0vec,c1vec);
+    vec256_swap(V0,R0,%d,swapvec);
+    vec256_swap(V1,R1,%d,swapvec);
+    vec256_eliminate(V0,V1,R0,R1,%d,c0vec,c1vec);
   }
+""" % (loops,vvec,vvec,gvec,gvec,gvec,gvec,gvec,vvec,vvec,vvec)
 
-  for (loop = 256;loop > 0;--loop) {
-    vec256_timesx_2(V0);
-    vec256_timesx_2(V1);
-    swapmask = negative_mask(minusdelta) & vec256_bit0mask(G0);
+  vvecgvec = vvecgvec[loops:]
 
-    c0 = vec256_bit0mask(F0) & vec256_bit0mask(G0);
-    c1 = vec256_bit0mask(F1) ^ vec256_bit0mask(G1);
-    c1 &= c0;
+# ---------- reciprocal finalization
 
-    minusdelta ^= swapmask & (minusdelta ^ -minusdelta);
-    minusdelta -= 1;
-
-    swapvec = _mm256_set1_epi32(swapmask);
-    vec256_swap(F0,G0,3,swapvec);
-    vec256_swap(F1,G1,3,swapvec);
-
-    c0vec = _mm256_set1_epi32(c0);
-    c1vec = _mm256_set1_epi32(c1);
-
-    vec256_eliminate(F0,F1,G0,G1,3,c0vec,c1vec);
-    vec256_divx_3(G0);
-    vec256_divx_3(G1);
-
-    vec256_swap(V0,R0,2,swapvec);
-    vec256_swap(V1,R1,2,swapvec);
-    vec256_eliminate(V0,V1,R0,R1,2,c0vec,c1vec);
-  }
-
-  for (loop = 327;loop > 0;--loop) {
-    vec256_timesx_3(V0);
-    vec256_timesx_3(V1);
-    swapmask = negative_mask(minusdelta) & vec256_bit0mask(G0);
-
-    c0 = vec256_bit0mask(F0) & vec256_bit0mask(G0);
-    c1 = vec256_bit0mask(F1) ^ vec256_bit0mask(G1);
-    c1 &= c0;
-
-    minusdelta ^= swapmask & (minusdelta ^ -minusdelta);
-    minusdelta -= 1;
-
-    swapvec = _mm256_set1_epi32(swapmask);
-    vec256_swap(F0,G0,3,swapvec);
-    vec256_swap(F1,G1,3,swapvec);
-
-    c0vec = _mm256_set1_epi32(c0);
-    c1vec = _mm256_set1_epi32(c1);
-
-    vec256_eliminate(F0,F1,G0,G1,3,c0vec,c1vec);
-    vec256_divx_3(G0);
-    vec256_divx_3(G1);
-
-    vec256_swap(V0,R0,3,swapvec);
-    vec256_swap(V1,R1,3,swapvec);
-    vec256_eliminate(V0,V1,R0,R1,3,c0vec,c1vec);
-  }
-
-  for (loop = 256;loop > 0;--loop) {
-    vec256_timesx_3(V0);
-    vec256_timesx_3(V1);
-    swapmask = negative_mask(minusdelta) & vec256_bit0mask(G0);
-
-    c0 = vec256_bit0mask(F0) & vec256_bit0mask(G0);
-    c1 = vec256_bit0mask(F1) ^ vec256_bit0mask(G1);
-    c1 &= c0;
-
-    minusdelta ^= swapmask & (minusdelta ^ -minusdelta);
-    minusdelta -= 1;
-
-    swapvec = _mm256_set1_epi32(swapmask);
-    vec256_swap(F0,G0,2,swapvec);
-    vec256_swap(F1,G1,2,swapvec);
-
-    c0vec = _mm256_set1_epi32(c0);
-    c1vec = _mm256_set1_epi32(c1);
-
-    vec256_eliminate(F0,F1,G0,G1,2,c0vec,c1vec);
-    vec256_divx_2(G0);
-    vec256_divx_2(G1);
-
-    vec256_swap(V0,R0,3,swapvec);
-    vec256_swap(V1,R1,3,swapvec);
-    vec256_eliminate(V0,V1,R0,R1,3,c0vec,c1vec);
-  }
-
-  for (loop = 256;loop > 0;--loop) {
-    vec256_timesx_3(V0);
-    vec256_timesx_3(V1);
-    swapmask = negative_mask(minusdelta) & vec256_bit0mask(G0);
-
-    c0 = vec256_bit0mask(F0) & vec256_bit0mask(G0);
-    c1 = vec256_bit0mask(F1) ^ vec256_bit0mask(G1);
-    c1 &= c0;
-
-    minusdelta ^= swapmask & (minusdelta ^ -minusdelta);
-    minusdelta -= 1;
-
-    swapvec = _mm256_set1_epi32(swapmask);
-    vec256_swap(F0,G0,1,swapvec);
-    vec256_swap(F1,G1,1,swapvec);
-
-    c0vec = _mm256_set1_epi32(c0);
-    c1vec = _mm256_set1_epi32(c1);
-
-    vec256_eliminate(F0,F1,G0,G1,1,c0vec,c1vec);
-    vec256_divx_1(G0);
-    vec256_divx_1(G1);
-
-    vec256_swap(V0,R0,3,swapvec);
-    vec256_swap(V1,R1,3,swapvec);
-    vec256_eliminate(V0,V1,R0,R1,3,c0vec,c1vec);
-  }
-
+out += """
   c0vec = _mm256_set1_epi32(vec256_bit0mask(F0));
   c1vec = _mm256_set1_epi32(vec256_bit0mask(F1));
   vec256_scale(V0,V1,c0vec,c1vec);
@@ -544,13 +426,13 @@ void poly_S3_inv(poly *r_out, const poly *a) {
   const unsigned char *in = (void*) a;
   unsigned char *out = (void*) r_out;
 
-  small input[768];
-  small output[768];
+  small input[ppad];
+  small output[ppad];
   int i;
 
   /* XXX: obviously input/output format should be packed into bytes */
 
-  for (i = 0;i < 676;++i) {
+  for (i = 0;i < p;++i) {
     small x = in[2*i]&3; /* 0 1 2 3 */
     x += 1; /* 0 1 2 3 4 5 6, offset by 1 */
     x &= (x-3)>>5; /* 0 1 2, offset by 1 */
@@ -560,8 +442,15 @@ void poly_S3_inv(poly *r_out, const poly *a) {
 
   __poly_S3_inv((unsigned char *)output,(unsigned char *)input);
 
-  for (i = 0;i < 676;++i) {
+  for (i = 0;i < p;++i) {
     out[2*i] = (3 & output[i]) ^ ((3 & output[i]) >> 1);
     out[2*i+1] = 0;
   }
-}
+}\
+"""
+
+out = re.sub(r'\bP\b',str(p),out)
+out = re.sub(r'\bPPAD\b',str(ppad),out)
+out = re.sub(r'\bNUMVEC\b',str(numvec),out)
+
+print(out)
