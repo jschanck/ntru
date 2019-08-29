@@ -99,7 +99,7 @@ if __name__ == '__main__':
     for i in [65535]*12 + [0]*4:
         p(".word {}".format(i))
     p("low165:")
-    for i in [65535]*10 + [31] + [0]*4:
+    for i in [65535]*10 + [31] + [0]*5:
         p(".word {}".format(i))
 
     p(".text")
