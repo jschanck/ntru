@@ -1,6 +1,15 @@
-
 p = print
 
+def mod3_masks():
+    p("mask_ff:")
+    for i in range(16):
+        p(".word 0xff")
+    p("mask_f:")
+    for i in range(16):
+        p(".word 0xf")
+    p("mask_3:")
+    for i in range(16):
+        p(".word 0x03")
 
 def mod3(a, r=13, t=14, c=15):
     # r = (a >> 8) + (a & 0xff); // r mod 255 == a mod 255
@@ -30,43 +39,3 @@ def mod3(a, r=13, t=14, c=15):
     p("vpandn %ymm{}, %ymm{}, %ymm{}".format(t, c, tmp))
     p("vpand %ymm{}, %ymm{}, %ymm{}".format(c, r, t))
     p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t, tmp, r))
-
-
-from math import ceil
-
-N = 677
-N16 = 704
-
-if __name__ == '__main__':
-    p(".data")
-    p(".section .rodata")
-    p(".align 32")
-
-    p("mask_ff:")
-    for i in range(16):
-        p(".word 0xff")
-    p("mask_f:")
-    for i in range(16):
-        p(".word 0xf")
-    p("mask_3:")
-    for i in range(16):
-        p(".word 0x03")
-
-    p(".text")
-    p(".hidden poly_mod3")
-    p(".global poly_mod3")
-    p(".att_syntax prefix")
-
-    p("poly_mod3:")
-    # rdi holds r
-
-    t = 1
-    retval = 2
-    for i in range(N16//16):
-        p("vmovdqa {}(%rdi), %ymm{}".format(i*32, t))
-        mod3(t, retval)
-        p("vmovdqa %ymm{}, {}(%rdi)".format(retval, i*32))
-
-    for i in range(N-1, N16):
-      p("movw $0, {}(%rdi)".format(2*i))
-    p("ret")
