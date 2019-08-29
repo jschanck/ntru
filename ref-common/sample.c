@@ -58,7 +58,7 @@ void sample_iid_plus(poly *r, const unsigned char uniformbytes[NTRU_SAMPLE_IID_B
 #endif
 
 #ifdef NTRU_HPS
-#include "crypto_sort.h"
+#include "crypto_sort_int32.h"
 void sample_fixed_type(poly *r, const unsigned char u[NTRU_SAMPLE_FT_BYTES])
 {
   // Assumes NTRU_SAMPLE_FT_BYTES = ceil(30*(n-1)/8)
@@ -84,7 +84,7 @@ void sample_fixed_type(poly *r, const unsigned char u[NTRU_SAMPLE_FT_BYTES])
 
   for (i = NTRU_WEIGHT/2; i<NTRU_WEIGHT; i++) s[i] |=  2;
 
-  crypto_sort(s,NTRU_N-1);
+  crypto_sort_int32(s,NTRU_N-1);
 
   for(i=0; i<NTRU_N-1; i++)
     r->coeffs[i] = ((uint16_t) (s[i] & 3));

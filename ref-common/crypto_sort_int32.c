@@ -2,7 +2,7 @@
 // Copied from supercop-20190110/crypto_sort/int32/portable3
 
 #include <stdint.h>
-#include "crypto_sort.h"
+#include "crypto_sort_int32.h"
 
 #define int32_MINMAX(a,b) \
 do { \
@@ -15,7 +15,7 @@ do { \
   b ^= c; \
 } while(0)
 
-void crypto_sort(void *array,long long n)
+void crypto_sort_int32(void *array,long long n)
 {
   long long top,p,q,r,i;
   int32_t *x = array;

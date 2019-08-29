@@ -1,8 +1,8 @@
 CC = /usr/bin/cc
 CFLAGS = -Wall -Wextra -Wpedantic -O3
 
-SOURCES = crypto_sort.c poly.c poly_rq_mul.c poly_mod.c poly_lift.c poly_r2_inv.c poly_s3_inv.c pack3.c packq.c fips202.c randombytes.c sample.c sample_iid.c verify.c owcpa.c kem.c
-HEADERS = crypto_sort.h params.h poly.h randombytes.h sample.h verify.h owcpa.h kem.h
+SOURCES = crypto_sort_int32.c poly.c poly_rq_mul.c poly_mod.c poly_lift.c poly_r2_inv.c poly_s3_inv.c pack3.c packq.c fips202.c randombytes.c sample.c sample_iid.c verify.c owcpa.c kem.c
+HEADERS = crypto_sort_int32.h crypto_hash_sha3256.h params.h poly.h randombytes.h sample.h verify.h owcpa.h kem.h
 
 all: test/test_polymul \
      test/test_ntru \

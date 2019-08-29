@@ -4,7 +4,7 @@ CFLAGS = -Wall -Wextra -Wpedantic -O3 -fomit-frame-pointer -march=native -fPIC -
 SOURCES = fips202.c \
           randombytes.c \
           djbsort/sort.c \
-          crypto_sort.c \
+          crypto_sort_int32.c \
           poly_lift.c \
           poly_s3_inv.c \
           poly.c \
@@ -18,7 +18,7 @@ SOURCES = fips202.c \
 
 HEADERS = randombytes.h \
           djbsort/int32_sort.h\
-          crypto_sort.h \
+          crypto_sort_int32.h \
           poly.h \
           poly_r2_inv.h \
           sample.h \
@@ -121,6 +121,7 @@ clean:
 	-find . -name '__pycache__' -delete
 	-$(RM) *.o
 	-$(RM) *.s
+	-$(RM) poly_s3_inv.c
 	-$(RM) -r test/test_polymul
 	-$(RM) -r test/test_ntru
 	-$(RM) -r test/test_pack
