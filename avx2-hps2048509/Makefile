@@ -56,7 +56,7 @@ all: test/test_polymul \
 asm: ${OBJS} poly_s3_inv.c
 
 poly_s3_inv.c: asmgen/poly_s3_inv.py
-	python3 $^ 508 > $@
+	python3 $^ 508 | sed 's/4294967295/-1/g' > $@
 
 poly_rq_mul.s: asmgen/rq_mul/poly_rq_mul.py asmgen/rq_mul/K2_schoolbook_64x8.py asmgen/rq_mul/K2_K2_64x32.py
 	python3 $^ > $@

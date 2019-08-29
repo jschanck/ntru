@@ -2,4 +2,5 @@ test/*
 !test/*.c
 !test/*.h
 *.s
+poly_s3_inv.c
 __pycache__/
