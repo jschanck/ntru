@@ -8,7 +8,7 @@
 #define CRYPTO_CIPHERTEXTBYTES NTRU_CIPHERTEXTBYTES
 #define CRYPTO_BYTES NTRU_SHAREDKEYBYTES
 
-#define CRYPTO_ALGNAME "NTRU-HPS4096821"
+#define CRYPTO_ALGNAME "ntruhps4096821"
 
 int crypto_kem_keypair(unsigned char *pk, unsigned char *sk);
 
