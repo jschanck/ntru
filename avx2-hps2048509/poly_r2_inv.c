@@ -44,7 +44,7 @@ void poly_R2_frombytes(poly *a, const unsigned char *in)
   coeff_pointer[2*63+1] = _pdep_u64(in[i] >> 4, 0x1);
 }
 
-int poly_R2_inv(poly *r, const poly *a) {
+void poly_R2_inv(poly *r, const poly *a) {
     #if NTRU_N != 509
       #error This function requires NTRU_N = 509!
     #endif
@@ -82,5 +82,4 @@ int poly_R2_inv(poly *r, const poly *a) {
     square_1_509(squares[0], squares[12]);
 
     poly_R2_frombytes(r, squares[0]);
-    return 0;
 }

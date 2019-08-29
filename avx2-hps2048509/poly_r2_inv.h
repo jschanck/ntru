@@ -17,6 +17,4 @@ extern void square_252_509(unsigned char* out, const unsigned char* a);
 extern void poly_R2_mul(unsigned char* out, const unsigned char* a,
                                             const unsigned char* b);
 
-int poly_R2_inv(poly *r, const poly *a);
-
 #endif
