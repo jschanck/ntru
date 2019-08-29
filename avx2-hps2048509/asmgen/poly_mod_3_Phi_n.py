@@ -33,8 +33,8 @@ if __name__ == '__main__':
     p("vbroadcastss %xmm{}, %ymm{}".format(N_min_1, N_min_1))
 
     retval = 2
-    for i in range(NTRU_N32 // 16):
-        p("vpaddw {}(%rdi), %ymm{}, %ymm{}".format(i * 32, N_min_1, t))
+    for i in range(NTRU_N32//16):
+        p("vpaddw {}(%rdi), %ymm{}, %ymm{}".format(i*32, N_min_1, t))
         mod3(t, retval)
         p("vmovdqa %ymm{}, {}(%rdi)".format(retval, i*32))
 

@@ -1,10 +1,8 @@
+p = print
 
 from params import *
 from mod3 import mod3, mod3_masks
 from math import ceil
-
-p = print
-
 
 if __name__ == '__main__':
     p(".data")

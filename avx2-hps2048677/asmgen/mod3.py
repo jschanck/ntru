@@ -39,3 +39,5 @@ def mod3(a, r=13, t=14, c=15):
     p("vpandn %ymm{}, %ymm{}, %ymm{}".format(t, c, tmp))
     p("vpand %ymm{}, %ymm{}, %ymm{}".format(c, r, t))
     p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t, tmp, r))
+
+
