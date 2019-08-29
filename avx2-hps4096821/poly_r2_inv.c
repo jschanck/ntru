@@ -1,4 +1,3 @@
-#include "poly_r2_inv.h"
 #include "poly.h"
 #include "verify.h"
 
@@ -41,7 +40,7 @@ static inline void poly_mulx(poly *a, int s)
   a->coeffs[0] = (!s * a->coeffs[0]);
 }
 
-int poly_R2_inv(poly *r, const poly *a)
+void poly_R2_inv(poly *r, const poly *a)
 {
   /* Schroeppel--Orman--O'Malley--Spatscheck
    * "Almost Inverse" algorithm as described
@@ -113,6 +112,4 @@ int poly_R2_inv(poly *r, const poly *a)
          (unsigned char *)&(temp_r->coeffs), sizeof(uint16_t) * NTRU_N, k & 1);
     k >>= 1;
   }
-
-  return 0;
 }

@@ -55,6 +55,7 @@ all: test/test_polymul \
      test/keypair \
      test/gen_owcpa_vecs
 
+asm: ${OBJS} poly_s3_inv.c
 
 poly_s3_inv.c: asmgen/poly_s3_inv.py
 	python3 $^ 676 > $@

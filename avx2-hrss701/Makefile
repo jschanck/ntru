@@ -53,6 +53,7 @@ all: test/test_polymul \
      test/speed_r2_inv
 
 
+asm: ${OBJS}
 
 poly_rq_mul.s: asmgen/rq_mul/poly_rq_mul.py asmgen/rq_mul/K2_schoolbook_64x11.py asmgen/rq_mul/K2_K2_64x44.py
 	python3 $^ > $@
