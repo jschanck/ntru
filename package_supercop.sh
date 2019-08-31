@@ -110,7 +110,7 @@ Joost Rijneveld
 John M. Schanck
 Peter Schwabe
 William Whyte
-Zhenfei Zhang" > description
+Zhenfei Zhang" > designers
 
   echo "Oussama Danba
 Joost Rijneveld
