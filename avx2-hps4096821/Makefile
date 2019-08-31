@@ -41,6 +41,7 @@ OBJS = square_1_821_patience.s \
 	     square_408_821_shufbytes.s
 
 OBJS += poly_rq_to_s3.s \
+        poly_r2_mul.s \
         sample_iid.s \
         poly_mod_3_Phi_n.s \
         poly_mod_q_Phi_n.s

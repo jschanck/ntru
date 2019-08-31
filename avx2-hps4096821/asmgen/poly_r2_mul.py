@@ -1,3 +1,5 @@
+p = print
+
 
 def mult_128x128(xy, x, y, t1, t2):
     t0 = xy  # careful about pipelining here
@@ -48,41 +50,112 @@ def karatsuba_256x256(ab, a, b, t0, t1, t2, t3, t4):
     # ~512bit result is now in z2 and z0
 
 
-def karatsuba_256x256_destroy_a(ab, a, b, t0, t1, t2, t3):
-    """assumes a and b are two ymm registers"""
-    z0, z2 = ab
-    a0, a1 = a, t0
-    b0, b1 = b, t1
-    p("vextracti128 $1, %ymm{}, %xmm{}".format(a, a1))
-    p("vextracti128 $1, %ymm{}, %xmm{}".format(b, b1))
-    mult_128x128(z2, a1, b1, t2, t3)
+def karatsuba_512x512(w, ab, xy, t0, t1, t2, t3, t4, t5, t6):
+    """ w: 4 ymm reg. ab: 2 ymm reg. xy: 2 ymm reg. t*: 1 ymm reg """
+    a, b = ab[0], ab[1]
+    x, y = xy[0], xy[1]
 
-    mult_128x128(z0, a0, b0, t2, t3)
-    z1 = t2
-    p("vpxor %xmm{}, %xmm{}, %xmm{}".format(a0, a1, a1))  # a1 contains [0][a0 xor a1]
-    p("vpxor %xmm{}, %xmm{}, %xmm{}".format(b0, b1, b1))
-    mult_128x128(z1, a1, b1, a0, b0)
+    aPb = t5
+    xPy = t6
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(a, b, aPb))
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(x, y, xPy))
 
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(z1, z2, z1))
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(z1, z0, z1))
+    aTx = w[0], w[1]
+    karatsuba_256x256(aTx, a, x, t0, t1, t2, t3, t4)
 
-    # put top half of z1 into t (contains [0][z1top])
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t0, t0, t0))
-    p("vextracti128 $1, %ymm{}, %xmm{}".format(z1, t0))
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(z2, t0, z2))  # compose into z2
+    bTy = w[2], w[3]
+    karatsuba_256x256(bTy, b, y, t0, t1, t2, t3, t4)
 
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t0, t0, t0))
-    p("vinserti128 $1, %xmm{}, %ymm{}, %ymm{}".format(z1, t0, t0))
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t0, z0, z0))
-    # ~512bit result is now in z2 and z0
+    aPbTxPy = ab
+    karatsuba_256x256(aPbTxPy, aPb, xPy, t0, t1, t2, t3, t4)
 
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(aTx[0], aPbTxPy[0], aPbTxPy[0]))
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(aTx[1], aPbTxPy[1], aPbTxPy[1]))
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(bTy[0], aPbTxPy[0], aPbTxPy[0]))
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(bTy[1], aPbTxPy[1], aPbTxPy[1]))
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(aPbTxPy[0], w[1], w[1]))
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(aPbTxPy[1], w[2], w[2]))
 
-p = print
+def add_1024(w1,w2,w3):
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(w1[0], w2[0], w3[0]))
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(w1[1], w2[1], w3[1]))
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(w1[2], w2[2], w3[2]))
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(w1[3], w2[3], w3[3]))
+
+def store_1024(w, ptr="%rdi"):
+    p("vmovdqa %ymm{}, {}({})".format(w[0], 32*0, ptr))
+    p("vmovdqa %ymm{}, {}({})".format(w[1], 32*1, ptr))
+    p("vmovdqa %ymm{}, {}({})".format(w[2], 32*2, ptr))
+    p("vmovdqa %ymm{}, {}({})".format(w[3], 32*3, ptr))
+
+def load_1024(w, ptr="%rdi"):
+    p("vmovdqa {}({}), %ymm{}".format(32*0, ptr, w[0]))
+    p("vmovdqa {}({}), %ymm{}".format(32*1, ptr, w[1]))
+    p("vmovdqa {}({}), %ymm{}".format(32*2, ptr, w[2]))
+    p("vmovdqa {}({}), %ymm{}".format(32*3, ptr, w[3]))
+
+def vec256_sr53(r, a, t):
+    p("vpand mask1110(%rip), %ymm{}, %ymm{}".format(a, r))
+    p("vpsllq ${}, %ymm{}, %ymm{}".format(11, r, r))
+    p("vpermq ${}, %ymm{}, %ymm{}".format(int('00''11''10''01', 2), r, r))
+    p("vpsrlq ${}, %ymm{}, %ymm{}".format(53, a, t))
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t, r, r))
+
+def vec256_sl203(r, a, t):
+    p("vpand mask0001(%rip), %ymm{}, %ymm{}".format(a, r))
+    p("vpermq ${}, %ymm{}, %ymm{}".format(int('00''11''10''01', 2), r, r))
+    p("vpsllq ${}, %ymm{}, %ymm{}".format(11, r, r))
+
+def mul512_and_accumulate(s, r, t):
+    # multiply a by x^512, reduce mod x^821 -1, add to r
+    s1,s2,s3,s4 = s
+    t5,t6,t7,t8 = t
+
+    #load_1024((t1,t2,t3,t4))
+
+    # r[0] is aligned with 512:767
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(r[0], s3, s3))
+
+    # the low 53 of r[1] are aligned with 768:820
+    p("vpand low53(%rip), %ymm{}, %ymm{}".format(r[1], t8))
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t8, s4, s4))
+    # align the high 203 of r[1] with 0:202
+    vec256_sr53(t5, r[1], t8)
+
+    # align low 53 of r[2] with 203:255
+    vec256_sl203(t6, r[2], t8)
+    # align high 203 of r[2] with 256:458
+    vec256_sr53(t7, r[2], t8)
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t5, t6, t6))
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t6, s1, s1))
+
+    # align low 53 of r[3] with 459:511
+    vec256_sl203(t5, r[3], t8)
+    # align high 203 of r[3] with 512:714
+    vec256_sr53(t6, r[3], t8)
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t5, t7, t7))
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t7, s2, s2))
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t6, s3, s3))
+
+    #store_1024((t1,t2,t3,t4))
+
+def mul1024_and_accumulate(s, r, t):
+    t5,t6,t7 = t
+
+    # reduce mod x^821 - 1
+    for i in [0,1,2,3]:
+      # t[i] <- "high 203 of r[i-1] | low 53 of r[i]"
+      vec256_sr53(t5, r[i-1], t7)
+      vec256_sl203(t6, r[i], t7)
+      p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t5, t6, t6))
+      p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t6, s[i], s[i]))
+
 
 if __name__ == '__main__':
     p(".data")
     p(".section .rodata")
     p(".align 32")
+
     p("mask1100:")
     for i in [0]*8 + [65535]*8:
         p(".word {}".format(i))
@@ -92,14 +165,14 @@ if __name__ == '__main__':
     p("mask0011:")
     for i in [65535]*8 + [0]*8:
         p(".word {}".format(i))
-    p("mask1000:")
-    for i in [0]*12 + [65535]*4:
+    p("mask0001:")
+    for i in [65535]*4 + [0]*12:
         p(".word {}".format(i))
-    p("mask0111:")
-    for i in [65535]*12 + [0]*4:
+    p("mask1110:")
+    for i in [0]*4 + [65535]*12:
         p(".word {}".format(i))
-    p("low165:")
-    for i in [65535]*10 + [31] + [0]*4:
+    p("low53:")
+    for i in [65535]*3 + [31] + [0]*12:
         p(".word {}".format(i))
 
     p(".text")
@@ -108,123 +181,65 @@ if __name__ == '__main__':
     p(".att_syntax prefix")
 
     p("poly_R2_mul:")
+    # rdi holds result, rsi holds a, rdx holds b
+    # TODO: allow rdi=rsi
 
-    a, x = 0, 3
-    b, y = 1, 4
-    # c, z = 2, 5  # we do not need these yet
-    p("vmovdqa {}(%rsi), %ymm{}".format(0, a)) # load a
-    p("vmovdqa {}(%rsi), %ymm{}".format(32, b)) # load b
-    p("vmovdqa {}(%rdx), %ymm{}".format(0, x)) # load x
-    p("vmovdqa {}(%rdx), %ymm{}".format(32, y)) # load y
+    r=0,1,2,3
+    a,b=4,5
+    w,x=6,7
+    t1,t2,t3,t4=8,9,10,11
+    t5,t6,t7,t8=12,13,14,15
+    p("vmovdqa {}(%rsi), %ymm{}".format( 0, a))
+    p("vmovdqa {}(%rsi), %ymm{}".format(32, b))
+    p("vmovdqa {}(%rdx), %ymm{}".format( 0, w))
+    p("vmovdqa {}(%rdx), %ymm{}".format(32, x))
 
-    aPb = 6
-    xPy = 7
+    karatsuba_512x512(r, (a, b), (w, x), t1, t2, t3, t4, t5, t6, t7)
 
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(a, b, aPb))
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(x, y, xPy))
+    # store r mod x^821-1, do not modify r
+    vec256_sr53(t1, r[3], t7)
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(r[0], t1, t1))
+    p("vpand low53(%rip), %ymm{}, %ymm{}".format(r[3], t2))
+    store_1024((t1,r[1],r[2],t2))
 
-    t0, t1, t2, t3, t4 = (11, 12, 13, 14, 15)
+    # add r * x^512 mod x^821-1 to output
+    s = (a,b,w,x)
+    load_1024(s, "%rdi")
+    mul512_and_accumulate(s, r, (t1,t2,t3,t4))
+    store_1024(s, "%rdi")
 
-    w0 = aTx = 2, 5
-    karatsuba_256x256(aTx, a, x, t0, t1, t2, t3, t4)
-    # finished w0
-    # free: 8, 9, 10, a, x
+    c, d, y, z = 4, 5, 6, 7
+    p("vmovdqa {}(%rsi), %ymm{}".format(64, c))
+    p("vmovdqa {}(%rsi), %ymm{}".format(96, d))
+    p("vmovdqa {}(%rdx), %ymm{}".format(64, y))
+    p("vmovdqa {}(%rdx), %ymm{}".format(96, z))
 
-    aPbTxPy = 8, 9
-    karatsuba_256x256(aPbTxPy, aPb, xPy, t0, t1, t2, t3, t4)
-    # free: 10, a, x
-    w2 = aPbTxPy
+    karatsuba_512x512(r, (c, d), (y, z), t1, t2, t3, t4, t5, t6, t7)
 
-    w1 = a, x
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(aPbTxPy[0], aTx[0], w1[0]))
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(aPbTxPy[1], aTx[1], w1[1]))
-    # by already merging w0[1], we do not need to store it and recompose later
-    # the same goes for w1[1]. This frees up registers!
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(w0[1], w1[0], w1[0]))
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(w1[1], w2[0], w2[0]))
+    s = (c,d,y,z)
+    load_1024(s, "%rdi")
+    mul512_and_accumulate(s, r, (t1,t2,t3,t4))
+    mul1024_and_accumulate(s, r, (t1,t2,t3))
+    store_1024(s, "%rdi")
 
-    c, z = 10, t4
-    p("vmovdqa {}(%rsi), %ymm{}".format(64, c)) # load c
-    p("vmovdqa {}(%rdx), %ymm{}".format(64, z)) # load z
+    # used all free registers during accumulate, reload inputs
+    a,b,w,x=4,5,6,7
+    c,d,y,z=8,9,10,11
+    t5,t6,t7,t8=12,13,14,15
+    load_1024((a,b,c,d), "%rsi")
+    load_1024((w,x,y,z), "%rdx")
 
-    aPbPc = aPb
-    xPyPz = xPy
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(aPb, c, aPbPc))
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(xPy, z, xPyPz))
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(a, c, a))
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(b, d, b))
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(w, y, w))
+    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(x, z, x))
 
-    aPbPcTxPyPz = w1[1], w0[1]
-    karatsuba_256x256_destroy_a(aPbPcTxPyPz, aPbPc, xPyPz, t0, t1, t2, t3)
+    karatsuba_512x512(r, (a,b), (w, x), c, d, y, z, t5, t6, t7)
 
-    for i in range(2):
-        p("vpxor %ymm{}, %ymm{}, %ymm{}".format(aPbPcTxPyPz[i], w2[i], w2[i]))
-    # free: aPbPc, xPyPz, aPbPcTxPyPz[0, 1]
-
-    bPc = aPbPc
-    yPz = xPyPz
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(b, c, bPc))
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(y, z, yPz))
-
-    bPcTyPz = aPbPcTxPyPz
-    karatsuba_256x256_destroy_a(bPcTyPz, bPc, yPz, t0, t1, t2, t3)
-
-    for i in range(2):
-        p("vpxor %ymm{}, %ymm{}, %ymm{}".format(bPcTyPz[i], w2[i], w2[i]))
-    # finished w2
-    # free: bPc, yPz
-
-    bTy = bPc, yPz
-    karatsuba_256x256_destroy_a(bTy, b, y, t0, t1, t2, t3)
-    # free b, y
-
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(bTy[0], w1[0], w1[0]))
-    # this is actually part of w1, but we have already merged w1[1] into w2[0]
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(bTy[1], w2[0], w2[0]))
-    # finished w1
-
-    w3 = bPcTyPz
-    for i in range(2):
-        p("vpxor %ymm{}, %ymm{}, %ymm{}".format(bTy[i], w3[i], w3[i]))
-    # free bTy[0, 1], b, y
-
-    cTz = b, y
-    karatsuba_256x256_destroy_a(cTz, c, z, t0, t1, t2, t3)
-    # free bTy[0, 1], c, z (c=10, z=t4)
-    w4 = cTz
-    # finished w4
-
-    for i in range(2):
-        p("vpxor %ymm{}, %ymm{}, %ymm{}".format(cTz[i], w3[i], w3[i]))
-    # finished w3
-
-    # recompose w2[1] into w3 and w3 into w4
-    # note that w0 -> w1 and w1 -> w2 has already been done to save registers
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(w2[1], w3[0], w3[0]))
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(w3[1], w4[0], w4[0]))
-    # free bTy[0, 1], w2[1], w3[1], 10
-
-    w = w0, w1, w2, w3, w4, w5 = w0[0], w1[0], w2[0], w3[0], w4[0], w4[1]
-
-    for i, word in enumerate(w[:3]):
-        p("vpand mask1100(%rip), %ymm{}, %ymm{}".format(w[i+2], t2))
-        p("vpand mask0011(%rip), %ymm{}, %ymm{}".format(w[i+3], t1))
-        p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t1, t2, t1))
-
-        p("vpsrlq ${}, %ymm{}, %ymm{}".format(37, t1, t1))
-        p("vpermq ${}, %ymm{}, %ymm{}".format(int('01' '00' '11' '10', 2), t1, t1))
-        p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t1, w[i], w[i]))
-
-        p("vpand mask1000(%rip), %ymm{}, %ymm{}".format(w[i+2], t1))
-        p("vpand mask0111(%rip), %ymm{}, %ymm{}".format(w[i+3], t2))
-        p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t1, t2, t1))
-
-        p("vpsllq ${}, %ymm{}, %ymm{}".format(27, t1, t1))
-        p("vpermq ${}, %ymm{}, %ymm{}".format(int('10' '01' '00' '11', 2), t1, t1))
-        p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t1, w[i], w[i]))
-
-    p("vpand low165(%rip), %ymm{}, %ymm{}".format(w2, w2))
-
-    p("vmovdqa %ymm{}, {}(%rdi)".format(w0, 0))
-    p("vmovdqa %ymm{}, {}(%rdi)".format(w1, 32))
-    p("vmovdqa %ymm{}, {}(%rdi)".format(w2, 64))
+    # multiply by 512 and reduce mod x^821 - 1
+    s = (t5,t6,t7,t8)
+    load_1024(s, "%rdi")
+    mul512_and_accumulate(s, r, (a,b,w,x))
+    store_1024(s, "%rdi")
 
     p("ret")

@@ -38,13 +38,15 @@ void poly_R2_frombytes(poly *a, const unsigned char *in)
   }
 }
 
-void poly_R2_mul(unsigned char* out, const unsigned char* a, const unsigned char* b)
+
+static void _poly_R2_mul(unsigned char r[128], unsigned char a[128], unsigned char b[128])
 {
-  poly ap, bp, rp;
-  poly_R2_frombytes(&ap, a);
-  poly_R2_frombytes(&bp, b);
-  poly_Rq_mul(&rp, &ap, &bp);
-  poly_R2_tobytes(out, &rp);
+  // TODO: Try to avoid copying input
+  int i;
+  unsigned char rt[128];
+  poly_R2_mul(rt, a, b);
+  for(i=0; i<128; i++)
+    r[i] = rt[i];
 }
 
 void poly_R2_inv(poly *r, const poly *a) {
@@ -59,29 +61,29 @@ void poly_R2_inv(poly *r, const poly *a) {
     poly_R2_tobytes(squares[0], a); // TODO alignment
 
     square_1_821(squares[1], squares[0]);
-    poly_R2_mul(squares[1], squares[1], squares[0]);
+    _poly_R2_mul(squares[1], squares[1], squares[0]);
     square_1_821(squares[2], squares[1]);
-    poly_R2_mul(squares[2], squares[2], squares[0]);
+    _poly_R2_mul(squares[2], squares[2], squares[0]);
     square_3_821(squares[3], squares[2]);
-    poly_R2_mul(squares[3], squares[3], squares[2]);
+    _poly_R2_mul(squares[3], squares[3], squares[2]);
     square_6_821(squares[4], squares[3]);
-    poly_R2_mul(squares[4], squares[4], squares[3]);
+    _poly_R2_mul(squares[4], squares[4], squares[3]);
     square_12_821(squares[5], squares[4]);
-    poly_R2_mul(squares[5], squares[5], squares[4]);
+    _poly_R2_mul(squares[5], squares[5], squares[4]);
     square_24_821(squares[6], squares[5]);
-    poly_R2_mul(squares[6], squares[6], squares[5]);
+    _poly_R2_mul(squares[6], squares[6], squares[5]);
     square_3_821(squares[7], squares[6]);
-    poly_R2_mul(squares[7], squares[7], squares[2]);
+    _poly_R2_mul(squares[7], squares[7], squares[2]);
     square_51_821(squares[8], squares[7]);
-    poly_R2_mul(squares[8], squares[8], squares[7]);
+    _poly_R2_mul(squares[8], squares[8], squares[7]);
     square_102_821(squares[9], squares[8]);
-    poly_R2_mul(squares[9], squares[9], squares[8]);
+    _poly_R2_mul(squares[9], squares[9], squares[8]);
     square_204_821(squares[10], squares[9]);
-    poly_R2_mul(squares[10], squares[10], squares[9]);
+    _poly_R2_mul(squares[10], squares[10], squares[9]);
     square_408_821(squares[11], squares[10]);
-    poly_R2_mul(squares[11], squares[11], squares[10]);
+    _poly_R2_mul(squares[11], squares[11], squares[10]);
     square_3_821(squares[12], squares[11]);
-    poly_R2_mul(squares[12], squares[12], squares[2]);
+    _poly_R2_mul(squares[12], squares[12], squares[2]);
     square_1_821(squares[0], squares[12]);
 
 
