@@ -43,7 +43,7 @@ static void _poly_R2_mul(unsigned char r[128], unsigned char a[128], unsigned ch
 {
   // TODO: Try to avoid copying input
   int i;
-  unsigned char rt[128];
+  unsigned char rt[128] __attribute__((aligned(32)));
   poly_R2_mul(rt, a, b);
   for(i=0; i<128; i++)
     r[i] = rt[i];

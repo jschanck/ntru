@@ -1,6 +1,5 @@
 p = print
 
-
 def mult_128x128(xy, x, y, t1, t2):
     t0 = xy  # careful about pipelining here
     p("vpclmulqdq $1, %xmm{}, %xmm{}, %xmm{}".format(x, y, t0))  # x0 * y1
@@ -76,12 +75,6 @@ def karatsuba_512x512(w, ab, xy, t0, t1, t2, t3, t4, t5, t6):
     p("vpxor %ymm{}, %ymm{}, %ymm{}".format(aPbTxPy[0], w[1], w[1]))
     p("vpxor %ymm{}, %ymm{}, %ymm{}".format(aPbTxPy[1], w[2], w[2]))
 
-def add_1024(w1,w2,w3):
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(w1[0], w2[0], w3[0]))
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(w1[1], w2[1], w3[1]))
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(w1[2], w2[2], w3[2]))
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(w1[3], w2[3], w3[3]))
-
 def store_1024(w, ptr="%rdi"):
     p("vmovdqa %ymm{}, {}({})".format(w[0], 32*0, ptr))
     p("vmovdqa %ymm{}, {}({})".format(w[1], 32*1, ptr))
@@ -107,11 +100,9 @@ def vec256_sl203(r, a, t):
     p("vpsllq ${}, %ymm{}, %ymm{}".format(11, r, r))
 
 def mul512_and_accumulate(s, r, t):
-    # multiply a by x^512, reduce mod x^821 -1, add to r
+    # multiply r by x^512, reduce mod x^821-1, add to s
     s1,s2,s3,s4 = s
     t5,t6,t7,t8 = t
-
-    #load_1024((t1,t2,t3,t4))
 
     # r[0] is aligned with 512:767
     p("vpxor %ymm{}, %ymm{}, %ymm{}".format(r[0], s3, s3))
@@ -137,19 +128,16 @@ def mul512_and_accumulate(s, r, t):
     p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t7, s2, s2))
     p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t6, s3, s3))
 
-    #store_1024((t1,t2,t3,t4))
-
 def mul1024_and_accumulate(s, r, t):
+    # multiply r by x^1024 (= x^203), reduce mod x^821 - 1, add to s
     t5,t6,t7 = t
 
-    # reduce mod x^821 - 1
     for i in [0,1,2,3]:
-      # t[i] <- "high 203 of r[i-1] | low 53 of r[i]"
+      # s[i] <- s[i] + "high 203 of r[i-1] | low 53 of r[i]"
       vec256_sr53(t5, r[i-1], t7)
       vec256_sl203(t6, r[i], t7)
       p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t5, t6, t6))
       p("vpxor %ymm{}, %ymm{}, %ymm{}".format(t6, s[i], s[i]))
-
 
 if __name__ == '__main__':
     p(".data")
@@ -237,7 +225,7 @@ if __name__ == '__main__':
     karatsuba_512x512(r, (a,b), (w, x), c, d, y, z, t5, t6, t7)
 
     # multiply by 512 and reduce mod x^821 - 1
-    s = (t5,t6,t7,t8)
+    s = (c,d,y,z)
     load_1024(s, "%rdi")
     mul512_and_accumulate(s, r, (a,b,w,x))
     store_1024(s, "%rdi")
