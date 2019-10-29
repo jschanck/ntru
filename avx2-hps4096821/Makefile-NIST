@@ -1,26 +1,32 @@
-CC=/usr/bin/gcc
+CC = /usr/bin/cc
+CFLAGS = -O3 -fomit-frame-pointer -march=native -no-pie
 LDFLAGS=-lcrypto
 
-SOURCES = crypto_sort.c fips202.c kem.c owcpa.c pack3.c packq.c poly.c sample.c verify.c rng.c PQCgenKAT_kem.c \
-					square_1_821_patience.s \
-					square_3_821_patience.s \
-					square_6_821_patience.s \
-					square_12_821_shufbytes.s \
-					square_24_821_shufbytes.s \
-					square_48_821_shufbytes.s \
-					square_51_821_shufbytes.s \
-					square_102_821_shufbytes.s \
-					square_204_821_shufbytes.s \
-					square_408_821_shufbytes.s \
-					sample_iid.s
+SOURCES = crypto_sort_int32.c djbsort/sort.c poly_lift.c poly.c pack3.c packq.c fips202.c sample.c verify.c owcpa.c kem.c poly_r2_inv.c rng.c PQCgenKAT_kem.c \
+		square_1_821_patience.s \
+		square_3_821_patience.s \
+		square_6_821_patience.s \
+		square_12_821_shufbytes.s \
+		square_24_821_shufbytes.s \
+		square_48_821_shufbytes.s \
+		square_51_821_shufbytes.s \
+		square_102_821_shufbytes.s \
+		square_204_821_shufbytes.s \
+		square_408_821_shufbytes.s \
+		poly_r2_mul.s  \
+		poly_rq_mul.c  \
+		poly_s3_inv.c  \
+		poly_rq_to_s3.s  \
+		sample_iid.s \
+		poly_mod_3_Phi_n.s \
+		poly_mod_q_Phi_n.s
 
-HEADERS = api.h crypto_sort.h fips202.h kem.h poly.h owcpa.h params.h sample.h verify.h rng.h
+HEADERS = crypto_sort_int32.h crypto_int8.h djbsort/int32_sort.h params.h poly.h sample.h verify.h owcpa.h kem.h poly_r2_inv.h rng.h api.h
 
 PQCgenKAT_kem: $(HEADERS) $(SOURCES)
-	$(CC) -o $@ $(SOURCES) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(LDFLAGS)
 
 .PHONY: clean
 
 clean:
 	-rm PQCgenKAT_kem
-
