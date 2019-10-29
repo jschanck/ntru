@@ -2,7 +2,7 @@ CC = /usr/bin/cc
 CFLAGS = -O3 -fomit-frame-pointer -march=native -no-pie
 LDFLAGS=-lcrypto
 
-SOURCES = poly.c pack3.c packq.c fips202.c sample.c verify.c owcpa.c kem.c poly_r2_inv.c rng.c PQCgenKAT_kem.c \
+SOURCES = poly.c pack3.c packq.c fips202.c sample.c sample_iid.c verify.c owcpa.c kem.c poly_r2_inv.c rng.c PQCgenKAT_kem.c \
 					square_1_701_patience.s \
 					square_3_701_patience.s \
 					square_6_701_patience.s \
@@ -19,7 +19,7 @@ SOURCES = poly.c pack3.c packq.c fips202.c sample.c verify.c owcpa.c kem.c poly_
 					poly_s3_inv.s  \
 					poly_rq_to_s3.s  \
 					poly_s3_to_rq.s \
-					sample_iid.s \
+					vec32_sample_iid.s \
 					poly_mod_3_Phi_n.s \
 					poly_mod_q_Phi_n.s
 

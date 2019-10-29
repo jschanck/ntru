@@ -20,11 +20,11 @@ if __name__ == '__main__':
     mod3_masks()
 
     p(".text")
-    p(".hidden sample_iid")
-    p(".global sample_iid")
+    p(".hidden vec32_sample_iid")
+    p(".global vec32_sample_iid")
     p(".att_syntax prefix")
 
-    p("sample_iid:")
+    p("vec32_sample_iid:")
     # rdi holds r
     # rsi holds uniformbytes
 
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     retval = 2
     b = 3
     for i in range(NTRU_N32//32):
-        p("vmovdqu {}(%rsi), %ymm{}".format(i*32, b))
+        p("vmovdqa {}(%rsi), %ymm{}".format(i*32, b))
         p("vextracti128 $0, %ymm{}, %xmm{}".format(b, t))
         p("vpermq ${}, %ymm{}, %ymm{}".format(int('11' '01' '10' '00', 2), t, t))
         p("vpshufb cast8_to_16(%rip), %ymm{}, %ymm{}".format(t,t))

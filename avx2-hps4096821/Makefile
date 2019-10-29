@@ -13,6 +13,7 @@ SOURCES = fips202.c \
           pack3.c \
           packq.c \
           sample.c \
+          sample_iid.c \
           verify.c \
           owcpa.c \
           kem.c
@@ -42,7 +43,7 @@ OBJS = square_1_821_patience.s \
 
 OBJS += poly_rq_to_s3.s \
         poly_r2_mul.s \
-        sample_iid.s \
+        vec32_sample_iid.s \
         poly_mod_3_Phi_n.s \
         poly_mod_q_Phi_n.s
 
