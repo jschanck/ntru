@@ -17,12 +17,12 @@ ALL=(
   poly.h
   sample.c
   sample.h
+  sample_iid.c
   verify.c
   verify.h
 )
 
 ONLYREF=(
-  sample_iid.c
   poly_mod.c
   poly_lift.c
   poly_r2_inv.c
