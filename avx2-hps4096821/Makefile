@@ -1,48 +1,51 @@
 CC = /usr/bin/cc
-CFLAGS = -Wall -Wextra -Wpedantic -O3 -fomit-frame-pointer -march=native -fPIC -fPIE -pie
+CFLAGS = -O3 -fomit-frame-pointer -march=native -fPIC -fPIE -pie
+CFLAGS += -Wall -Wextra -Wpedantic
 
-SOURCES = fips202.c \
-          randombytes.c \
-          djbsort/sort.c \
-          crypto_sort_int32.c \
-          poly_lift.c \
-          poly_rq_mul.c \
-          poly_s3_inv.c \
-          poly.c \
-          poly_r2_inv.c \
-          pack3.c \
-          packq.c \
-          sample.c \
-          sample_iid.c \
-          verify.c \
-          owcpa.c \
-          kem.c
+SRC = fips202.c \
+      crypto_sort_int32.c \
+      djbsort/sort.c \
+      kem.c \
+      owcpa.c \
+      pack3.c \
+      packq.c \
+      poly.c \
+      poly_lift.c \
+      poly_r2_inv.c \
+      poly_rq_mul.c \
+      poly_s3_inv.c \
+      sample.c \
+      sample_iid.c \
+      verify.c
 
-HEADERS = randombytes.h \
-          djbsort/int32_sort.h\
-          crypto_sort_int32.h \
-          poly.h \
-          poly_r2_inv.h \
-          sample.h \
-          verify.h \
-          owcpa.h \
-          kem.h \
-          params.h
+HDR = djbsort/int32_sort.h\
+      crypto_sort_int32.h \
+      kem.h \
+      owcpa.h \
+      params.h \
+      poly.h \
+      poly_r2_inv.h \
+      sample.h \
+      verify.h
 
+SRC_URAND = $(SRC) randombytes.c
+HDR_URAND = $(HDR) randombytes.h
+
+SRC_KAT = $(SRC) rng.c PQCgenKAT_kem.c
+HDR_KAT = $(HDR) rng.h api.h
 
 OBJS = square_1_821_patience.s \
 	     square_3_821_patience.s \
 	     square_6_821_patience.s \
 	     square_12_821_shufbytes.s \
 	     square_24_821_shufbytes.s \
-	     square_48_821_shufbytes.s \
 	     square_51_821_shufbytes.s \
 	     square_102_821_shufbytes.s \
 	     square_204_821_shufbytes.s \
 	     square_408_821_shufbytes.s
 
-OBJS += poly_rq_to_s3.s \
-        poly_r2_mul.s \
+OBJS += poly_r2_mul.s \
+        poly_rq_to_s3.s \
         vec32_sample_iid.s \
         poly_mod_3_Phi_n.s \
         poly_mod_q_Phi_n.s
@@ -55,7 +58,7 @@ all: test/test_polymul \
      test/encap \
      test/decap \
      test/keypair \
-     test/gen_owcpa_vecs
+     test/speed_r2_inv
 
 asm: ${OBJS} poly_s3_inv.c
 
@@ -80,36 +83,39 @@ square_%_patience.s: $(wildcard bitpermutations/*)
 	 --patience --callee 6 --raw-name $(word 2, $(subst _, ,$@)) \
 	 > $@
 
-test/test_polymul: $(SOURCES) $(OBJS) $(HEADERS) test/test_polymul.c
-	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(OBJS) test/test_polymul.c
+test/test_polymul: $(SRC_URAND) $(OBJS) $(HDR_URAND) test/test_polymul.c
+	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) test/test_polymul.c cpucycles.c
 
-test/test_ntru: $(SOURCES) $(OBJS) $(HEADERS) test/test_ntru.c
-	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(OBJS) test/test_ntru.c
+test/test_ntru: $(SRC_URAND) $(OBJS) $(HDR_URAND) test/test_ntru.c
+	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) test/test_ntru.c cpucycles.c
 
-test/test_pack: $(SOURCES) $(OBJS) $(HEADERS) test/test_pack.c
-	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(OBJS) test/test_pack.c
+test/test_pack: $(SRC_URAND) $(OBJS) $(HDR_URAND) test/test_pack.c
+	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) test/test_pack.c cpucycles.c
 
-test/speed: $(SOURCES) $(OBJS) $(HEADERS) cpucycles.h cpucycles.c test/speed.c
-	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(OBJS) cpucycles.c test/speed.c
+test/ram: $(SRC_URAND) $(OBJS) $(HDR_URAND) test/ram.c
+	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) test/ram.c
 
-test/ram: $(SOURCES) $(OBJS) $(HEADERS) test/ram.c
-	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(OBJS) test/ram.c
+test/speed: $(SRC_URAND) $(OBJS) $(HDR_URAND) cpucycles.h cpucycles.c test/speed.c
+	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) cpucycles.c test/speed.c
 
-test/gen_owcpa_vecs: $(SOURCES) $(OBJS) $(HEADERS) test/gen_owcpa_vecs.c
-	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(OBJS) test/gen_owcpa_vecs.c
+test/speed_r2_inv: $(SRC_URAND) $(OBJS) $(HDR_URAND) cpucycles.h cpucycles.c test/speed_r2_inv.c
+	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) cpucycles.c test/speed_r2_inv.c
 
-test/encap: $(SOURCES) $(OBJS) $(HEADERS) test/encap.c
-	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(OBJS) test/encap.c
+test/encap: $(SRC_URAND) $(OBJS) $(HDR_URAND) test/encap.c
+	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) test/encap.c
 
-test/decap: $(SOURCES) $(OBJS) $(HEADERS) test/decap.c
-	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(OBJS) test/decap.c
+test/decap: $(SRC_URAND) $(OBJS) $(HDR_URAND) test/decap.c
+	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) test/decap.c
 
-test/keypair: $(SOURCES) $(OBJS) $(HEADERS) test/keypair.c
-	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(OBJS) test/keypair.c
+test/keypair: $(SRC_URAND) $(OBJS) $(HDR_URAND) test/keypair.c
+	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) test/keypair.c
+
+PQCgenKAT_kem: $(SRC_KAT) $(HDR_KAT) $(OBJS) 
+	$(CC) $(CFLAGS) -o $@ $(SRC_KAT) $(OBJS) -lcrypto $(LDFLAGS)
 
 .PHONY: clean test
 
-# In particular useful for the .s files;
+# Useful for the .s files;
 .DELETE_ON_ERROR:
 
 test:
@@ -118,6 +124,7 @@ test:
 	./test/test_pack
 	./test/speed
 	./test/ram
+	./test/speed_r2_inv
 
 clean:
 	-find . -name '*.pyc' -delete
@@ -133,4 +140,7 @@ clean:
 	-$(RM) -r test/encap
 	-$(RM) -r test/decap
 	-$(RM) -r test/keypair
-	-$(RM) -r test/gen_owcpa_vecs
+	-$(RM) -r test/speed_r2_inv
+	-$(RM) PQCgenKAT_kem
+	-$(RM) PQCkemKAT_*.req
+	-$(RM) PQCkemKAT_*.rsp

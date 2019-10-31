@@ -1,14 +1,11 @@
-CC=/usr/bin/gcc
-LDFLAGS=-lcrypto
+all: PQCgenKAT_kem
 
-SOURCES = crypto_sort_int32.c fips202.c kem.c owcpa.c pack3.c packq.c poly.c poly_rq_mul.c poly_lift.c poly_mod.c poly_r2_inv.c poly_s3_inv.c sample.c sample_iid.c verify.c rng.c PQCgenKAT_kem.c
-HEADERS = api.h crypto_sort_int32.h fips202.h kem.h poly.h owcpa.h params.h sample.h verify.h rng.h
-
-PQCgenKAT_kem: $(HEADERS) $(SOURCES)
-	$(CC) -o $@ $(SOURCES) $(LDFLAGS)
+PQCgenKAT_kem:
+	$(MAKE) -f Makefile PQCgenKAT_kem
 
 .PHONY: clean
 
 clean:
-	-rm PQCgenKAT_kem
-
+	-$(RM) PQCgenKAT_kem
+	-$(RM) PQCkemKAT_*.req
+	-$(RM) PQCkemKAT_*.rsp
