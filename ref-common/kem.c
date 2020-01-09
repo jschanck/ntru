@@ -44,7 +44,12 @@ int crypto_kem_dec(unsigned char *k, const unsigned char *c, const unsigned char
   unsigned char rm[NTRU_OWCPA_MSGBYTES];
   unsigned char buf[NTRU_PRFKEYBYTES+NTRU_CIPHERTEXTBYTES];
 
-  fail = owcpa_dec(rm, c, sk);
+  fail = 0;
+
+  /* Check that unused bits of last byte of ciphertext are zero */
+  fail |= c[NTRU_CIPHERTEXTBYTES-1] & (0xff << (8 - (7 & (NTRU_LOGQ*NTRU_PACK_DEG))));
+
+  fail |= owcpa_dec(rm, c, sk);
   /* If fail = 0 then c = Enc(h, rm), there is no need to re-encapsulate. */
   /* See comment in owcpa_dec for details.                                */
 
