@@ -32,7 +32,7 @@ int crypto_kem_enc(unsigned char *c, unsigned char *k, const unsigned char *pk)
   poly_S3_tobytes(rm+NTRU_PACK_TRINARY_BYTES, &m);
   crypto_hash_sha3256(k, rm, NTRU_OWCPA_MSGBYTES);
 
-  poly_Z3_to_Zq(&r); // XXX: Should be in owcpa_enc
+  poly_Z3_to_Zq(&r);
   owcpa_enc(c, &r, &m, pk);
 
   return 0;
@@ -50,7 +50,7 @@ int crypto_kem_dec(unsigned char *k, const unsigned char *c, const unsigned char
   fail |= c[NTRU_CIPHERTEXTBYTES-1] & (0xff << (8 - (7 & (NTRU_LOGQ*NTRU_PACK_DEG))));
 
   fail |= owcpa_dec(rm, c, sk);
-  /* If fail = 0 then c = Enc(h, rm), there is no need to re-encapsulate. */
+  /* If fail = 0 then c = Enc(h, rm). There is no need to re-encapsulate. */
   /* See comment in owcpa_dec for details.                                */
 
   crypto_hash_sha3256(k, rm, NTRU_OWCPA_MSGBYTES);
