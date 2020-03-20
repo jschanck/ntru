@@ -28,22 +28,23 @@ void poly_Sq_tobytes(unsigned char *r, const poly *a)
   for(; j<8; j++)
     t[j] = 0;
 
-  switch(NTRU_PACK_DEG - 8*(NTRU_PACK_DEG/8))
+  switch(NTRU_PACK_DEG&0x07)
   {
-    case 6:
-    r[11*i+ 8] = (t[5] >>  9) | ((t[6] & 0x3f) << 2);
-    r[11*i+ 7] = (t[5] >>  1) & 0xff;
-    r[11*i+ 6] = (t[4] >>  4) | ((t[5] & 0x01) << 7);
-    // fallthrough
+    // cases 0 and 6 are impossible since 2 generates (Z/n)* and
+    // p mod 8 in {1, 7} implies that 2 is a quadratic residue.
     case 4:
-    r[11*i+ 5] = (t[3] >>  7) | ((t[4] & 0x0f) << 4);
-    r[11*i+ 4] = (t[2] >> 10) | ((t[3] & 0x7f) << 1);
-    r[11*i+ 3] = (t[2] >>  2) & 0xff;
-    // fallthrough
+      r[11*i+ 0] =  t[0]        & 0xff;
+      r[11*i+ 1] = (t[0] >>  8) | ((t[1] & 0x1f) << 3);
+      r[11*i+ 2] = (t[1] >>  5) | ((t[2] & 0x03) << 6);
+      r[11*i+ 3] = (t[2] >>  2) & 0xff;
+      r[11*i+ 4] = (t[2] >> 10) | ((t[3] & 0x7f) << 1);
+      r[11*i+ 5] = (t[3] >>  7) | ((t[4] & 0x0f) << 4);
+      break;
     case 2:
-    r[11*i+ 2] = (t[1] >>  5) | ((t[2] & 0x03) << 6);
-    r[11*i+ 1] = (t[0] >>  8) | ((t[1] & 0x1f) << 3);
-    r[11*i+ 0] =  t[0]        & 0xff;
+      r[11*i+ 0] =  t[0]        & 0xff;
+      r[11*i+ 1] = (t[0] >>  8) | ((t[1] & 0x1f) << 3);
+      r[11*i+ 2] = (t[1] >>  5) | ((t[2] & 0x03) << 6);
+      break;
   }
 }
 
@@ -61,19 +62,20 @@ void poly_Sq_frombytes(poly *r, const unsigned char *a)
     r->coeffs[8*i+6] = (a[11*i+ 8] >> 2) | (((uint16_t)a[11*i+ 9] & 0x1f) << 6);
     r->coeffs[8*i+7] = (a[11*i+ 9] >> 5) | (((uint16_t)a[11*i+10] & 0xff) << 3);
   }
-  switch(NTRU_PACK_DEG - 8*(NTRU_PACK_DEG/8))
+  switch(NTRU_PACK_DEG&0x07)
   {
-    case 6:
-      r->coeffs[8*i+5] = (a[11*i+ 6] >> 7) | (((uint16_t)a[11*i+ 7] & 0xff) << 1) | (((uint16_t)a[11*i+ 8] & 0x03) <<  9);
-      r->coeffs[8*i+4] = (a[11*i+ 5] >> 4) | (((uint16_t)a[11*i+ 6] & 0x7f) << 4);
-    // fallthrough
+    // cases 0 and 6 are impossible since 2 generates (Z/n)* and
+    // p mod 8 in {1, 7} implies that 2 is a quadratic residue.
     case 4:
-      r->coeffs[8*i+3] = (a[11*i+ 4] >> 1) | (((uint16_t)a[11*i+ 5] & 0x0f) << 7);
-      r->coeffs[8*i+2] = (a[11*i+ 2] >> 6) | (((uint16_t)a[11*i+ 3] & 0xff) << 2) | (((uint16_t)a[11*i+ 4] & 0x01) << 10);
-    // fallthrough
-    case 2:
-      r->coeffs[8*i+1] = (a[11*i+ 1] >> 3) | (((uint16_t)a[11*i+ 2] & 0x3f) << 5);
       r->coeffs[8*i+0] = (a[11*i+ 0] >> 0) | (((uint16_t)a[11*i+ 1] & 0x07) << 8);
+      r->coeffs[8*i+1] = (a[11*i+ 1] >> 3) | (((uint16_t)a[11*i+ 2] & 0x3f) << 5);
+      r->coeffs[8*i+2] = (a[11*i+ 2] >> 6) | (((uint16_t)a[11*i+ 3] & 0xff) << 2) | (((uint16_t)a[11*i+ 4] & 0x01) << 10);
+      r->coeffs[8*i+3] = (a[11*i+ 4] >> 1) | (((uint16_t)a[11*i+ 5] & 0x0f) << 7);
+      break;
+    case 2:
+      r->coeffs[8*i+0] = (a[11*i+ 0] >> 0) | (((uint16_t)a[11*i+ 1] & 0x07) << 8);
+      r->coeffs[8*i+1] = (a[11*i+ 1] >> 3) | (((uint16_t)a[11*i+ 2] & 0x3f) << 5);
+      break;
   }
   r->coeffs[NTRU_N-1] = 0;
 }
