@@ -1,1 +1,0 @@
-../ref-common/poly_rq_mul.c

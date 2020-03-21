@@ -119,34 +119,32 @@ def _transpose_16x16_to_16x16(dst, src, src_off=0, dst_off=0, src_gap=3, dst_gap
         p("vmovdqa %ymm{}, {}({})".format(t[15], 32*(dst_gap*15+dst_off), dst))
 
 
-def transpose_48x16_to_16x44(dst, src, src_off=0, dst_off=0):
+def transpose_64x16_to_16x52(dst, src, src_off=0, dst_off=0):
     p("subq $32, %rsp")
     if src == '%rsp':
         src_off += 1
     if dst == '%rsp':
         dst_off += 1
-    for n in range(3):
-        dst_limit = 12 if n == 2 else None
+    for n in range(4):
+        dst_limit = 4 if n == 3 else None
         _transpose_16x16_to_16x16(dst, src, src_off=n+src_off,
                                   dst_off=dst_off+n*16,
-                                  src_gap=3, dst_limit=dst_limit)
+                                  src_gap=4, dst_limit=dst_limit)
     p("addq $32, %rsp")
 
 
-def transpose_16x96_to_96x16(dst, src, src_off=0, dst_off=0):
-    """ It turns out to be tricky to make this 16x88 to 96x16 because of
-        divisibility in 32-byte blocks. """
+def transpose_16x128_to_128x16(dst, src, src_off=0, dst_off=0):
     p("subq $32, %rsp")
     if src == '%rsp':
         src_off += 1
     if dst == '%rsp':
         dst_off += 1
-    for n in range(6):
-        # artificially create a gap after every 44 coefficients
+    for n in range(8):
+        # create a gap after 52nd coeff
         # this is very useful when interpolating multiple outputs in Karatsuba
-        gap44 = 0 if n < 3 else 4
-        _transpose_16x16_to_16x16(dst, src, src_off=src_off+n*16-gap44, dst_off=dst_off+n,
-                                  src_gap=1, dst_gap=6)
+        gap52 = 0 if n < 4 else 12
+        _transpose_16x16_to_16x16(dst, src, src_off=src_off+n*16-gap52, dst_off=dst_off+n,
+                                  src_gap=1, dst_gap=8)
     p("addq $32, %rsp")
 
 
@@ -156,58 +154,26 @@ if __name__ == '__main__':
     p(".align 32")
 
     p(".text")
-    p(".hidden transpose_48x16_to_16x44")
-    p(".global transpose_48x16_to_16x44")
-    p(".hidden transpose_48x16_to_16x44_stackbased")
-    p(".global transpose_48x16_to_16x44_stackbased")
-    p(".hidden transpose_16x96_to_96x16")
-    p(".global transpose_16x96_to_96x16")
-    p(".hidden transpose_16x96_to_96x16_stackbased")
-    p(".global transpose_16x96_to_96x16_stackbased")
+    p(".hidden transpose_64x16_to_16x52")
+    p(".global transpose_64x16_to_16x52")
+    p(".hidden transpose_16x128_to_128x16")
+    p(".global transpose_16x128_to_128x16")
     p(".att_syntax prefix")
 
-    p("transpose_48x16_to_16x44:")
+    p("transpose_64x16_to_16x52:")
     p("mov %rsp, %r8")  # Use r8 to store the old stack pointer during execution.
     p("andq $-32, %rsp")  # Align rsp to the next 32-byte value, for vmovdqa.
 
-    transpose_48x16_to_16x44('%rdi', '%rsi')
+    transpose_64x16_to_16x52('%rdi', '%rsi')
 
     p("mov %r8, %rsp")
     p("ret")
 
-    p("transpose_16x96_to_96x16:")
+    p("transpose_16x128_to_128x16:")
     p("mov %rsp, %r8")  # Use r8 to store the old stack pointer during execution.
     p("andq $-32, %rsp")  # Align rsp to the next 32-byte value, for vmovdqa.
 
-    transpose_16x96_to_96x16('%rdi', '%rsi')
-
-    p("mov %r8, %rsp")
-    p("ret")
-
-    p("transpose_48x16_to_16x44_stackbased:")
-    p("mov %rsp, %r8")  # Use r8 to store the old stack pointer during execution.
-    p("andq $-32, %rsp")  # Align rsp to the next 32-byte value, for vmovdqa.
-
-    p("subq ${}, %rsp".format(32 * (37 + 44)))  # allocate some stack space
-    dst_off = 37
-    transpose_48x16_to_16x44(dst='%rsp', src='%rsi', dst_off=dst_off)
-    for i in range(44):
-        p("vmovdqa {}(%rsp), %ymm0".format((i+dst_off)*32))
-        p("vmovdqa %ymm0, {}(%rdi)".format(i*32))
-
-    p("mov %r8, %rsp")
-    p("ret")
-
-    p("transpose_16x96_to_96x16_stackbased:")
-    p("mov %rsp, %r8")  # Use r8 to store the old stack pointer during execution.
-    p("andq $-32, %rsp")  # Align rsp to the next 32-byte value, for vmovdqa.
-
-    p("subq ${}, %rsp".format(32 * (11 + 96)))  # allocate some stack space
-    src_off = 11
-    for i in range(96):
-        p("vmovdqa {}(%rsi), %ymm0".format(i*32))
-        p("vmovdqa %ymm0, {}(%rsp)".format((i + src_off)*32))
-    transpose_16x96_to_96x16(dst='%rdi', src='%rsp', src_off=src_off)
+    transpose_16x128_to_128x16('%rdi', '%rsi')
 
     p("mov %r8, %rsp")
     p("ret")

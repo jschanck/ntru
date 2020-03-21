@@ -12,7 +12,6 @@ SRC = fips202.c \
       poly.c \
       poly_lift.c \
       poly_r2_inv.c \
-      poly_rq_mul.c \
       poly_s3_inv.c \
       sample.c \
       sample_iid.c \
@@ -44,7 +43,8 @@ OBJS = square_1_821_patience.s \
 	     square_204_821_shufbytes.s \
 	     square_408_821_shufbytes.s
 
-OBJS += poly_r2_mul.s \
+OBJS += poly_rq_mul.s \
+        poly_r2_mul.s \
         poly_rq_to_s3.s \
         vec32_sample_iid.s \
         poly_mod_3_Phi_n.s \
@@ -65,7 +65,7 @@ asm: ${OBJS} poly_s3_inv.c
 poly_s3_inv.c: asmgen/poly_s3_inv.py
 	python3 $^ 820 | sed 's/4294967295/-1/g' > $@
 
-poly_rq_mul.s: asmgen/rq_mul/poly_rq_mul.py asmgen/rq_mul/K2_schoolbook_64x8.py asmgen/rq_mul/K2_K2_64x32.py
+poly_rq_mul.s: asmgen/rq_mul/poly_rq_mul.py asmgen/rq_mul/schoolbook_64x13.py asmgen/rq_mul/K2_K2_64x52.py
 	python3 $^ > $@
 
 %.s: asmgen/%.py
