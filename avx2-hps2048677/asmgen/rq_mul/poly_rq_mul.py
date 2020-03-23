@@ -328,18 +328,7 @@ if __name__ == '__main__':
     # we get 8 44-bit chunks per interpolated result, of which we have 7;
     #   (352 / 44 = 8,  3-way sequential over coefficients => 8 registers)
     # there are already 16 registers available from f0-f3, so allocate 40 more
-    # we also allocate 4x8 registers-worth for the words that drop out of h3,
-    #   h4, h5 and h6 during composition / reduction, which need to be added later
-    # we also allocate 3 registers for the two words that spill out of h2 into
-    #   h0, h3 into h1 and h4 into h2
-    p("subq ${}, %rsp".format((56 - 16 + 4*8 + 3) * 32))
-    compose_offset = 56
-    far_spill_offset = compose_offset + 4*8
-    # we zero the space for composition; later we rely the top half being 0
-    #   by only vmovdqa'ing the xmm part (so we do not need to mask)
-    p("vpxor %ymm0, %ymm0, %ymm0")
-    for i in range(4*8):
-        p("vmovdqa %ymm0, {}(%rsp)".format((compose_offset+i)*32))
+    p("subq ${}, %rsp".format((56 - 16) * 32))
 
     registers = list(range(16))
 
@@ -583,7 +572,7 @@ if __name__ == '__main__':
                         return
                     p("vpand mask_mod2048(%rip), %ymm{}, %ymm{}".format(limbreg, limbreg))
                     p("vmovdqu %xmm{}, {}({})".format(limbreg, (off + i*176 + j * 44 + coeff*16) * 2, r_real))
-                    p("vextracti128 $1, %ymm{}, %xmm{}".format(limbreg, limbreg, limbreg))
+                    p("vextracti128 $1, %ymm{}, %xmm{}".format(limbreg, limbreg))
                     p("vmovq %xmm{}, {}({})".format(limbreg, (off + i*176 + j * 44 + coeff*16 + 8) * 2, r_real))
                 else:
                     if i == 3 and j >= 4:  # this part exceeds 704
