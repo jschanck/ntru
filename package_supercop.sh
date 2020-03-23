@@ -46,7 +46,6 @@ ONLYHPS677=(
 
 ONLYHPS821=(
   poly_lift.c
-  poly_rq_mul.c
   poly_s3_inv.c
   poly_r2_inv.c
   poly_r2_inv.h
@@ -136,8 +135,8 @@ for i in "${ONLYHPS509[@]}"; do
   cp -l ${WORKDIR}/avx2-hps2048509/$i avx2/$i
 done
 
-echo "057b9853c1d5afbcde8c674dee733baccf112f0d3bda75e99c0465733bd15c91" > checksumbig
-echo "a069c6ac317d509349e9828723e4ce2beee879abee32a76f938bc2008b3928b2" > checksumsmall
+echo "66f43b84ed90c246c40c03904fddd0d6137bc2153829f214038cebe89dd6772f" > checksumsmall
+echo "11d99e8437286529ef7db4a7a8dea3524ede2a16bc266c754b9c233eb255c0b3" > checksumbig
 )
 
 # special files for hps2048677
@@ -149,8 +148,8 @@ for i in "${ONLYHPS677[@]}"; do
   cp -l ${WORKDIR}/avx2-hps2048677/$i avx2/$i
 done
 
-echo "203b1d763ebdca2620eabac6b0111a8c281101a61c1f849debefaef02dec25d4" > checksumbig
-echo "c4249772037609c251c1cf90e18de5e99b9a08838441e59b75c6962f6710ae38" > checksumsmall
+echo "cedd16c6a222107c57e6fab41a4277ca35816b75f49a9afb951a8bf8f9236e2f" > checksumsmall
+echo "1c0b86a65604d7a84d9c7791ab0ad3dbff983f03abda0cd7dae49f57ad77a630" > checksumbig
 )
 
 # special files for hps4096821
@@ -162,8 +161,8 @@ for i in "${ONLYHPS821[@]}"; do
   cp -l ${WORKDIR}/avx2-hps4096821/$i avx2/$i
 done
 
-echo "596acc49c4d10836755d96b5095566b45d6ca3f18812c7b02aed9b2d0e092878" > checksumbig
-echo "e37343c3fea69ad913549a550cfb9221b3058abb1c0d1f479ea94c116195c497" > checksumsmall
+echo "2ac4d15dffb2f7c317bd5595009d3d553c86107f9ec0164379ca1eb4d1b0c813" > checksumsmall
+echo "ed42da97b53d62eb8328379f39806af7df25914d149f31225764de4b7b2dae38" > checksumbig
 )
 
 # special files for hrss701
@@ -175,8 +174,8 @@ for i in "${ONLYHRSS701[@]}"; do
   cp -l ${WORKDIR}/avx2-hrss701/$i avx2/$i
 done
 
-echo "e18d70bd4c1001c6fb6cb690159053c9277bdd9593dd9e02a58b981ba594a2ae" > checksumbig
-echo "532a32f821b8b1d607f82fbe34ced3110d10ba2ad7ce4bd17c1dea425ab9631d" > checksumsmall
+echo "95b39b282fe1b91eb4b7bd5957693eaec5cd73e37c25699127d6d87751453cd4" > checksumsmall
+echo "50e9bccc8bbc93496ca3a77e9beed329ba18ce5a83a529359b706d16aeda7e14" > checksumbig
 
 rm avx2/poly_s3_inv.s
 cat > avx2/poly_s3_inv.c <<herefiledelim
