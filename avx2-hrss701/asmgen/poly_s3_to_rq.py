@@ -247,7 +247,7 @@ if __name__ == '__main__':
         p("vmovdqa %ymm{}, {}(%rsp)".format(retval, i*32))
 
     p("mov %rsp, %rsi")  # use b as input for poly_Rq_mul_x_minus_1
-    p("call poly_Rq_mul_x_minus_1")
+    p("call {}poly_Rq_mul_x_minus_1".format(NAMESPACE))
 
     p("mov %r8, %rsp")
     p("ret")

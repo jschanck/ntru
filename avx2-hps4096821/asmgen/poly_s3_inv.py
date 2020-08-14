@@ -4,6 +4,8 @@ import re
 import sys
 from math import ceil
 
+from params import *
+
 p = int(sys.argv[1])
 numvec = ceil(p/256)
 ppad = 256*numvec
@@ -422,7 +424,7 @@ out += """
 
 // This code is based on crypto_core/invhrss701/faster from SUPERCOP. The code was written as a case study
 // for the paper "Fast constant-time gcd computation and modular inversion" by Daniel J. Bernstein and Bo-Yin Yang.
-void poly_S3_inv(poly *r_out, const poly *a) {
+void %spoly_S3_inv(poly *r_out, const poly *a) {
   const unsigned char *in = (void*) a;
   unsigned char *out = (void*) r_out;
 
@@ -447,7 +449,7 @@ void poly_S3_inv(poly *r_out, const poly *a) {
     out[2*i+1] = 0;
   }
 }\
-"""
+""" % NAMESPACE
 
 out = re.sub(r'\bP\b',str(p),out)
 out = re.sub(r'\bPPAD\b',str(ppad),out)

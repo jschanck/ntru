@@ -1,3 +1,4 @@
+from params import *
 
 from K2_K2_64x32 import K2_K2_transpose_64x32
 
@@ -173,11 +174,11 @@ if __name__ == '__main__':
         p(".word 2047")
 
     p(".text")
-    p(".hidden poly_Rq_mul")
-    p(".global poly_Rq_mul")
+    p(".hidden {}poly_Rq_mul".format(NAMESPACE))
+    p(".global {}poly_Rq_mul".format(NAMESPACE))
     p(".att_syntax prefix")
 
-    p("poly_Rq_mul:")
+    p("{}poly_Rq_mul:".format(NAMESPACE))
     # assume a and b in rsi and rdx respectively
     # assume destination pointer in rdi
     r_real = '%rdi'

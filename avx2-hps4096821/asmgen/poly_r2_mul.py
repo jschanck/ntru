@@ -1,3 +1,5 @@
+from params import *
+
 p = print
 
 def mult_128x128(xy, x, y, t1, t2):
@@ -164,11 +166,11 @@ if __name__ == '__main__':
         p(".word {}".format(i))
 
     p(".text")
-    p(".hidden poly_R2_mul")
-    p(".global poly_R2_mul")
+    p(".hidden {}poly_R2_mul".format(NAMESPACE))
+    p(".global {}poly_R2_mul".format(NAMESPACE))
     p(".att_syntax prefix")
 
-    p("poly_R2_mul:")
+    p("{}poly_R2_mul:".format(NAMESPACE))
     # rdi holds result, rsi holds a, rdx holds b
     # TODO: allow rdi=rsi
 

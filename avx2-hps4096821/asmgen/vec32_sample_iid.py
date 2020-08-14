@@ -20,11 +20,11 @@ if __name__ == '__main__':
     mod3_masks()
 
     p(".text")
-    p(".hidden vec32_sample_iid")
-    p(".global vec32_sample_iid")
+    p(".hidden {}vec32_sample_iid".format(NAMESPACE))
+    p(".global {}vec32_sample_iid".format(NAMESPACE))
     p(".att_syntax prefix")
 
-    p("vec32_sample_iid:")
+    p("{}vec32_sample_iid:".format(NAMESPACE))
     # rdi holds r
     # rsi holds uniformbytes
 

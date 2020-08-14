@@ -9,11 +9,11 @@ if __name__ == '__main__':
     p(".align 32")
 
     p(".text")
-    p(".hidden poly_mod_q_Phi_n")
-    p(".global poly_mod_q_Phi_n")
+    p(".hidden {}poly_mod_q_Phi_n".format(NAMESPACE))
+    p(".global {}poly_mod_q_Phi_n".format(NAMESPACE))
     p(".att_syntax prefix")
 
-    p("poly_mod_q_Phi_n:")
+    p("{}poly_mod_q_Phi_n:".format(NAMESPACE))
     # rdi holds r
 
     N_min_1 = 0

@@ -1,5 +1,7 @@
 from math import ceil
 
+from params import *
+
 p = print
 
 # This does not perform a full 16 bit reduction; assumes input is 4 bits.
@@ -253,11 +255,11 @@ if __name__ == '__main__':
         p(".word 0")
 
     p(".text")
-    p(".hidden poly_S3_inv")
-    p(".global poly_S3_inv")
+    p(".hidden {}poly_S3_inv".format(NAMESPACE))
+    p(".global {}poly_S3_inv".format(NAMESPACE))
     p(".att_syntax prefix")
 
-    p("poly_S3_inv:")
+    p("{}poly_S3_inv:".format(NAMESPACE))
 
     # can freely use: r8, r9, r10, r11, rax, rcx, rdx
     # others are available as callee-saved; 12, 13, 14
