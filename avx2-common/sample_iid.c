@@ -1,4 +1,4 @@
-#include "poly.h"
+#include "sample.h"
 
 extern void vec32_sample_iid(poly *r, const unsigned char uniformbytes[PAD32(NTRU_SAMPLE_IID_BYTES)]);
 
