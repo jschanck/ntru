@@ -17,18 +17,18 @@ static inline int both_negative_mask(int x,int y)
   return (x & y) >> 15;
 }
 
-void poly_S3_inv(poly *out, const poly *in)
+void poly_S3_inv(poly *r, const poly *a)
 {
-  poly f, g, v, r;
+  poly f, g, v, w;
   int i,loop,delta;
   int sign,swap,t;
 
   for (i = 0;i < NTRU_N;++i) v.coeffs[i] = 0;
-  for (i = 0;i < NTRU_N;++i) r.coeffs[i] = 0;
-  r.coeffs[0] = 1;
+  for (i = 0;i < NTRU_N;++i) w.coeffs[i] = 0;
+  w.coeffs[0] = 1;
 
   for (i = 0;i < NTRU_N;++i) f.coeffs[i] = 1;
-  for (i = 0;i < NTRU_N-1;++i) g.coeffs[NTRU_N-2-i] = mod3((in->coeffs[i] & 3) + 2*(in->coeffs[NTRU_N-1] & 3));
+  for (i = 0;i < NTRU_N-1;++i) g.coeffs[NTRU_N-2-i] = mod3((a->coeffs[i] & 3) + 2*(a->coeffs[NTRU_N-1] & 3));
   g.coeffs[NTRU_N-1] = 0;
 
   delta = 1;
@@ -44,15 +44,15 @@ void poly_S3_inv(poly *out, const poly *in)
 
     for (i = 0;i < NTRU_N;++i) {
       t = swap&(f.coeffs[i]^g.coeffs[i]); f.coeffs[i] ^= t; g.coeffs[i] ^= t;
-      t = swap&(v.coeffs[i]^r.coeffs[i]); v.coeffs[i] ^= t; r.coeffs[i] ^= t;
+      t = swap&(v.coeffs[i]^w.coeffs[i]); v.coeffs[i] ^= t; w.coeffs[i] ^= t;
     }
 
     for (i = 0;i < NTRU_N;++i) g.coeffs[i] = mod3(g.coeffs[i]+sign*f.coeffs[i]);
-    for (i = 0;i < NTRU_N;++i) r.coeffs[i] = mod3(r.coeffs[i]+sign*v.coeffs[i]);
+    for (i = 0;i < NTRU_N;++i) w.coeffs[i] = mod3(w.coeffs[i]+sign*v.coeffs[i]);
     for (i = 0;i < NTRU_N-1;++i) g.coeffs[i] = g.coeffs[i+1];
     g.coeffs[NTRU_N-1] = 0;
   }
 
   sign = f.coeffs[0];
-  for (i = 0;i < NTRU_N-1;++i) out->coeffs[i] = mod3(sign*v.coeffs[NTRU_N-2-i]);
+  for (i = 0;i < NTRU_N-1;++i) r->coeffs[i] = mod3(sign*v.coeffs[NTRU_N-2-i]);
 }
