@@ -245,23 +245,25 @@ if __name__ == '__main__':
                         help='always use the shufbytes method')
     parser.add_argument('--raw-name', dest='raw_name', action='store_true',
                         help='use minimal function name (square_N_509)')
+    parser.add_argument('--namespace', type=str, nargs='?', dest='namespace', default='',
+                        help='namespace to prepend to the function name')
     parser.set_defaults(patience=False)
 
     args = parser.parse_args()
     if args.shufbytes:
         f = functools.partial(square_509_shufbytes, n=args.no_of_squarings)
         if args.raw_name:
-            f.__name__ = "square_{}_509".format(args.no_of_squarings)
+            f.__name__ = "{}square_{}_509".format(args.namespace, args.no_of_squarings)
         else:
-            f.__name__ = "square_{}_509_shufbytes".format(args.no_of_squarings)
+            f.__name__ = "{}square_{}_509_shufbytes".format(args.namespace, args.no_of_squarings)
         print_memfunc(f, 2, 2, initialize=True)
     elif args.patience:
         f = functools.partial(square_509_patience,
                               n=args.no_of_squarings, callee_saved=args.callee)
         if args.raw_name:
-            f.__name__ = "square_{}_509".format(args.no_of_squarings)
+            f.__name__ = "{}square_{}_509".format(args.namespace, args.no_of_squarings)
         else:
-            f.__name__ = "square_{}_509_patience".format(args.no_of_squarings)
+            f.__name__ = "{}square_{}_509_patience".format(args.namespace, args.no_of_squarings)
         print_memfunc(f, 8, 8, per_reg=64)
     else:
         raise NotImplementedError(
