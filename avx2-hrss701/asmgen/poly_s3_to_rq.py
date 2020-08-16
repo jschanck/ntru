@@ -81,11 +81,11 @@ if __name__ == '__main__':
         p(".word 0")
 
     p(".text")
-    p(".hidden poly_lift")
-    p(".global poly_lift")
+    p(".hidden {}poly_lift".format(NAMESPACE))
+    p(".global {}poly_lift".format(NAMESPACE))
     p(".att_syntax prefix")
 
-    p("poly_lift:")
+    p("{}poly_lift:".format(NAMESPACE))
 
     p("mov %rsp, %r8")  # Use r8 to store the old stack pointer during execution.
     p("andq $-32, %rsp")  # Align rsp to the next 32-byte value, for vmovdqa.
