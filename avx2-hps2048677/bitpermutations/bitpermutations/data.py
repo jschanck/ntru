@@ -9,13 +9,13 @@ ONE = '#'
 tokens = [UNKNOWN, ZERO, ONE]
 
 DATASECTION = []
-SALT = ''  # prevents duplicate labels
+SALT = 0  # prevents duplicate labels
 
 
 def reset():
     global DATASECTION, SALT
     DATASECTION = []
-    SALT = '{:16x}'.format(random.randint(0, 2**128))
+    SALT += 1
 
 
 class AllocationError(Exception):

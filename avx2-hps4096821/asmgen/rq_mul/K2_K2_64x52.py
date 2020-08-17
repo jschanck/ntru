@@ -5,6 +5,7 @@ import random
 
 p = print
 
+SALT = 0
 
 def K2_K2_transpose_64x52(r_real='%rdi', a_real='%rsi', b_real='%rdx', coeffs=52, transpose=True):
     """ coeffs should be set to 64 if polynomials are allocated like that"""
@@ -14,7 +15,8 @@ def K2_K2_transpose_64x52(r_real='%rdi', a_real='%rsi', b_real='%rdx', coeffs=52
     # - (b[0:26] + b[26:52]) before 3rd K2-step
     # - output of third 26x26 multiplication
 
-    SALT = '{:16x}'.format(random.randint(0, 2**128))  # prevent duplicate labels
+    global SALT
+    SALT += 1
 
     p("subq ${}, %rsp".format((52 + 52 + 128 + 26 + 26 + 26 + 52) * 32))
     a_transpose = 0

@@ -5,6 +5,8 @@ import random
 
 p = print
 
+SALT = 0
+
 def K2_K2_transpose_64x32(r_real='%rdi', a_real='%rsi', b_real='%rdx', coeffs=32):
     # allocate space for;
     # - (A[0:8]+B[0:8])*(C[0:8]+D[0:8]) inside K2-step
@@ -12,7 +14,8 @@ def K2_K2_transpose_64x32(r_real='%rdi', a_real='%rsi', b_real='%rdx', coeffs=32
     # - (b[0:16] + b[16:32]) before 3rd K2-step
     # - output of third 16x16 multiplication
 
-    SALT = '{:16x}'.format(random.randint(0, 2**128))  # prevent duplicate labels
+    global SALT
+    SALT += 1
 
     p("subq ${}, %rsp".format((32 + 32 + 64 + 16 + 16 + 16 + 32) * 32))
     a_transpose = 0
