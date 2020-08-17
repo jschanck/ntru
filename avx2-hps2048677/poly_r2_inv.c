@@ -42,39 +42,43 @@ void poly_R2_inv(poly *r, const poly *a) {
     #if NTRU_N != 677
       #error This function requires NTRU_N = 677!
     #endif
-    unsigned char squares[13][96] __attribute__((aligned(32)));
+    union {
+      unsigned char s[96];
+      __m256i s_x32[3];
+    } squares[13];
+    #define s(x) squares[(x)].s
 
     // This relies on the following addition chain:
     // 1, 2, 3, 5, 10, 20, 21, 42, 84, 168, 336, 672, 675
 
-    poly_R2_tobytes(squares[0], a); // TODO alignment
+    poly_R2_tobytes(s(0), a); // TODO alignment
 
-    square_1_677(squares[1], squares[0]);
-    poly_R2_mul(squares[1], squares[1], squares[0]);
-    square_1_677(squares[2], squares[1]);
-    poly_R2_mul(squares[2], squares[2], squares[0]);
-    square_2_677(squares[3], squares[2]);
-    poly_R2_mul(squares[3], squares[3], squares[1]);
-    square_5_677(squares[4], squares[3]);
-    poly_R2_mul(squares[4], squares[4], squares[3]);
-    square_10_677(squares[5], squares[4]);
-    poly_R2_mul(squares[5], squares[5], squares[4]);
-    square_1_677(squares[6], squares[5]);
-    poly_R2_mul(squares[6], squares[6], squares[0]);
-    square_21_677(squares[7], squares[6]);
-    poly_R2_mul(squares[7], squares[7], squares[6]);
-    square_42_677(squares[8], squares[7]);
-    poly_R2_mul(squares[8], squares[8], squares[7]);
-    square_84_677(squares[9], squares[8]);
-    poly_R2_mul(squares[9], squares[9], squares[8]);
-    square_168_677(squares[10], squares[9]);
-    poly_R2_mul(squares[10], squares[10], squares[9]);
-    square_336_677(squares[11], squares[10]);
-    poly_R2_mul(squares[11], squares[11], squares[10]);
-    square_3_677(squares[12], squares[11]);
-    poly_R2_mul(squares[12], squares[12], squares[2]);
-    square_1_677(squares[0], squares[12]);
+    square_1_677(s(1), s(0));
+    poly_R2_mul(s(1), s(1), s(0));
+    square_1_677(s(2), s(1));
+    poly_R2_mul(s(2), s(2), s(0));
+    square_2_677(s(3), s(2));
+    poly_R2_mul(s(3), s(3), s(1));
+    square_5_677(s(4), s(3));
+    poly_R2_mul(s(4), s(4), s(3));
+    square_10_677(s(5), s(4));
+    poly_R2_mul(s(5), s(5), s(4));
+    square_1_677(s(6), s(5));
+    poly_R2_mul(s(6), s(6), s(0));
+    square_21_677(s(7), s(6));
+    poly_R2_mul(s(7), s(7), s(6));
+    square_42_677(s(8), s(7));
+    poly_R2_mul(s(8), s(8), s(7));
+    square_84_677(s(9), s(8));
+    poly_R2_mul(s(9), s(9), s(8));
+    square_168_677(s(10), s(9));
+    poly_R2_mul(s(10), s(10), s(9));
+    square_336_677(s(11), s(10));
+    poly_R2_mul(s(11), s(11), s(10));
+    square_3_677(s(12), s(11));
+    poly_R2_mul(s(12), s(12), s(2));
+    square_1_677(s(0), s(12));
 
-
-    poly_R2_frombytes(r, squares[0]);
+    poly_R2_frombytes(r, s(0));
+    #undef s
 }

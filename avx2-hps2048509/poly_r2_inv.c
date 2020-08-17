@@ -1,6 +1,7 @@
+#include <immintrin.h>
+
 #include "poly_r2_inv.h"
 #include "poly.h"
-#include <immintrin.h>
 
 // Using pdep/pext for these two functions is faster but not a lot since they work on uint64_t which means
 // we can only do 4 coefficients at a time. Per byte (where we store 8 coefficients) we will thus need 2 pdeps/pexts
@@ -48,38 +49,43 @@ void poly_R2_inv(poly *r, const poly *a) {
     #if NTRU_N != 509
       #error This function requires NTRU_N = 509!
     #endif
-    unsigned char squares[13][64] __attribute__((aligned(32)));
+    union {
+      unsigned char s[64];
+      __m256i s_x32[2];
+    } squares[13];
+    #define s(x) squares[(x)].s
 
     // This relies on the following addition chain:
     // 1, 2, 3, 6, 12, 15, 30, 60, 63, 126, 252, 504, 507
 
-    poly_R2_tobytes(squares[0], a); // TODO alignment
+    poly_R2_tobytes(s(0), a); // TODO alignment
 
-    square_1_509(squares[1], squares[0]);
-    poly_R2_mul(squares[1], squares[1], squares[0]);
-    square_1_509(squares[2], squares[1]);
-    poly_R2_mul(squares[2], squares[2], squares[0]);
-    square_3_509(squares[3], squares[2]);
-    poly_R2_mul(squares[3], squares[3], squares[2]);
-    square_6_509(squares[4], squares[3]);
-    poly_R2_mul(squares[4], squares[4], squares[3]);
-    square_3_509(squares[5], squares[4]);
-    poly_R2_mul(squares[5], squares[5], squares[2]);
-    square_15_509(squares[6], squares[5]);
-    poly_R2_mul(squares[6], squares[6], squares[5]);
-    square_30_509(squares[7], squares[6]);
-    poly_R2_mul(squares[7], squares[7], squares[6]);
-    square_3_509(squares[8], squares[7]);
-    poly_R2_mul(squares[8], squares[8], squares[2]);
-    square_63_509(squares[9], squares[8]);
-    poly_R2_mul(squares[9], squares[9], squares[8]);
-    square_126_509(squares[10], squares[9]);
-    poly_R2_mul(squares[10], squares[10], squares[9]);
-    square_252_509(squares[11], squares[10]);
-    poly_R2_mul(squares[11], squares[11], squares[10]);
-    square_3_509(squares[12], squares[11]);
-    poly_R2_mul(squares[12], squares[12], squares[2]);
-    square_1_509(squares[0], squares[12]);
+    square_1_509(s(1), s(0));
+    poly_R2_mul(s(1), s(1), s(0));
+    square_1_509(s(2), s(1));
+    poly_R2_mul(s(2), s(2), s(0));
+    square_3_509(s(3), s(2));
+    poly_R2_mul(s(3), s(3), s(2));
+    square_6_509(s(4), s(3));
+    poly_R2_mul(s(4), s(4), s(3));
+    square_3_509(s(5), s(4));
+    poly_R2_mul(s(5), s(5), s(2));
+    square_15_509(s(6), s(5));
+    poly_R2_mul(s(6), s(6), s(5));
+    square_30_509(s(7), s(6));
+    poly_R2_mul(s(7), s(7), s(6));
+    square_3_509(s(8), s(7));
+    poly_R2_mul(s(8), s(8), s(2));
+    square_63_509(s(9), s(8));
+    poly_R2_mul(s(9), s(9), s(8));
+    square_126_509(s(10), s(9));
+    poly_R2_mul(s(10), s(10), s(9));
+    square_252_509(s(11), s(10));
+    poly_R2_mul(s(11), s(11), s(10));
+    square_3_509(s(12), s(11));
+    poly_R2_mul(s(12), s(12), s(2));
+    square_1_509(s(0), s(12));
 
-    poly_R2_frombytes(r, squares[0]);
+    poly_R2_frombytes(r, s(0));
+    #undef s
 }
