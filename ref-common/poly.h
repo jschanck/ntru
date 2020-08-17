@@ -7,9 +7,7 @@
 #define MODQ(X) ((X) & (NTRU_Q-1))
 
 typedef struct{
-  // round to nearest multiple of 32 to make it easier to load into vector
-  //   registers without having to do bound checks
-  uint16_t coeffs[PAD32(NTRU_N)] __attribute__((aligned(32)));
+  uint16_t coeffs[NTRU_N];
 } poly;
 
 void poly_mod_3_Phi_n(poly *r);
