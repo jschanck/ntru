@@ -190,4 +190,4 @@ herefiledelim
 )
 
 tar czf supercop-ntru-$(date +"%Y%m%d").tar.gz crypto_kem/
-rm -rf crypto_kem
+rm -rf ${DIRNAME}
