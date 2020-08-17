@@ -1,18 +1,21 @@
-#include <string.h>
 #include <stdint.h>
+#include <stdlib.h>
+
+#include "verify.h"
 
 /* returns 0 for equal strings, 1 for non-equal strings */
-int verify(const unsigned char *a, const unsigned char *b, size_t len)
+unsigned char verify(const unsigned char *a, const unsigned char *b, size_t len)
 {
   uint64_t r;
   size_t i;
+
   r = 0;
-  
   for(i=0;i<len;i++)
     r |= a[i] ^ b[i];
- 
-  r = (-r) >> 63;
-  return r;
+
+  r = (~r + 1); // Two's complement
+  r >>= 63;
+  return (unsigned char)r;
 }
 
 /* b = 1 means mov, b = 0 means don't mov*/
@@ -20,7 +23,7 @@ void cmov(unsigned char *r, const unsigned char *x, size_t len, unsigned char b)
 {
   size_t i;
 
-  b = -b;
+  b = (~b + 1); // Two's complement
   for(i=0;i<len;i++)
     r[i] ^= b & (x[i] ^ r[i]);
 }

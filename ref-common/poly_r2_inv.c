@@ -1,9 +1,10 @@
 #include "poly.h"
 #include "verify.h"
 
-#define POLY_R2_ADD(I,A,B,S)        \
-   for(I=0; I<NTRU_N; I++)        \
-   { A.coeffs[I] ^= B.coeffs[I] * S;  }
+#define POLY_R2_ADD(I,A,B,S) \
+   for ((I)=0; (I)<NTRU_N; (I)++) { \
+   (A).coeffs[(I)] ^= (B).coeffs[(I)] * (S); \
+   }
 
 static void cswappoly(poly *a, poly *b, int swap)
 {
@@ -23,7 +24,7 @@ static inline void poly_divx(poly *a, int s)
   int i;
 
   for(i=1; i<NTRU_N; i++)
-    a->coeffs[i-1] = (s * a->coeffs[i]) | (!s * a->coeffs[i-1]);
+    a->coeffs[i-1] = (unsigned char) ((s * a->coeffs[i]) | (!s * a->coeffs[i-1]));
   a->coeffs[NTRU_N-1] = (!s * a->coeffs[NTRU_N-1]);
 }
 
@@ -32,7 +33,7 @@ static inline void poly_mulx(poly *a, int s)
   int i;
 
   for(i=1; i<NTRU_N; i++)
-    a->coeffs[NTRU_N-i] = (s * a->coeffs[NTRU_N-i-1]) | (!s * a->coeffs[NTRU_N-i]);
+    a->coeffs[NTRU_N-i] = (unsigned char) ((s * a->coeffs[NTRU_N-i-1]) | (!s * a->coeffs[NTRU_N-i]));
   a->coeffs[0] = (!s * a->coeffs[0]);
 }
 
@@ -47,7 +48,7 @@ void poly_R2_inv(poly *r, const poly *a)
   uint16_t degf = NTRU_N-1;
   uint16_t degg = NTRU_N-1;
   int sign, t, swap;
-  int done = 0;
+  int16_t done = 0;
   poly b, f, g;
   poly *c = r; // save some stack space
   poly *temp_r = &f;

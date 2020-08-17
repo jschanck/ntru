@@ -43,13 +43,13 @@ void sample_iid_plus(poly *r, const unsigned char uniformbytes[NTRU_SAMPLE_IID_B
 
   /* s = <x*r, r>.  (r[n-1] = 0) */
   for(i=0; i<NTRU_N-1; i++)
-    s += r->coeffs[i+1] * r->coeffs[i];
+    s += (uint16_t)((uint32_t)r->coeffs[i + 1] * (uint32_t)r->coeffs[i]);
 
   /* Extract sign of s (sign(0) = 1) */
   s = 1 | (-(s>>15));
 
   for(i=0; i<NTRU_N; i+=2)
-    r->coeffs[i] = s * r->coeffs[i];
+    r->coeffs[i] = (uint16_t)((uint32_t)s * (uint32_t)r->coeffs[i]);
 
   /* Map {0,1,2^16-1} -> {0, 1, 2} */
   for(i=0; i<NTRU_N; i++)
