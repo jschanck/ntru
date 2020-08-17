@@ -75,13 +75,13 @@ poly_rq_mul.s: asmgen/rq_mul/poly_rq_mul.py asmgen/rq_mul/K2_schoolbook_64x11.py
 square_%_shufbytes.s: $(wildcard bitpermutations/*)
 	PYTHONPATH=bitpermutations \
 	 python3 bitpermutations/applications/squaring_mod_GF2N.py \
-	 --shufbytes --raw-name $(word 2, $(subst _, ,$@)) \
+	 --shufbytes --namespace=$(NTRU_NAMESPACE) --raw-name $(word 2, $(subst _, ,$@)) \
 	 > $@
 
 square_%_patience.s: $(wildcard bitpermutations/*)
 	PYTHONPATH=bitpermutations \
 	 python3 bitpermutations/applications/squaring_mod_GF2N.py \
-	 --patience --callee 6 --raw-name $(word 2, $(subst _, ,$@)) \
+	 --patience --callee 6 --namespace=$(NTRU_NAMESPACE) --raw-name $(word 2, $(subst _, ,$@)) \
 	 > $@
 
 test/test_polymul: $(SRC_URAND) $(OBJS) $(HDR_URAND) test/test_polymul.c
