@@ -32,9 +32,10 @@ if __name__ == '__main__':
 
     p(".text")
     p(".global {}poly_Rq_mul_x_minus_1".format(NAMESPACE))
-    p(".att_syntax prefix")
+    p(".global _{}poly_Rq_mul_x_minus_1".format(NAMESPACE))
 
     p("{}poly_Rq_mul_x_minus_1:".format(NAMESPACE))
+    p("_{}poly_Rq_mul_x_minus_1:".format(NAMESPACE))
 
     a_imin1 = 0
     t0 = 1

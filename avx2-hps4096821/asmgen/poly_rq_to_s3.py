@@ -28,9 +28,10 @@ if __name__ == '__main__':
 
     p(".text")
     p(".global {}poly_Rq_to_S3".format(NAMESPACE))
-    p(".att_syntax prefix")
+    p(".global _{}poly_Rq_to_S3".format(NAMESPACE))
 
     p("{}poly_Rq_to_S3:".format(NAMESPACE))
+    p("_{}poly_Rq_to_S3:".format(NAMESPACE))
 
     r = 0
     a = 1

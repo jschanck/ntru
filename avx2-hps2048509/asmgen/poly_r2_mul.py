@@ -76,9 +76,10 @@ if __name__ == '__main__':
 
     p(".text")
     p(".global {}poly_R2_mul".format(NAMESPACE))
-    p(".att_syntax prefix")
+    p(".global _{}poly_R2_mul".format(NAMESPACE))
 
     p("{}poly_R2_mul:".format(NAMESPACE))
+    p("_{}poly_R2_mul:".format(NAMESPACE))
 
     # Since we have the vpclmulqdq instruction to multiply 64-bit polynomials over GF(2^k)
     # we try to reduce our computation to multiplications of 64-bit polynomials. In this implementation

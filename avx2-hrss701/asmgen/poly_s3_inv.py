@@ -256,9 +256,10 @@ if __name__ == '__main__':
 
     p(".text")
     p(".global {}poly_S3_inv".format(NAMESPACE))
-    p(".att_syntax prefix")
+    p(".global _{}poly_S3_inv".format(NAMESPACE))
 
     p("{}poly_S3_inv:".format(NAMESPACE))
+    p("_{}poly_S3_inv:".format(NAMESPACE))
 
     # can freely use: r8, r9, r10, r11, rax, rcx, rdx
     # others are available as callee-saved; 12, 13, 14

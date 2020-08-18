@@ -12,9 +12,10 @@ if __name__ == '__main__':
 
     p(".text")
     p(".global {}poly_mod_3_Phi_n".format(NAMESPACE))
-    p(".att_syntax prefix")
+    p(".global _{}poly_mod_3_Phi_n".format(NAMESPACE))
 
     p("{}poly_mod_3_Phi_n:".format(NAMESPACE))
+    p("_{}poly_mod_3_Phi_n:".format(NAMESPACE))
     # rdi holds r
 
     N_min_1 = 0

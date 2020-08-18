@@ -155,8 +155,9 @@ if __name__ == '__main__':
 
     p(".text")
     p(".global transpose_64x16_to_16x52")
+    p(".global _transpose_64x16_to_16x52")
     p(".global transpose_16x128_to_128x16")
-    p(".att_syntax prefix")
+    p(".global _transpose_16x128_to_128x16")
 
     p("transpose_64x16_to_16x52:")
     p("mov %rsp, %r8")  # Use r8 to store the old stack pointer during execution.

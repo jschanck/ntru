@@ -119,7 +119,7 @@ if __name__ == '__main__':
 
     p(".text")
     p(".global poly_lift")
-    p(".att_syntax prefix")
+    p(".global _poly_lift")
 
     p("poly_lift:")
 

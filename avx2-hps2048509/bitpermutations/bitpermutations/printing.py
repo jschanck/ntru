@@ -28,10 +28,11 @@ def print_memfunc(f, in_size, out_size, per_reg=256, initialize=False):
         print(mask.data())
 
     print(".text")
-    print(".att_syntax prefix")
     print(".global {}".format(f.__name__))
+    print(".global _{}".format(f.__name__))
 
     print("{}:".format(f.__name__))
+    print("_{}:".format(f.__name__))
     for ins in instructions.INSTRUCTIONS:
         print(ins)
 

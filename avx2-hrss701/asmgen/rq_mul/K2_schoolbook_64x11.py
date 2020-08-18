@@ -114,8 +114,9 @@ if __name__ == '__main__':
 
     p(".text")
     p(".global K2_schoolbook_64x11")
+    p(".global _K2_schoolbook_64x11")
     p(".global K2_schoolbook_64x11_additive")
-    p(".att_syntax prefix")
+    p(".global _K2_schoolbook_64x11_additive")
 
     p("K2_schoolbook_64x11:")
     p("mov $4, %ecx")

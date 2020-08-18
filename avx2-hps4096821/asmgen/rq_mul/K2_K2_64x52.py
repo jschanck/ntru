@@ -195,8 +195,9 @@ if __name__ == '__main__':
 
     p(".text")
     p(".global K2_K2_schoolbook_64x52coef")
+    p(".global _K2_K2_schoolbook_64x52coef")
     p(".global K2_K2_schoolbook_64x52coef_transpose")
-    p(".att_syntax prefix")
+    p(".global _K2_K2_schoolbook_64x52coef_transpose")
 
     p("K2_K2_schoolbook_64x52coef:")
 

@@ -157,10 +157,13 @@ if __name__ == '__main__':
 
     p(".text")
     p(".global transpose_48x16_to_16x44")
+    p(".global _transpose_48x16_to_16x44")
     p(".global transpose_48x16_to_16x44_stackbased")
+    p(".global _transpose_48x16_to_16x44_stackbased")
     p(".global transpose_16x96_to_96x16")
+    p(".global _transpose_16x96_to_96x16")
     p(".global transpose_16x96_to_96x16_stackbased")
-    p(".att_syntax prefix")
+    p(".global _transpose_16x96_to_96x16_stackbased")
 
     p("transpose_48x16_to_16x44:")
     p("mov %rsp, %r8")  # Use r8 to store the old stack pointer during execution.

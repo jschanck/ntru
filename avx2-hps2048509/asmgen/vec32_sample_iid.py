@@ -21,9 +21,10 @@ if __name__ == '__main__':
 
     p(".text")
     p(".global {}vec32_sample_iid".format(NAMESPACE))
-    p(".att_syntax prefix")
+    p(".global _{}vec32_sample_iid".format(NAMESPACE))
 
     p("{}vec32_sample_iid:".format(NAMESPACE))
+    p("_{}vec32_sample_iid:".format(NAMESPACE))
     # rdi holds r
     # rsi holds uniformbytes
 

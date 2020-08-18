@@ -178,9 +178,10 @@ if __name__ == '__main__':
 
     p(".text")
     p(".global {}poly_Rq_mul".format(NAMESPACE))
-    p(".att_syntax prefix")
+    p(".global _{}poly_Rq_mul".format(NAMESPACE))
 
     p("{}poly_Rq_mul:".format(NAMESPACE))
+    p("_{}poly_Rq_mul:".format(NAMESPACE))
     # assume a and b in rsi and rdx respectively
     # assume destination pointer in rdi
     r_real = '%rdi'

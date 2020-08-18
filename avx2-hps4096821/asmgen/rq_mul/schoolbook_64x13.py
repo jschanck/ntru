@@ -89,8 +89,9 @@ if __name__ == '__main__':
 
     p(".text")
     p(".global schoolbook_64x13")
+    p(".global _schoolbook_64x13")
     p(".global schoolbook_64x13_additive")
-    p(".att_syntax prefix")
+    p(".global _schoolbook_64x13_additive")
 
     p("schoolbook_64x13:")
     p("mov $4, %ecx")

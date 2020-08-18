@@ -167,9 +167,10 @@ if __name__ == '__main__':
 
     p(".text")
     p(".global {}poly_R2_mul".format(NAMESPACE))
-    p(".att_syntax prefix")
+    p(".global _{}poly_R2_mul".format(NAMESPACE))
 
     p("{}poly_R2_mul:".format(NAMESPACE))
+    p("_{}poly_R2_mul:".format(NAMESPACE))
     # rdi holds result, rsi holds a, rdx holds b
     # TODO: allow rdi=rsi
 
