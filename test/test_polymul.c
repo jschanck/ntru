@@ -44,12 +44,13 @@ static int test_poly_Rq_inv(poly *a)
 
 static int test_poly_S3_inv(poly *a)
 {
-  poly r1,r2,r3,r4;
+  poly r1,r2;
 
-  randombytes((unsigned char *)&r1, sizeof(poly));
-  randombytes((unsigned char *)&r2, sizeof(poly));
-  randombytes((unsigned char *)&r3, sizeof(poly));
-  randombytes((unsigned char *)&r4, sizeof(poly));
+  for(int i=0; i<NTRU_N; i++)
+  {
+    r1.coeffs[i] = 0;
+    r2.coeffs[i] = 0;
+  }
 
   /* test inverse mod 2 */
   poly_S3_inv(&r1, a);
