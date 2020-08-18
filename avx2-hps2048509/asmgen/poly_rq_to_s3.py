@@ -9,7 +9,7 @@ while 2**LOGQ < NTRU_Q: LOGQ +=1
 if __name__ == '__main__':
     p(".data")
     p(".section .rodata")
-    p(".align 32")
+    p(".p2align 5")
 
     p("const_3_repeating:")
     for i in range(16):

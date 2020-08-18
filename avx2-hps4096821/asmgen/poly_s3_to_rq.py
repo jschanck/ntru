@@ -37,7 +37,7 @@ def mod3(a, r=13, t=14, c=15):
 
 if __name__ == '__main__':
     p(".data")
-    p(".align 32")
+    p(".p2align 5")
 
     p("mask_ff:")
     for i in range(16):

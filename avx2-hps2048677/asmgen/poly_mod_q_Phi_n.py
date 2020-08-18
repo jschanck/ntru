@@ -6,7 +6,7 @@ from params import *
 if __name__ == '__main__':
     p(".data")
     p(".section .rodata")
-    p(".align 32")
+    p(".p2align 5")
 
     p(".text")
     p(".hidden {}poly_mod_q_Phi_n".format(NAMESPACE))

@@ -144,7 +144,7 @@ def mul1024_and_accumulate(s, r, t):
 if __name__ == '__main__':
     p(".data")
     p(".section .rodata")
-    p(".align 32")
+    p(".p2align 5")
 
     p("mask1100:")
     for i in [0]*8 + [65535]*8:

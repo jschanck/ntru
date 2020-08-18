@@ -6,7 +6,7 @@ from mod3 import mod3, mod3_masks
 if __name__ == '__main__':
     p(".data")
     p(".section .rodata")
-    p(".align 32")
+    p(".p2align 5")
 
     mod3_masks()
 

@@ -8,7 +8,7 @@ p = print
 if __name__ == '__main__':
     p(".data")
     p(".section .rodata")
-    p(".align 32")
+    p(".p2align 5")
 
     p("mask_mod8192:")
     for i in range(16):

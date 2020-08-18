@@ -23,7 +23,7 @@ def print_memfunc(f, in_size, out_size, per_reg=256, initialize=False):
 
     print(".data")
     print(".section .rodata")
-    print(".align 32")
+    print(".p2align 5")
     for mask in data.DATASECTION:
         print(mask.data())
 

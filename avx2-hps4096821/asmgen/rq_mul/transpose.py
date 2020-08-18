@@ -151,7 +151,7 @@ def transpose_16x128_to_128x16(dst, src, src_off=0, dst_off=0):
 if __name__ == '__main__':
     p(".data")
     p(".section .rodata")
-    p(".align 32")
+    p(".p2align 5")
 
     p(".text")
     p(".hidden transpose_64x16_to_16x52")

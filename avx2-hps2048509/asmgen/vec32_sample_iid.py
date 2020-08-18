@@ -7,7 +7,7 @@ from math import ceil
 if __name__ == '__main__':
     p(".data")
     p(".section .rodata")
-    p(".align 32")
+    p(".p2align 5")
 
     p("cast8_to_16:")
     for i in range(8):

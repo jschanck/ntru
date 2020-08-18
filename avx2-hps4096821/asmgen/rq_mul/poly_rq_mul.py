@@ -111,7 +111,7 @@ def idx2off(i):
 if __name__ == '__main__':
     p(".data")
     p(".section .rodata")
-    p(".align 32")
+    p(".p2align 5")
 
     p("mask_low9words:")
     for i in [65535]*9 + [0]*7:
