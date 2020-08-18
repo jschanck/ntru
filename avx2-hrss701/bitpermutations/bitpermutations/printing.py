@@ -29,7 +29,6 @@ def print_memfunc(f, in_size, out_size, per_reg=256, initialize=False):
 
     print(".text")
     print(".att_syntax prefix")
-    print(".hidden {}".format(f.__name__))
     print(".global {}".format(f.__name__))
 
     print("{}:".format(f.__name__))

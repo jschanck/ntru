@@ -104,7 +104,6 @@ if __name__ == '__main__':
         p(".word {}".format(i))
 
     p(".text")
-    p(".hidden {}poly_R2_mul".format(NAMESPACE))
     p(".global {}poly_R2_mul".format(NAMESPACE))
     p(".att_syntax prefix")
 

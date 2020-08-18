@@ -81,7 +81,6 @@ if __name__ == '__main__':
         p(".word 0")
 
     p(".text")
-    p(".hidden {}poly_lift".format(NAMESPACE))
     p(".global {}poly_lift".format(NAMESPACE))
     p(".att_syntax prefix")
 

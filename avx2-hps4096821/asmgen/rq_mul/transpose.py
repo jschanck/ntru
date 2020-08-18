@@ -154,9 +154,7 @@ if __name__ == '__main__':
     p(".p2align 5")
 
     p(".text")
-    p(".hidden transpose_64x16_to_16x52")
     p(".global transpose_64x16_to_16x52")
-    p(".hidden transpose_16x128_to_128x16")
     p(".global transpose_16x128_to_128x16")
     p(".att_syntax prefix")
 

@@ -88,9 +88,7 @@ if __name__ == '__main__':
     p(".p2align 5")
 
     p(".text")
-    p(".hidden schoolbook_64x13")
     p(".global schoolbook_64x13")
-    p(".hidden schoolbook_64x13_additive")
     p(".global schoolbook_64x13_additive")
     p(".att_syntax prefix")
 

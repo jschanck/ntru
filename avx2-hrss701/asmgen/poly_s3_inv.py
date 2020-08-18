@@ -255,7 +255,6 @@ if __name__ == '__main__':
         p(".word 0")
 
     p(".text")
-    p(".hidden {}poly_S3_inv".format(NAMESPACE))
     p(".global {}poly_S3_inv".format(NAMESPACE))
     p(".att_syntax prefix")
 

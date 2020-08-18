@@ -27,7 +27,6 @@ if __name__ == '__main__':
     mod3_masks()
 
     p(".text")
-    p(".hidden {}poly_Rq_to_S3".format(NAMESPACE))
     p(".global {}poly_Rq_to_S3".format(NAMESPACE))
     p(".att_syntax prefix")
 

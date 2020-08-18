@@ -31,7 +31,6 @@ if __name__ == '__main__':
         p(".byte 255")
 
     p(".text")
-    p(".hidden {}poly_Rq_mul_x_minus_1".format(NAMESPACE))
     p(".global {}poly_Rq_mul_x_minus_1".format(NAMESPACE))
     p(".att_syntax prefix")
 

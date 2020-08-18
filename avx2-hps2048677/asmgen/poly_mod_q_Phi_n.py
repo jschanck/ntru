@@ -9,7 +9,6 @@ if __name__ == '__main__':
     p(".p2align 5")
 
     p(".text")
-    p(".hidden {}poly_mod_q_Phi_n".format(NAMESPACE))
     p(".global {}poly_mod_q_Phi_n".format(NAMESPACE))
     p(".att_syntax prefix")
 

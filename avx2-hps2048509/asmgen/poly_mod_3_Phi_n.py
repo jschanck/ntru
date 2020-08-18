@@ -12,7 +12,6 @@ if __name__ == '__main__':
     mod3_masks()
 
     p(".text")
-    p(".hidden {}poly_mod_3_Phi_n".format(NAMESPACE))
     p(".global {}poly_mod_3_Phi_n".format(NAMESPACE))
     p(".att_syntax prefix")
 

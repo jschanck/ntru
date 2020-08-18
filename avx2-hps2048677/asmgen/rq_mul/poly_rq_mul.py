@@ -177,7 +177,6 @@ if __name__ == '__main__':
         p(".word 2047")
 
     p(".text")
-    p(".hidden {}poly_Rq_mul".format(NAMESPACE))
     p(".global {}poly_Rq_mul".format(NAMESPACE))
     p(".att_syntax prefix")
 
