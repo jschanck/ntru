@@ -72,7 +72,7 @@ PQCgenKAT_kem: $(SRC_KAT) $(HDR_KAT)
 
 .PHONY: clean test
 
-test:
+test: all
 	./test/test_polymul
 	./test/test_ntru
 	./test/test_pack

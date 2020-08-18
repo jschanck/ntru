@@ -119,7 +119,7 @@ PQCgenKAT_kem: $(SRC_KAT) $(HDR_KAT) $(OBJS)
 # Useful for the .s files;
 .DELETE_ON_ERROR:
 
-test:
+test: all
 	./test/test_polymul
 	./test/test_ntru
 	./test/test_pack
