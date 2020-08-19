@@ -7,7 +7,6 @@ p = print
 
 if __name__ == '__main__':
     p(".data")
-    p(".section .rodata")
     p(".p2align 5")
 
     p("mask_mod8192:")

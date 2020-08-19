@@ -108,7 +108,6 @@ def idx2off(i):
 
 if __name__ == '__main__':
     p(".data")
-    p(".section .rodata")
     p(".p2align 5")
 
     p("mask_low13words:")

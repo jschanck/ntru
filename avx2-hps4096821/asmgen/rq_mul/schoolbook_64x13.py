@@ -84,7 +84,6 @@ def schoolbook_64x13(r_mem, a_mem, b_mem, r_off=0, a_off=0, b_off=0, additive=Fa
 
 if __name__ == '__main__':
     p(".data")
-    p(".section .rodata")
     p(".p2align 5")
 
     p(".text")

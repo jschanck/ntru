@@ -100,7 +100,6 @@ def poly_s3_fmadd(a, b, s, t0=13, t1=14, t2=15, b_from_mem=False):
 
 if __name__ == '__main__':
     p(".data")
-    p(".section .rodata")
     p(".p2align 5")
 
     p("mask_3:")

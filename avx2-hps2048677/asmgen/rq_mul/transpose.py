@@ -152,7 +152,6 @@ def transpose_16x96_to_96x16(dst, src, src_off=0, dst_off=0):
 
 if __name__ == '__main__':
     p(".data")
-    p(".section .rodata")
     p(".p2align 5")
 
     p(".text")

@@ -190,7 +190,6 @@ def K2_K2_transpose_64x52(r_real='%rdi', a_real='%rsi', b_real='%rdx', coeffs=52
 
 if __name__ == '__main__':
     p(".data")
-    p(".section .rodata")
     p(".p2align 5")
 
     p(".text")
