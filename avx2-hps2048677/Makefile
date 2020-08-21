@@ -4,7 +4,6 @@ CFLAGS += -Wall -Wextra -Wpedantic
 
 SRC = fips202.c \
       crypto_sort_int32.c \
-      djbsort/sort.c \
       kem.c \
       owcpa.c \
       pack3.c \
@@ -17,8 +16,7 @@ SRC = fips202.c \
       sample_iid.c \
       verify.c
 
-HDR = djbsort/int32_sort.h\
-      crypto_sort_int32.h \
+HDR = crypto_sort_int32.h \
       kem.h \
       owcpa.h \
       params.h \
