@@ -55,4 +55,5 @@ void poly_S3_inv(poly *r, const poly *a)
 
   sign = f.coeffs[0];
   for (i = 0;i < NTRU_N-1;++i) r->coeffs[i] = mod3(sign*v.coeffs[NTRU_N-2-i]);
+  r->coeffs[NTRU_N-1] = 0;
 }

@@ -45,4 +45,5 @@ void poly_R2_inv(poly *r, const poly *a)
   }
 
   for (i = 0;i < NTRU_N-1;++i) r->coeffs[i] = v.coeffs[NTRU_N-2-i];
+  r->coeffs[NTRU_N-1] = 0;
 }
