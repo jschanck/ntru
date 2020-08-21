@@ -3,8 +3,6 @@
 #include "../poly.h"
 #include "../sample.h"
 #include "../randombytes.h"
-#include "../verify.h"
-
 
 #if 0
 static void poly_print(poly *a)

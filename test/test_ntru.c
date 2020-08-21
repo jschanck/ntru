@@ -1,8 +1,24 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
+
 #include "../params.h"
 #include "../kem.h"
-#include "../verify.h"
+
+/* returns 0 for equal strings, 1 for non-equal strings */
+static unsigned char verify(const unsigned char *a, const unsigned char *b, size_t len)
+{
+  uint64_t r;
+  size_t i;
+
+  r = 0;
+  for(i=0;i<len;i++)
+    r |= a[i] ^ b[i];
+
+  r = (~r + 1); // Two's complement
+  r >>= 63;
+  return (unsigned char)r;
+}
 
 #define TRIALS 100
 int main(void)

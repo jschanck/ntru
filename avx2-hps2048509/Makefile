@@ -2,8 +2,9 @@ CC ?= /usr/bin/cc
 CFLAGS = -O3 -fomit-frame-pointer -march=native -fPIC -fPIE -pie
 CFLAGS += -Wall -Wextra -Wpedantic
 
-SRC = fips202.c \
+SRC = cmov.c \
       crypto_sort_int32.c \
+      fips202.c \
       kem.c \
       owcpa.c \
       pack3.c \
@@ -13,17 +14,16 @@ SRC = fips202.c \
       poly_r2_inv.c \
       poly_s3_inv.c \
       sample.c \
-      sample_iid.c \
-      verify.c
+      sample_iid.c
 
-HDR = crypto_sort_int32.h \
+HDR = cmov.h \
+      crypto_sort_int32.h \
       kem.h \
       owcpa.h \
       params.h \
       poly.h \
       poly_r2_inv.h \
-      sample.h \
-      verify.h
+      sample.h
 
 SRC_URAND = $(SRC) randombytes.c
 HDR_URAND = $(HDR) randombytes.h

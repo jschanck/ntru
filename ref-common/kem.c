@@ -1,10 +1,10 @@
 #include "api.h"
+#include "cmov.h"
 #include "crypto_hash_sha3256.h"
 #include "owcpa.h"
 #include "params.h"
 #include "randombytes.h"
 #include "sample.h"
-#include "verify.h"
 
 // API FUNCTIONS 
 int crypto_kem_keypair(unsigned char *pk, unsigned char *sk)
