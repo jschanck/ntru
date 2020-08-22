@@ -1,18 +1,19 @@
 // XXX: Temporary placeholder for a faster sort.
 // Copied from supercop-20190110/crypto_sort/int32/portable3
 
-#include <stdint.h>
 #include "crypto_sort_int32.h"
+
+#include <stdint.h>
 
 #define int32_MINMAX(a,b) \
 do { \
-  int32_t ab = b ^ a; \
-  int32_t c = b - a; \
-  c ^= ab & (c ^ b); \
+  int32_t ab = (b) ^ (a); \
+  int32_t c = (int32_t)((int64_t)(b) - (int64_t)(a)); \
+  c ^= ab & (c ^ (b)); \
   c >>= 31; \
   c &= ab; \
-  a ^= c; \
-  b ^= c; \
+  (a) ^= c; \
+  (b) ^= c; \
 } while(0)
 
 void crypto_sort_int32(int32_t *array,size_t n)
@@ -25,9 +26,11 @@ void crypto_sort_int32(int32_t *array,size_t n)
   while (top < n - top) top += top;
 
   for (p = top;p > 0;p >>= 1) {
-    for (i = 0;i < n - p;++i)
-      if (!(i & p))
+    for (i = 0;i < n - p;++i) {
+      if (!(i & p)) {
         int32_MINMAX(x[i],x[i+p]);
+      }
+    }
     i = 0;
     for (q = top;q > p;q >>= 1) {
       for (;i < n - q;++i) {

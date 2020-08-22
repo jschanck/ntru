@@ -1,7 +1,6 @@
 #ifndef SAMPLE_H
 #define SAMPLE_H
 
-#include <stdlib.h>
 #include "params.h"
 #include "poly.h"
 

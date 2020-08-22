@@ -1,8 +1,8 @@
 // Based on supercop-20200820/crypto_sort/int32/avx2
 
-#include <immintrin.h>
-
 #include "crypto_sort_int32.h"
+
+#include <immintrin.h>
 #define int32 int32_t
 
 typedef __m256i int32x8;
@@ -20,7 +20,7 @@ do { \
 
 static inline void int32_MINMAX(int32 *a, int32 *b) {
     int32 ab = *b ^ *a;
-    int32 c = *b - *a;
+    int32 c = (int32)((int64_t)*b - (int64_t)*a);
     c ^= ab & (c ^ *b);
     c >>= 31;
     c &= ab;
@@ -176,6 +176,7 @@ static size_t int32_threestages(int32 *x,size_t n,size_t q)
 
 /* n is a power of 2; n >= 8; if n == 8 then flagdown */
 __attribute__((noinline))
+// NOLINTNEXTLINE(google-readability-function-size)
 static void int32_sort_2power(int32 *x,size_t n,int flagdown) {
   size_t p,q,i,j,k;
   int32x8 mask;

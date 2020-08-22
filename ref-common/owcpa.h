@@ -21,6 +21,6 @@ void owcpa_enc(unsigned char *c,
 
 #define owcpa_dec CRYPTO_NAMESPACE(owcpa_dec)
 int owcpa_dec(unsigned char *rm,
-              const unsigned char *c,
-              const unsigned char *sk);
+              const unsigned char *ciphertext,
+              const unsigned char *secretkey);
 #endif

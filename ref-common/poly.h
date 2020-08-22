@@ -1,8 +1,9 @@
 #ifndef POLY_H
 #define POLY_H
 
-#include <stdint.h>
 #include "params.h"
+
+#include <stdint.h>
 
 #define MODQ(X) ((X) & (NTRU_Q-1))
 
