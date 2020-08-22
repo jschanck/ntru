@@ -1,6 +1,7 @@
 #include "api.h"
 #include "cmov.h"
 #include "crypto_hash_sha3256.h"
+#include "kem.h"
 #include "owcpa.h"
 #include "params.h"
 #include "randombytes.h"

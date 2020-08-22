@@ -5,6 +5,10 @@
 #define NTRU_N 821
 #define NTRU_LOGQ 12
 
+#ifndef CRYPTO_NAMESPACE
+#define CRYPTO_NAMESPACE(s) s
+#endif
+
 /* Do not modify below this line */
 
 #define PAD32(X) ((((X) + 31)/32)*32)

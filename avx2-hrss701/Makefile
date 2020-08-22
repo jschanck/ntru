@@ -1,6 +1,7 @@
 CC ?= /usr/bin/cc
 CFLAGS = -O3 -fomit-frame-pointer -march=native -fPIC -fPIE -pie
 CFLAGS += -Wall -Wextra -Wpedantic
+CFLAGS += -DCRYPTO_NAMESPACE\(s\)=${NTRU_NAMESPACE}\#\#s
 
 SRC = fips202.c \
       kem.c \

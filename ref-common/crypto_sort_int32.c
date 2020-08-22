@@ -15,9 +15,9 @@ do { \
   b ^= c; \
 } while(0)
 
-void crypto_sort_int32(void *array,long long n)
+void crypto_sort_int32(int32_t *array,size_t n)
 {
-  long long top,p,q,r,i;
+  size_t top,p,q,r,i;
   int32_t *x = array;
 
   if (n < 2) return;

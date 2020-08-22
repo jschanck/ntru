@@ -2,6 +2,7 @@
 
 #include "sample.h"
 
+#define vec32_sample_iid CRYPTO_NAMESPACE(vec32_sample_iid)
 extern void vec32_sample_iid(poly *r, const unsigned char uniformbytes[PAD32(NTRU_SAMPLE_IID_BYTES)]);
 
 void sample_iid(poly *r, const unsigned char uniformbytes[NTRU_SAMPLE_IID_BYTES])
