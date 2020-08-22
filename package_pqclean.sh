@@ -1,157 +1,56 @@
 #!/bin/bash
 
-
 WORKDIR=`dirname $0`
 WORKDIR=`cd $WORKDIR && pwd`
+VERSION=$(git rev-parse HEAD)
 echo $WORKDIR
 
 DIRNAME=${WORKDIR}/crypto_kem
-
-ALL=(
-  api.h
-  kem.c
-  owcpa.c
-  owcpa.h
-  pack3.c
-  packq.c
-  params.h
-  poly.c
-  poly.h
-  sample.c
-  sample.h
-  sample_iid.c
-  verify.c
-  verify.h
-)
-
-ONLYREF=(
-  poly_mod.c
-  poly_lift.c
-  poly_r2_inv.c
-  poly_s3_inv.c
-  poly_rq_mul.c
-)
-
-ONLYHPS509=(
-  poly_lift.c
-  poly_s3_inv.c
-  poly_r2_inv.c
-  poly_r2_inv.h
-)
-
-ONLYHPS677=(
-  poly_lift.c
-  poly_s3_inv.c
-  poly_r2_inv.c
-  poly_r2_inv.h
-)
-
-ONLYHPS821=(
-  poly_lift.c
-  poly_s3_inv.c
-  poly_r2_inv.c
-  poly_r2_inv.h
-)
-
-ONLYHRSS701=(
-  poly_r2_inv.c
-  poly_r2_inv.h
-)
-
-cd $WORKDIR
 
 if [ -e "$DIRNAME" ]; then
   echo "Error; directory already exists; delete first."
   exit -1
 fi
 
-mkdir -p ${DIRNAME}/ntruhrss701/avx2
-mkdir -p ${DIRNAME}/ntruhrss701/clean
-
-mkdir -p ${DIRNAME}/ntruhps2048509/avx2
-mkdir -p ${DIRNAME}/ntruhps2048509/clean
-
-mkdir -p ${DIRNAME}/ntruhps2048677/avx2
-mkdir -p ${DIRNAME}/ntruhps2048677/clean
-
-mkdir -p ${DIRNAME}/ntruhps4096821/avx2
-mkdir -p ${DIRNAME}/ntruhps4096821/clean
-
 for PARAM in hrss701 hps2048509 hps2048677 hps4096821; do
+  mkdir -p ${DIRNAME}/ntru${PARAM}/avx2
+  mkdir -p ${DIRNAME}/ntru${PARAM}/clean
 
   export NTRU_NAMESPACE=PQCLEAN_NTRU${PARAM^^}_AVX2_
-  ( cd ${WORKDIR}/avx2-${PARAM} && make clean && make asm )
+  ( cd ${WORKDIR}/avx2-${PARAM} && make -B asm )
 
-  ( cd ${DIRNAME}/ntru${PARAM}/
+  ( cd ${WORKDIR}/ref-${PARAM}/
+    cp -l api.h cmov.h owcpa.h kem.h params.h poly.h sample.h ${DIRNAME}/ntru${PARAM}/clean/
+    cp -l cmov.c kem.c owcpa.c pack3.c packq.c poly.c poly_lift.c poly_mod.c poly_r2_inv.c poly_rq_mul.c poly_s3_inv.c sample.c sample_iid.c ${DIRNAME}/ntru${PARAM}/clean/ )
 
-  for i in "${ALL[@]}"; do
-    cp -l ${WORKDIR}/ref-${PARAM}/$i clean/$i
-    cp -l ${WORKDIR}/avx2-${PARAM}/$i avx2/$i
-  done
+  ( cd ${WORKDIR}/avx2-${PARAM}/
+    cp -l api.h cmov.h owcpa.h kem.h params.h poly.h poly_r2_inv.h sample.h ${DIRNAME}/ntru${PARAM}/avx2/
+    cp -l cmov.c kem.c owcpa.c pack3.c packq.c poly.c poly_r2_inv.c sample.c sample_iid.c ${DIRNAME}/ntru${PARAM}/avx2/
+    cp -l *.s ${DIRNAME}/ntru${PARAM}/avx2/ )
 
-  for i in "${ONLYREF[@]}"; do
-    cp -l ${WORKDIR}/ref-${PARAM}/$i clean/$i
-  done
+  if [ "${PARAM}" != "hrss701" ]; then
+    ( cd ${WORKDIR}/ref-${PARAM}/
+      cp -l crypto_sort_int32.h ${DIRNAME}/ntru${PARAM}/clean/
+      cp -l crypto_sort_int32.c ${DIRNAME}/ntru${PARAM}/clean/ )
 
-  cp ${WORKDIR}/avx2-${PARAM}/*.s avx2/
-)
-done
-
-# special files for hps2048509
-
-(
-cd ${DIRNAME}/ntruhps2048509/
-
-for i in "${ONLYHPS509[@]}"; do
-  cp -l ${WORKDIR}/avx2-hps2048509/$i avx2/$i
-done
-)
-
-# special files for hps2048677
-
-(
-cd ${DIRNAME}/ntruhps2048677/
-
-for i in "${ONLYHPS677[@]}"; do
-  cp -l ${WORKDIR}/avx2-hps2048677/$i avx2/$i
-done
-)
-
-# special files for hps4096821
-
-(
-cd ${DIRNAME}/ntruhps4096821/
-
-for i in "${ONLYHPS821[@]}"; do
-  cp -l ${WORKDIR}/avx2-hps4096821/$i avx2/$i
-done
-)
-
-# special files for hrss701
-
-(
-cd ${DIRNAME}/ntruhrss701/
-
-for i in "${ONLYHRSS701[@]}"; do
-  cp -l ${WORKDIR}/avx2-hrss701/$i avx2/$i
-done
-)
+    ( cd ${WORKDIR}/avx2-${PARAM}/
+      cp -l crypto_sort_int32.h ${DIRNAME}/ntru${PARAM}/avx2/
+      cp -l crypto_sort_int32.c poly_lift.c poly_s3_inv.c ${DIRNAME}/ntru${PARAM}/avx2/ )
+  fi
 
 # Makefiles and other metadata
-for PARAM in hrss701 hps2048509 hps2048677 hps4096821; do
+( cd ${DIRNAME}/ntru${PARAM}/
+echo "Public Domain" > clean/LICENSE
+cp clean/LICENSE avx2/LICENSE
 
-  ( cd ${DIRNAME}/ntru${PARAM}/
-  echo "Public Domain" > clean/LICENSE
-  cp clean/LICENSE avx2/LICENSE
-
-  echo \
-"# This Makefile can be used with GNU Make or BSD Make
+echo "\
+# This Makefile can be used with GNU Make or BSD Make
 
 LIB=libntru${PARAM}_clean.a
 HEADERS=$(basename -a clean/*.h | tr '\n' ' ')
 OBJECTS=$(basename -a clean/*.c | sed 's/\.c/.o/' | tr '\n' ' ')
 
-CFLAGS=-O3 -Wall -Wextra -Wpedantic -Werror -Wmissing-prototypes -Wredundant-decls -std=c99 -I../../../common \$(EXTRAFLAGS)
+CFLAGS=-O3 -Wall -Wextra -Wpedantic -Wvla -Werror -Wredundant-decls -Wmissing-prototypes -std=c99 -I../../../common \$(EXTRAFLAGS)
 
 all: \$(LIB)
 
@@ -165,8 +64,8 @@ clean:
 	\$(RM) \$(OBJECTS)
 	\$(RM) \$(LIB)" > clean/Makefile
 
-  echo \
-"# This Makefile can be used with Microsoft Visual Studio's nmake using the command:
+echo "\
+# This Makefile can be used with Microsoft Visual Studio's nmake using the command:
 #    nmake /f Makefile.Microsoft_nmake
 
 LIBRARY=libntru${PARAM}_clean.lib
@@ -186,9 +85,8 @@ clean:
     -DEL \$(OBJECTS)
     -DEL \$(LIBRARY)" > clean/Makefile.Microsoft_nmake
 
-
-  echo \
-"# This Makefile can be used with GNU Make or BSD Make
+echo "\
+# This Makefile can be used with GNU Make or BSD Make
 
 LIB=libntru${PARAM}_avx2.a
 HEADERS=$(basename -a avx2/*.h | tr '\n' ' ')
@@ -196,7 +94,7 @@ OBJECTS=$(basename -a avx2/*.c | sed 's/\.c/.o/' | tr '\n' ' ') \\
         $(basename -a avx2/square_* | sort -V | sed 's/\.s/.o/' | tr '\n' ' ') \\
         $(basename -a avx2/poly_*.s | sed 's/\.s/.o/' | tr '\n' ' ') vec32_sample_iid.o
 
-CFLAGS=-O3 -mavx2 -mbmi2 -Wall -Wextra -Wpedantic -Werror -Wmissing-prototypes -Wredundant-decls -std=c99 -I../../../common \$(EXTRAFLAGS)
+CFLAGS=-O3 -mavx2 -mbmi2 -Wall -Wextra -Wpedantic -Wvla -Werror -Wredundant-decls -Wmissing-prototypes -std=c99 -I../../../common \$(EXTRAFLAGS)
 
 all: \$(LIB)
 
@@ -212,38 +110,125 @@ all: \$(LIB)
 clean:
 	\$(RM) \$(OBJECTS)
 	\$(RM) \$(LIB)" > avx2/Makefile
-)
+ )
 done
 
-# Simplify ifdefs
-sed -i -s "s/NTRU_PACK_DEG > (NTRU_PACK_DEG \/ 5) \* 5/0/" ${DIRNAME}/ntruhrss701/*/pack3.c
-sed -i -s "s/NTRU_PACK_DEG > (NTRU_PACK_DEG \/ 5) \* 5/1/" ${DIRNAME}/ntruhps2048509/*/pack3.c
-sed -i -s "s/NTRU_PACK_DEG > (NTRU_PACK_DEG \/ 5) \* 5/1/" ${DIRNAME}/ntruhps2048677/*/pack3.c
-sed -i -s "s/NTRU_PACK_DEG > (NTRU_PACK_DEG \/ 5) \* 5/0/" ${DIRNAME}/ntruhps4096821/*/pack3.c
-sed -i -s "s/(NTRU_N - 1) > ((NTRU_N - 1) \/ 4) \* 4/0/" ${DIRNAME}/ntruhrss701/*/sample.c
-sed -i -s "s/(NTRU_N - 1) > ((NTRU_N - 1) \/ 4) \* 4/0/" ${DIRNAME}/ntruhps2048509/*/sample.c
-sed -i -s "s/(NTRU_N - 1) > ((NTRU_N - 1) \/ 4) \* 4/0/" ${DIRNAME}/ntruhps2048677/*/sample.c
-sed -i -s "s/(NTRU_N - 1) > ((NTRU_N - 1) \/ 4) \* 4/0/" ${DIRNAME}/ntruhps4096821/*/sample.c
+echo "\
+name: ntruhps2048509
+type: kem
+claimed-nist-level: 1
+claimed-security: IND-CCA2
+length-public-key: 699
+length-secret-key: 935
+length-ciphertext: 699
+length-shared-secret: 32
+nistkat-sha256: 7ecb93dbc7a588878691f2b2d656ebc42192779f335e3a96197f4ce2134f72c6" \
+> ${DIRNAME}/ntruhps2048509/META.yml
 
+echo "\
+name: ntruhps2048677
+type: kem
+claimed-nist-level: 3
+claimed-security: IND-CCA2
+length-public-key: 930
+length-secret-key: 1234
+length-ciphertext: 930
+length-shared-secret: 32
+nistkat-sha256: 715a5caf1ee22bb4b75ff6b10f911fec77e0d63378ea359c0773ee0a4c6cbb97" \
+> ${DIRNAME}/ntruhps2048677/META.yml
+
+echo "\
+name: ntruhps4096821
+type: kem
+claimed-nist-level: 5
+claimed-security: IND-CCA2
+length-public-key: 1230
+length-secret-key: 1590
+length-ciphertext: 1230
+length-shared-secret: 32
+nistkat-sha256: 0c5b6b159fab6eb677da469ec35aaa7e6b16162b315dcdb55a3b5da857e10519" \
+> ${DIRNAME}/ntruhps4096821/META.yml
+
+echo "\
+name: ntruhrss701
+type: kem
+claimed-nist-level: 3
+claimed-security: IND-CCA2
+length-public-key: 1138
+length-secret-key: 1450
+length-ciphertext: 1138
+length-shared-secret: 32
+nistkat-sha256: 501e000c3eb374ffbfb81b0f16673a6282116465936608d7d164b05635e769e8" \
+> ${DIRNAME}/ntruhrss701/META.yml
+
+echo "\
+principal-submitters:
+  - John M. Schanck
+auxiliary-submitters:
+  - Cong Chen
+  - Oussama Danba
+  - Jeffrey Hoffstein
+  - Andreas Hülsing
+  - Joost Rijneveld
+  - Tsunekazu Saito
+  - Peter Schwabe
+  - William Whyte
+  - Keita Xagawa
+  - Takashi Yamakawa
+  - Zhenfei Zhang
+implementations:
+    - name: clean
+      version: https://github.com/jschanck/ntru/tree/${VERSION:0:8} reference implementation
+    - name: avx2
+      version: https://github.com/jschanck/ntru/tree/${VERSION:0:8} avx2 implementation
+      supported_platforms:
+          - architecture: x86_64
+            operating_systems:
+                - Linux
+            required_flags:
+                - avx2
+                - bmi2" \
+  | tee -a ${DIRNAME}/*/META.yml >/dev/null
+
+# Simplify ifdefs
+sed -i -s "s/NTRU_PACK_DEG > (NTRU_PACK_DEG \/ 5) \* 5/0/" ${DIRNAME}/ntru{hrss701,hps4096821}/*/pack3.c
+sed -i -s "s/NTRU_PACK_DEG > (NTRU_PACK_DEG \/ 5) \* 5/1/" ${DIRNAME}/ntru{hps2048509,hps2048677}/*/pack3.c
+sed -i -s "s/(NTRU_N - 1) > ((NTRU_N - 1) \/ 4) \* 4/0/" ${DIRNAME}/ntru*/*/sample.c
+
+unifdef -k -m -DCRYPTO_NAMESPACE ${DIRNAME}/ntru*/*/params.h
 unifdef -k -m -UNTRU_HPS -DNTRU_HRSS -DNTRU_N=701 -DNTRU_Q=8192 ${DIRNAME}/ntruhrss701/*/*.{c,h}
 unifdef -k -m -DNTRU_HPS -UNTRU_HRSS -DNTRU_N=509 -DNTRU_Q=2048 ${DIRNAME}/ntruhps2048509/*/*.{c,h}
 unifdef -k -m -DNTRU_HPS -UNTRU_HRSS -DNTRU_N=677 -DNTRU_Q=2048 ${DIRNAME}/ntruhps2048677/*/*.{c,h}
 unifdef -k -m -DNTRU_HPS -UNTRU_HRSS -DNTRU_N=821 -DNTRU_Q=4096 ${DIRNAME}/ntruhps4096821/*/*.{c,h}
 
-# Replace unsigned char with uint8_t at top level
+# Remove __attribute__ from crypto_sort_int32.c
+sed -i -s 's/__attribute__((noinline))//' ${DIRNAME}/*/avx2/crypto_sort_int32.c
 
+# Replace unsigned char with uint8_t at top level
 sed -i -s "s/unsigned char /uint8_t /g" ${DIRNAME}/*/*/api.h
 sed -i -s "s/unsigned char /uint8_t /g" ${DIRNAME}/*/*/kem.c
 sed -i -s "3a#include <stdint.h>\n" ${DIRNAME}/*/*/api.h
 
 # Replace crypto_hash_sha3_256 with sha3_256
-
 sed -i -s "s/crypto_hash_sha3256\.h/fips202.h/g" ${DIRNAME}/*/*/kem.c
 sed -i -s "s/crypto_hash_sha3256/sha3_256/g" ${DIRNAME}/*/*/kem.c
 
+# Manual namespacing
+for PARAM in hrss701 hps2048509 hps2048677 hps4096821; do
+  for IMPL in clean avx2; do
+    ( cd ${DIRNAME}/ntru${PARAM}/${IMPL}
+    NTRU_NAMESPACE=PQCLEAN_NTRU${PARAM^^}_${IMPL^^}_
+    for X in $(grep CRYPTO_NAMESPACE *.{c,h} | cut -f2 -d' ' | sort -u); do
+      sed -i -s "s/ ${X}/ ${NTRU_NAMESPACE}${X}/g" *.c *.h
+    done
+    sed -i -s '/CRYPTO_NAMESPACE/d' *.{c,h}
+    sed -i -s '/kem\.h/d' kem.c
+    sed -i "s/API_H/${NTRU_NAMESPACE}API_H/" api.h
+    sed -i "s/CRYPTO_/${NTRU_NAMESPACE}CRYPTO_/" api.h )
+  done
+done
 
 # Apply PQClean formatting 
-
 astyle \
   --style=google \
   --indent=spaces \
@@ -259,34 +244,8 @@ astyle \
   --suffix=none \
   ${DIRNAME}/*/*/*.{c,h}
 
-# Manual namespacing of C files
-
-NEEDS_NAMESPACE=(
-  API_H
-  CRYPTO_
-  cmov
-  crypto_kem_
-  owcpa_
-  poly_
-  sample_
-  square_
-  vec32_sample_
-  verify
-)
-
-for PARAM in hrss701 hps2048509 hps2048677 hps4096821; do
-  NTRU_NAMESPACE=PQCLEAN_NTRU${PARAM^^}_CLEAN_
-  for X in ${NEEDS_NAMESPACE[@]}; do
-    sed -i -s "s/ ${X}/ ${NTRU_NAMESPACE}${X}/g" ${DIRNAME}/ntru${PARAM}/clean/*.c ${DIRNAME}/ntru${PARAM}/clean/*.h
-  done
-done
-
-for PARAM in hrss701 hps2048509 hps2048677 hps4096821; do
-  NTRU_NAMESPACE=PQCLEAN_NTRU${PARAM^^}_AVX2_
-  for X in ${NEEDS_NAMESPACE[@]}; do
-    sed -i -s "s/ ${X}/ ${NTRU_NAMESPACE}${X}/g" ${DIRNAME}/ntru${PARAM}/avx2/*.c ${DIRNAME}/ntru${PARAM}/avx2/*.h
-  done
-done
-
+# Package
 tar czf pqclean-ntru-$(date +"%Y%m%d").tar.gz crypto_kem/
+
+# Cleanup
 rm -rf ${DIRNAME}
