@@ -29,9 +29,7 @@ out = """\
 
 #include <immintrin.h>
 
-#include "crypto_int8.h"
-#define int8 crypto_int8
-typedef int8 small;
+typedef signed char small;
 
 #define p P
 #define ppad PPAD
@@ -318,7 +316,7 @@ for j in range(1,numvec+1):
 # ---------- reciprocal initialization
 
 out += """
-int __poly_S3_inv(unsigned char *outbytes,const unsigned char *inbytes)
+static int __poly_S3_inv(unsigned char *outbytes,const unsigned char *inbytes)
 { 
   small *out = (void *) outbytes;
   small *in = (void *) inbytes;
