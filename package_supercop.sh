@@ -2,103 +2,45 @@
 
 WORKDIR=`dirname $0`
 WORKDIR=`cd $WORKDIR && pwd`
+VERSION=$(git rev-parse HEAD)
 echo $WORKDIR
 
 DIRNAME=${WORKDIR}/crypto_kem
-
-ALL=(
-  kem.h
-  owcpa.c
-  owcpa.h
-  pack3.c
-  packq.c
-  params.h
-  poly.c
-  poly.h
-  sample.c
-  sample.h
-  sample_iid.c
-  verify.c
-  verify.h
-)
-
-ONLYREF=(
-  poly_mod.c
-  poly_lift.c
-  poly_r2_inv.c
-  poly_s3_inv.c
-  poly_rq_mul.c
-)
-
-ONLYHPS509=(
-  poly_lift.c
-  poly_s3_inv.c
-  poly_r2_inv.c
-  poly_r2_inv.h
-)
-
-ONLYHPS677=(
-  poly_lift.c
-  poly_s3_inv.c
-  poly_r2_inv.c
-  poly_r2_inv.h
-)
-
-ONLYHPS821=(
-  poly_lift.c
-  poly_s3_inv.c
-  poly_r2_inv.c
-  poly_r2_inv.h
-)
-
-ONLYHRSS701=(
-  poly_r2_inv.c
-  poly_r2_inv.h
-)
-
-cd $WORKDIR
 
 if [ -e "$DIRNAME" ]; then
   echo "Error; directory already exists; delete first."
   exit -1
 fi
 
-mkdir -p ${DIRNAME}/ntruhrss701/avx2
-mkdir -p ${DIRNAME}/ntruhrss701/ref
-
-mkdir -p ${DIRNAME}/ntruhps2048509/avx2
-mkdir -p ${DIRNAME}/ntruhps2048509/ref
-
-mkdir -p ${DIRNAME}/ntruhps2048677/avx2
-mkdir -p ${DIRNAME}/ntruhps2048677/ref
-
-mkdir -p ${DIRNAME}/ntruhps4096821/avx2
-mkdir -p ${DIRNAME}/ntruhps4096821/ref
-
-
 for PARAM in hrss701 hps2048509 hps2048677 hps4096821; do
+  mkdir -p ${DIRNAME}/ntru${PARAM}/avx2
+  mkdir -p ${DIRNAME}/ntru${PARAM}/ref
 
-  ( cd ${WORKDIR}/avx2-${PARAM} && make asm )
+  #TODO: Longterm namespacing solution. SUPERCOP does not guarantee
+  #      the "_avx2_constbranchindex" suffix.
+  export NTRU_NAMESPACE=crypto_kem_ntru${PARAM}_avx2_constbranchindex_
+  ( cd ${WORKDIR}/avx2-${PARAM} && make -B asm )
 
-  ( cd ${DIRNAME}/ntru${PARAM}/
+  ( cd ${WORKDIR}/ref-${PARAM}/
+    cp -l api_bytes.h ${DIRNAME}/ntru${PARAM}/ref/api.h
+    cp -l cmov.h owcpa.h kem.h params.h poly.h sample.h ${DIRNAME}/ntru${PARAM}/ref/
+    cp -l cmov.c kem.c owcpa.c pack3.c packq.c poly.c poly_lift.c poly_mod.c poly_r2_inv.c poly_rq_mul.c poly_s3_inv.c sample.c sample_iid.c ${DIRNAME}/ntru${PARAM}/ref/ )
 
-  echo "#include \"crypto_kem.h\"" >  ref/kem.c
-  cat ${WORKDIR}/ref-${PARAM}/kem.c >> ref/kem.c
+  ( cd ${WORKDIR}/avx2-${PARAM}/
+    cp -l api_bytes.h ${DIRNAME}/ntru${PARAM}/avx2/api.h
+    cp -l cmov.h owcpa.h kem.h params.h poly.h poly_r2_inv.h sample.h ${DIRNAME}/ntru${PARAM}/avx2/
+    cp -l cmov.c kem.c owcpa.c pack3.c packq.c poly.c poly_r2_inv.c sample.c sample_iid.c ${DIRNAME}/ntru${PARAM}/avx2/
+    cp -l *.s ${DIRNAME}/ntru${PARAM}/avx2/ )
 
-  ln -s ../ref/kem.c avx2/kem.c
+  ( cd ${WORKDIR}/avx2-${PARAM}/
+  if [ "${PARAM}" != "hrss701" ]; then
+      cp -l poly_lift.c poly_s3_inv.c ${DIRNAME}/ntru${PARAM}/avx2/
+  fi )
 
-  for i in "${ALL[@]}"; do
-    cp -l ${WORKDIR}/ref-${PARAM}/$i ref/$i
-    ( cd avx2 && ln -s ../ref/$i $i )
-  done
-
-  for i in "${ONLYREF[@]}"; do
-    cp -l ${WORKDIR}/ref-${PARAM}/$i ref/$i
-  done
-
-  cp ${WORKDIR}/avx2-${PARAM}/*.s avx2/
-
-  touch goal-indcca2 goal-indcpa nistpqc nistpqc1 nistpqc2
+  ( cd ${DIRNAME}/ntru${PARAM}
+  touch goal-indcca2 goal-indcpa nistpqc nistpqc1 nistpqc2 nistpqc3
+  touch ref/goal-constbranch ref/goal-constindex
+  touch avx2/goal-constbranch avx2/goal-constindex
 
   echo "ntru${PARAM} as specified by the NTRU submission to the second round of the NIST post-quantum standardisation process." > description
   echo "Cong Chen
@@ -106,9 +48,12 @@ Oussama Danba
 Jeffrey Hoffstein
 Andreas Hülsing
 Joost Rijneveld
+Tsunekazu Saito
 John M. Schanck
 Peter Schwabe
 William Whyte
+Keita Xagawa
+Takashi Yamakawa
 Zhenfei Zhang" > designers
 
   echo "Oussama Danba
@@ -118,12 +63,7 @@ Peter Schwabe" > ref/implementors
   cp ref/implementors avx2/implementors
 
   echo "amd64
-x86" > avx2/architectures
-
-  cp ${WORKDIR}/avx2-${PARAM}/api_bytes.h ref/api.h
-  cp ${WORKDIR}/avx2-${PARAM}/api_bytes.h avx2/api.h
-  )
-
+x86" > avx2/architectures )
 done
 
 # special files for hps2048509
@@ -131,12 +71,12 @@ done
 (
 cd ${DIRNAME}/ntruhps2048509/
 
-for i in "${ONLYHPS509[@]}"; do
+for i in "${ONLYAVX2_HPS[@]}"; do
   cp -l ${WORKDIR}/avx2-hps2048509/$i avx2/$i
 done
 
-echo "66f43b84ed90c246c40c03904fddd0d6137bc2153829f214038cebe89dd6772f" > checksumsmall
-echo "11d99e8437286529ef7db4a7a8dea3524ede2a16bc266c754b9c233eb255c0b3" > checksumbig
+echo "00cd3fe1b21cd7ad209de97d76eba108e51415ad7ed1fd717df6c7bcf4135c06" > checksumsmall
+echo "7034d970bde4229b59bee12a892dc555b9c20ace10fa95871d647553a89da00c" > checksumbig
 )
 
 # special files for hps2048677
@@ -144,12 +84,12 @@ echo "11d99e8437286529ef7db4a7a8dea3524ede2a16bc266c754b9c233eb255c0b3" > checks
 (
 cd ${DIRNAME}/ntruhps2048677/
 
-for i in "${ONLYHPS677[@]}"; do
+for i in "${ONLYAVX2_HPS[@]}"; do
   cp -l ${WORKDIR}/avx2-hps2048677/$i avx2/$i
 done
 
-echo "cedd16c6a222107c57e6fab41a4277ca35816b75f49a9afb951a8bf8f9236e2f" > checksumsmall
-echo "1c0b86a65604d7a84d9c7791ab0ad3dbff983f03abda0cd7dae49f57ad77a630" > checksumbig
+echo "2235d41f90f9ea218486529e8385ee98fa0680e2c8c80aa2690c08e44e102db5" > checksumsmall
+echo "c2e84c441cc7b06b9075e3f010acbe9af8ed6f62de8e913fdf00daac9dccd96c" > checksumbig
 )
 
 # special files for hps4096821
@@ -157,12 +97,12 @@ echo "1c0b86a65604d7a84d9c7791ab0ad3dbff983f03abda0cd7dae49f57ad77a630" > checks
 (
 cd ${DIRNAME}/ntruhps4096821/
 
-for i in "${ONLYHPS821[@]}"; do
+for i in "${ONLYAVX2_HPS[@]}"; do
   cp -l ${WORKDIR}/avx2-hps4096821/$i avx2/$i
 done
 
-echo "2ac4d15dffb2f7c317bd5595009d3d553c86107f9ec0164379ca1eb4d1b0c813" > checksumsmall
-echo "ed42da97b53d62eb8328379f39806af7df25914d149f31225764de4b7b2dae38" > checksumbig
+echo "202e8de9cd4dc0446643f740cb4fc9d5b8effd5f8fded33b6d4fc6d022bce04a" > checksumsmall
+echo "ba7975339f1f65b53a6610d6e9dcddee7b337cf2188bcf0114bde0ec8dfd5f70" > checksumbig
 )
 
 # special files for hrss701
@@ -170,12 +110,12 @@ echo "ed42da97b53d62eb8328379f39806af7df25914d149f31225764de4b7b2dae38" > checks
 (
 cd ${DIRNAME}/ntruhrss701/
 
-for i in "${ONLYHRSS701[@]}"; do
+for i in "${ONLYAVX2_HRSS[@]}"; do
   cp -l ${WORKDIR}/avx2-hrss701/$i avx2/$i
 done
 
-echo "95b39b282fe1b91eb4b7bd5957693eaec5cd73e37c25699127d6d87751453cd4" > checksumsmall
-echo "50e9bccc8bbc93496ca3a77e9beed329ba18ce5a83a529359b706d16aeda7e14" > checksumbig
+echo "e81768c877922de14d035615ad7695b679f4a634f58516b40c1c25f6a6ddef3a" > checksumsmall
+echo "f905d7d93153a42169d0b2d9e7ebf5b91b706229c05c0ef53a01dd2fa6c06b2e" > checksumbig
 
 rm avx2/poly_s3_inv.s
 cat > avx2/poly_s3_inv.c <<herefiledelim
@@ -188,6 +128,46 @@ void poly_S3_inv(poly *r, const poly *a)
 }
 herefiledelim
 )
+
+# Simplify ifdefs
+
+sed -i -s "s/NTRU_PACK_DEG > (NTRU_PACK_DEG \/ 5) \* 5/0/" ${DIRNAME}/ntruhrss701/*/pack3.c
+sed -i -s "s/NTRU_PACK_DEG > (NTRU_PACK_DEG \/ 5) \* 5/1/" ${DIRNAME}/ntruhps2048509/*/pack3.c
+sed -i -s "s/NTRU_PACK_DEG > (NTRU_PACK_DEG \/ 5) \* 5/1/" ${DIRNAME}/ntruhps2048677/*/pack3.c
+sed -i -s "s/NTRU_PACK_DEG > (NTRU_PACK_DEG \/ 5) \* 5/0/" ${DIRNAME}/ntruhps4096821/*/pack3.c
+sed -i -s "s/(NTRU_N - 1) > ((NTRU_N - 1) \/ 4) \* 4/0/" ${DIRNAME}/ntruhrss701/*/sample.c
+sed -i -s "s/(NTRU_N - 1) > ((NTRU_N - 1) \/ 4) \* 4/0/" ${DIRNAME}/ntruhps2048509/*/sample.c
+sed -i -s "s/(NTRU_N - 1) > ((NTRU_N - 1) \/ 4) \* 4/0/" ${DIRNAME}/ntruhps2048677/*/sample.c
+sed -i -s "s/(NTRU_N - 1) > ((NTRU_N - 1) \/ 4) \* 4/0/" ${DIRNAME}/ntruhps4096821/*/sample.c
+
+unifdef -k -m -UNTRU_HPS -DNTRU_HRSS -DNTRU_N=701 -DNTRU_Q=8192 ${DIRNAME}/ntruhrss701/*/*.{c,h}
+unifdef -k -m -DNTRU_HPS -UNTRU_HRSS -DNTRU_N=509 -DNTRU_Q=2048 ${DIRNAME}/ntruhps2048509/*/*.{c,h}
+unifdef -k -m -DNTRU_HPS -UNTRU_HRSS -DNTRU_N=677 -DNTRU_Q=2048 ${DIRNAME}/ntruhps2048677/*/*.{c,h}
+unifdef -k -m -DNTRU_HPS -UNTRU_HRSS -DNTRU_N=821 -DNTRU_Q=4096 ${DIRNAME}/ntruhps4096821/*/*.{c,h}
+
+
+# TIMECOP
+
+
+for PARAM in hrss701 hps2048509 hps2048677 hps4096821; do
+  for IMPL in ref avx2; do
+  (
+    cd ${DIRNAME}/ntru${PARAM}/${IMPL}
+    echo "\
+    20200816 koko amd64 20200821 crypto_kem ntru${PARAM}/constbranchindex timecop_pass crypto_kem/ntru${PARAM}/${IMPL} gcc_-march=native_-mtune=native_-O3_-fomit-frame-pointer_-fwrapv_-fPIC_-fPIE 3 0
+    20200816 koko amd64 20200821 crypto_kem ntru${PARAM}/constbranchindex timecop_pass crypto_kem/ntru${PARAM}/${IMPL} gcc_-march=native_-mtune=native_-Os_-fomit-frame-pointer_-fwrapv_-fPIC_-fPIE 3 0
+    20200816 koko amd64 20200821 crypto_kem ntru${PARAM}/constbranchindex timecop_pass crypto_kem/ntru${PARAM}/${IMPL} gcc_-march=native_-mtune=native_-O2_-fomit-frame-pointer_-fwrapv_-fPIC_-fPIE 3 0
+    20200816 koko amd64 20200821 crypto_kem ntru${PARAM}/constbranchindex timecop_pass crypto_kem/ntru${PARAM}/${IMPL} gcc_-march=native_-mtune=native_-O_-fomit-frame-pointer_-fwrapv_-fPIC_-fPIE 3 0
+    20200816 koko amd64 20200821 crypto_kem ntru${PARAM}/constbranchindex timecop_pass crypto_kem/ntru${PARAM}/${IMPL} clang_-march=native_-O3_-fomit-frame-pointer_-fwrapv_-Qunused-arguments_-fPIC_-fPIE 3 0
+    20200816 koko amd64 20200821 crypto_kem ntru${PARAM}/constbranchindex timecop_pass crypto_kem/ntru${PARAM}/${IMPL} clang_-march=native_-Os_-fomit-frame-pointer_-fwrapv_-Qunused-arguments_-fPIC_-fPIE 3 0
+    20200816 koko amd64 20200821 crypto_kem ntru${PARAM}/constbranchindex timecop_pass crypto_kem/ntru${PARAM}/${IMPL} clang_-march=native_-O2_-fomit-frame-pointer_-fwrapv_-Qunused-arguments_-fPIC_-fPIE 3 0
+    20200816 koko amd64 20200821 crypto_kem ntru${PARAM}/constbranchindex timecop_pass crypto_kem/ntru${PARAM}/${IMPL} clang_-march=native_-O_-fomit-frame-pointer_-fwrapv_-Qunused-arguments_-fPIC_-fPIE 3 0
+    20200816 koko amd64 20200821 crypto_kem ntru${PARAM}/constbranchindex timecop_pass crypto_kem/ntru${PARAM}/${IMPL} clang_-mcpu=native_-O3_-fomit-frame-pointer_-fwrapv_-Qunused-arguments_-fPIC_-fPIE 3 0" \
+      > goal-constbranch
+    cp goal-constbranch goal-constindex
+  )
+  done
+done
 
 tar czf supercop-ntru-$(date +"%Y%m%d").tar.gz crypto_kem/
 rm -rf ${DIRNAME}
