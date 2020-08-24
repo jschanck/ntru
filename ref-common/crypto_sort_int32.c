@@ -1,9 +1,9 @@
-// XXX: Temporary placeholder for a faster sort.
-// Copied from supercop-20190110/crypto_sort/int32/portable3
+// Based on supercop-20190110/crypto_sort/int32/x86
 
 #include "crypto_sort_int32.h"
 
 #include <stdint.h>
+#define int32 int32_t
 
 #define int32_MINMAX(a,b) \
 do { \
@@ -16,31 +16,67 @@ do { \
   (b) ^= c; \
 } while(0)
 
-void crypto_sort_int32(int32_t *array,size_t n)
+/* assume 2 <= n <= 0x40000000 */
+void crypto_sort_int32(int32 *array,size_t n)
 {
-  size_t top,p,q,r,i;
-  int32_t *x = array;
+  size_t top,p,q,r,i,j;
+  int32 *x = array;
 
-  if (n < 2) return;
   top = 1;
   while (top < n - top) top += top;
 
-  for (p = top;p > 0;p >>= 1) {
-    for (i = 0;i < n - p;++i) {
-      if (!(i & p)) {
-        int32_MINMAX(x[i],x[i+p]);
-      }
-    }
+  for (p = top;p >= 1;p >>= 1) {
     i = 0;
+    while (i + 2 * p <= n) {
+      for (j = i;j < i + p;++j) {
+        int32_MINMAX(x[j],x[j+p]);
+      }
+      i += 2 * p;
+    }
+    for (j = i;j < n - p;++j) {
+      int32_MINMAX(x[j],x[j+p]);
+    }
+
+    i = 0;
+    j = 0;
     for (q = top;q > p;q >>= 1) {
-      for (;i < n - q;++i) {
-        if (!(i & p)) {
-          int32_t a = x[i + p];
-          for (r = q;r > p;r >>= 1)
-            int32_MINMAX(a,x[i+r]);
-            x[i + p] = a;
+      if (j != i) {
+        for (;;) {
+          if (j == n - q) goto done;
+          int32 a = x[j + p];
+          for (r = q;r > p;r >>= 1) {
+            int32_MINMAX(a,x[j + r]);
+          }
+          x[j + p] = a;
+          ++j;
+          if (j == i + p) {
+            i += 2 * p;
+            break;
+          }
         }
       }
+      while (i + p <= n - q) {
+        for (j = i;j < i + p;++j) {
+          int32 a = x[j + p];
+          for (r = q;r > p;r >>= 1) {
+            int32_MINMAX(a,x[j+r]);
+          }
+          x[j + p] = a;
+        }
+        i += 2 * p;
+      }
+      /* now i + p > n - q */
+      j = i;
+      while (j < n - q) {
+        int32 a = x[j + p];
+        for (r = q;r > p;r >>= 1) {
+          int32_MINMAX(a,x[j+r]);
+        }
+        x[j + p] = a;
+        ++j;
+      }
+
+      done: ;
     }
   }
 }
