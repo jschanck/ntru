@@ -20,11 +20,11 @@ for PARAM in hrss701 hps2048509 hps2048677 hps4096821; do
   ( cd ${WORKDIR}/avx2-${PARAM} && make -B asm )
 
   ( cd ${WORKDIR}/ref-${PARAM}/
-    cp -l api.h cmov.h owcpa.h kem.h params.h poly.h sample.h ${DIRNAME}/ntru${PARAM}/clean/
+    cp -l api.h cmov.h owcpa.h params.h poly.h sample.h ${DIRNAME}/ntru${PARAM}/clean/
     cp -l cmov.c kem.c owcpa.c pack3.c packq.c poly.c poly_lift.c poly_mod.c poly_r2_inv.c poly_rq_mul.c poly_s3_inv.c sample.c sample_iid.c ${DIRNAME}/ntru${PARAM}/clean/ )
 
   ( cd ${WORKDIR}/avx2-${PARAM}/
-    cp -l api.h cmov.h owcpa.h kem.h params.h poly.h poly_r2_inv.h sample.h ${DIRNAME}/ntru${PARAM}/avx2/
+    cp -l api.h cmov.h owcpa.h params.h poly.h poly_r2_inv.h sample.h ${DIRNAME}/ntru${PARAM}/avx2/
     cp -l cmov.c kem.c owcpa.c pack3.c packq.c poly.c poly_r2_inv.c sample.c sample_iid.c ${DIRNAME}/ntru${PARAM}/avx2/
     cp -l *.s ${DIRNAME}/ntru${PARAM}/avx2/ )
 
@@ -185,6 +185,7 @@ implementations:
           - architecture: x86_64
             operating_systems:
                 - Linux
+                - Darwin
             required_flags:
                 - avx2
                 - bmi2" \
