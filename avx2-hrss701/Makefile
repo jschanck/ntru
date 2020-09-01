@@ -45,9 +45,9 @@ OBJS += poly_rq_mul.s \
         poly_r2_mul.s \
         poly_rq_to_s3.s \
         vec32_sample_iid.s \
+        poly_lift.s \
         poly_mod_3_Phi_n.s \
         poly_mod_q_Phi_n.s \
-        poly_s3_to_rq.s \
         poly_s3_inv.s
 
 all: test/test_polymul \
