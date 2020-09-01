@@ -1,8 +1,3 @@
-#include "params.h"
-
-#ifdef NTRU_HPS
-#include "crypto_sort_int32.h"
-#endif
 #include "sample.h"
 
 void sample_fg(poly *f, poly *g, const unsigned char uniformbytes[NTRU_SAMPLE_FG_BYTES])
