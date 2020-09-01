@@ -1,3 +1,5 @@
+#include "params.h"
+
 #ifdef NTRU_HPS
 #include "crypto_sort_int32.h"
 #endif
