@@ -1,3 +1,5 @@
+NTRU_NAMESPACE ?= ntru_
+
 CC ?= /usr/bin/cc
 CFLAGS = -O3 -fomit-frame-pointer -march=native -fPIC -fPIE -pie
 CFLAGS += -Wall -Wextra -Wpedantic
@@ -61,13 +63,13 @@ all: test/test_polymul \
 asm: ${OBJS} poly_s3_inv.c
 
 poly_s3_inv.c: asmgen/poly_s3_inv.py
-	python3 $^ 508 | sed 's/4294967295/-1/g' > $@
+	NTRU_NAMESPACE=${NTRU_NAMESPACE} python3 $^ 508 | sed 's/4294967295/-1/g' > $@
 
 poly_rq_mul.s: asmgen/rq_mul/poly_rq_mul.py asmgen/rq_mul/K2_schoolbook_64x8.py asmgen/rq_mul/K2_K2_64x32.py
-	python3 $^ > $@
+	NTRU_NAMESPACE=${NTRU_NAMESPACE} python3 $^ > $@
 
 %.s: asmgen/%.py
-	python3 $^ > $@
+	NTRU_NAMESPACE=${NTRU_NAMESPACE} python3 $^ > $@
 
 square_%_shufbytes.s: $(wildcard bitpermutations/*)
 	PYTHONPATH=bitpermutations \

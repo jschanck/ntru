@@ -1,9 +1,12 @@
+NTRU_NAMESPACE ?= ntru_
+
 CC ?= /usr/bin/cc
 CFLAGS = -O3 -fomit-frame-pointer -march=native -fPIC -fPIE -pie
 CFLAGS += -Wall -Wextra -Wpedantic
 CFLAGS += -DCRYPTO_NAMESPACE\(s\)=${NTRU_NAMESPACE}\#\#s
 
-SRC = fips202.c \
+SRC = cmov.c \
+      fips202.c \
       crypto_sort_int32.c \
       kem.c \
       owcpa.c \
@@ -14,17 +17,16 @@ SRC = fips202.c \
       poly_r2_inv.c \
       poly_s3_inv.c \
       sample.c \
-      sample_iid.c \
-      verify.c
+      sample_iid.c
 
-HDR = crypto_sort_int32.h \
+HDR = cmov.h \
+      crypto_sort_int32.h \
       kem.h \
       owcpa.h \
       params.h \
       poly.h \
       poly_r2_inv.h \
-      sample.h \
-      verify.h
+      sample.h
 
 SRC_URAND = $(SRC) randombytes.c
 HDR_URAND = $(HDR) randombytes.h
@@ -62,13 +64,13 @@ all: test/test_polymul \
 asm: ${OBJS} poly_s3_inv.c
 
 poly_s3_inv.c: asmgen/poly_s3_inv.py
-	python3 $^ 820 | sed 's/4294967295/-1/g' > $@
+	NTRU_NAMESPACE=${NTRU_NAMESPACE} python3 $^ 820 | sed 's/4294967295/-1/g' > $@
 
 poly_rq_mul.s: asmgen/rq_mul/poly_rq_mul.py asmgen/rq_mul/schoolbook_64x13.py asmgen/rq_mul/K2_K2_64x52.py
-	python3 $^ > $@
+	NTRU_NAMESPACE=${NTRU_NAMESPACE} python3 $^ > $@
 
 %.s: asmgen/%.py
-	python3 $^ > $@
+	NTRU_NAMESPACE=${NTRU_NAMESPACE} python3 $^ > $@
 
 square_%_shufbytes.s: $(wildcard bitpermutations/*)
 	PYTHONPATH=bitpermutations \

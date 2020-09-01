@@ -1,3 +1,5 @@
+NTRU_NAMESPACE ?= ntru_
+
 CC ?= /usr/bin/cc
 CFLAGS = -O3 -fomit-frame-pointer -march=native -fPIC -fPIE -pie
 CFLAGS += -Wall -Wextra -Wpedantic

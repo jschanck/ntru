@@ -1,9 +1,12 @@
+NTRU_NAMESPACE ?= ntru_
+
 CC ?= /usr/bin/cc
 CFLAGS = -O3 -fomit-frame-pointer -march=native -fPIC -fPIE -pie
 CFLAGS += -Wall -Wextra -Wpedantic
 CFLAGS += -DCRYPTO_NAMESPACE\(s\)=${NTRU_NAMESPACE}\#\#s
 
-SRC = fips202.c \
+SRC = cmov.c \
+      fips202.c \
       kem.c \
       owcpa.c \
       pack3.c \
@@ -11,16 +14,15 @@ SRC = fips202.c \
       poly.c \
       poly_r2_inv.c \
       sample.c \
-      sample_iid.c \
-      verify.c
+      sample_iid.c
 
-HDR = kem.h \
+HDR = cmov.c \
+      kem.h \
       owcpa.h \
       params.h \
       poly.h \
       poly_r2_inv.h \
-      sample.h \
-      verify.h
+      sample.h
 
 SRC_URAND = $(SRC) randombytes.c
 HDR_URAND = $(HDR) randombytes.h
@@ -62,10 +64,10 @@ all: test/test_polymul \
 asm: ${OBJS}
 
 poly_rq_mul.s: asmgen/rq_mul/poly_rq_mul.py asmgen/rq_mul/K2_schoolbook_64x11.py asmgen/rq_mul/K2_K2_64x44.py
-	python3 $^ > $@
+	NTRU_NAMESPACE=${NTRU_NAMESPACE} python3 $^ > $@
 
 %.s: asmgen/%.py
-	python3 $^ > $@
+	NTRU_NAMESPACE=${NTRU_NAMESPACE} python3 $^ > $@
 
 square_%_shufbytes.s: $(wildcard bitpermutations/*)
 	PYTHONPATH=bitpermutations \
