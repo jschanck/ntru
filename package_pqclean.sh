@@ -16,7 +16,7 @@ for PARAM in hrss701 hps2048509 hps2048677 hps4096821; do
   mkdir -p ${DIRNAME}/ntru${PARAM}/avx2
   mkdir -p ${DIRNAME}/ntru${PARAM}/clean
 
-  export NTRU_NAMESPACE=PQCLEAN_NTRU${PARAM^^}_AVX2_
+  export NTRU_NAMESPACE=$(echo PQCLEAN_NTRU${PARAM}_AVX2_ | tr [:lower:] [:upper:])
   ( cd ${WORKDIR}/avx2-${PARAM} && make -B asm )
 
   ( cd ${WORKDIR}/ref-${PARAM}/
@@ -218,7 +218,7 @@ sed -i -s "s/crypto_hash_sha3256/sha3_256/g" ${DIRNAME}/*/*/kem.c
 for PARAM in hrss701 hps2048509 hps2048677 hps4096821; do
   for IMPL in clean avx2; do
     ( cd ${DIRNAME}/ntru${PARAM}/${IMPL}
-    NTRU_NAMESPACE=PQCLEAN_NTRU${PARAM^^}_${IMPL^^}_
+    NTRU_NAMESPACE=$(echo PQCLEAN_NTRU${PARAM}_${IMPL}_ | tr [:lower:] [:upper])
     for X in $(grep CRYPTO_NAMESPACE *.{c,h} | cut -f2 -d' ' | sort -u); do
       sed -i -s "s/ ${X}/ ${NTRU_NAMESPACE}${X}/g" *.c *.h
     done
