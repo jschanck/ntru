@@ -229,6 +229,30 @@ for PARAM in hrss701 hps2048509 hps2048677 hps4096821; do
   done
 done
 
+for PARAM in hrss701 hps2048509 hps2048677 hps4096821
+do
+  for IMPL in clean avx2
+  do
+    for F in ${DIRNAME}/ntru${PARAM}/${IMPL}/*.h
+    do
+      START=$(grep -n -m 1 "^#include" ${F} | cut -d: -f1)
+      if [ x${START} == x ]; then continue; fi
+      GUARD=$(head -n $((${START}-1)) ${F})
+      INCL1=$(grep "^#include \"" ${F} | sort -u)
+      INCL2=$(grep "^#include <" ${F} | sort -u)
+      REST=$(tail -n+$((${START}+1)) ${F} | sed '/^#include/d')
+      echo "${GUARD}\n${INCL1}\n${INCL2}\n${REST}" | sed 's/\\n/\n/g' > ${F}
+    done
+    for F in ${DIRNAME}/ntru${PARAM}/${IMPL}/*.c
+    do
+      INCL1=$(grep "^#include \"" ${F} | sort -u)
+      INCL2=$(grep "^#include <" ${F} | sort -u)
+      REST=$(sed "/^#include/d" ${F})
+      echo "${INCL1}\n${INCL2}\n${REST}" | sed 's/\\n/\n/g' > ${F}
+    done
+  done
+done
+
 # Apply PQClean formatting 
 astyle \
   --style=google \
