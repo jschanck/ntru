@@ -138,11 +138,15 @@ int owcpa_dec(unsigned char *rm,
   poly_S3_mul(m, mf, finv3);
   poly_S3_tobytes(rm+NTRU_PACK_TRINARY_BYTES, m);
 
-  /* NOTE: For the IND-CCA2 KEM we must ensure that c = Enc(h, (r,m)).       */
+  fail = 0;
+
+  /* Check that unused bits of last byte of ciphertext are zero */
+  fail |= ciphertext[NTRU_CIPHERTEXTBYTES-1] & (0xff << (8 - (7 & (NTRU_LOGQ*NTRU_PACK_DEG))));
+
+  /* For the IND-CCA2 KEM we must ensure that c = Enc(h, (r,m)).             */
   /* We can avoid re-computing r*h + Lift(m) as long as we check that        */
   /* r (defined as b/h mod (q, Phi_n)) and m are in the message space.       */
   /* (m can take any value in S3 in NTRU_HRSS) */
-  fail = 0;
 #ifdef NTRU_HPS
   fail |= owcpa_check_m(m);
 #endif
