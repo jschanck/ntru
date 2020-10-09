@@ -19,43 +19,48 @@ static int owcpa_check_ciphertext(const unsigned char *ciphertext)
 
 static int owcpa_check_r(const poly *r)
 {
-  /* Check that r is in message space. */
-  /* Note: Assumes that r has coefficients in {0, 1, ..., q-1} */
+  /* A valid r has coefficients in {0,1,q-1} and has r[N-1] = 0 */
+  /* Note: We may assume that 0 <= r[i] <= q-1 for all i        */
+
   int i;
-  uint64_t t = 0;
+  uint32_t t = 0;
   uint16_t c;
-  for(i=0; i<NTRU_N; i++)
+  for(i=0; i<NTRU_N-1; i++)
   {
-    c = MODQ(r->coeffs[i]+1);
-    t |= c & (NTRU_Q-4);  /* 0 if c is in {0,1,2,3} */
-    t |= (c + 1) & 0x4;   /* 0 if c is in {0,1,2} */
+    c = r->coeffs[i];
+    t |= (c + 1) & (NTRU_Q-4);  /* 0 iff c is in {-1,0,1,2} */
+    t |= (c + 2) & 4;  /* 1 if c = 2, 0 if c is in {-1,0,1} */
   }
-  t |= MODQ(r->coeffs[NTRU_N-1]); /* Coefficient n-1 must be zero */
-  t = (~t + 1); // two's complement
-  t >>= 63;
-  return (int) t;
+  t |= r->coeffs[NTRU_N-1]; /* Coefficient n-1 must be zero */
+
+  /* We have 0 <= t < 2^16. */
+  /* Return 0 on success (t=0), 1 on failure */
+  return (int) (1&((~t + 1) >> 31));
 }
 
 #ifdef NTRU_HPS
 static int owcpa_check_m(const poly *m)
 {
-  /* Check that m is in message space. */
-  /* Note: Assumes that m has coefficients in {0,1,2}. */
+  /* Check that m is in message space, i.e.                  */
+  /*  (1)  |{i : m[i] = 1}| = |{i : m[i] = 2}|, and          */
+  /*  (2)  |{i : m[i] != 0}| = NTRU_WEIGHT.                  */
+  /* Note: We may assume that m has coefficients in {0,1,2}. */
+
   int i;
-  uint64_t t = 0;
-  uint16_t p1 = 0;
-  uint16_t m1 = 0;
+  uint32_t t = 0;
+  uint16_t ps = 0;
+  uint16_t ms = 0;
   for(i=0; i<NTRU_N; i++)
   {
-    p1 += m->coeffs[i] & 0x01;
-    m1 += (m->coeffs[i] & 0x02) >> 1;
+    ps += m->coeffs[i] & 1;
+    ms += m->coeffs[i] & 2;
   }
-  /* Need p1 = m1 and p1 + m1 = NTRU_WEIGHT */
-  t |= p1 ^ m1;
-  t |= (p1 + m1) ^ NTRU_WEIGHT;
-  t = (~t + 1); // two's complement
-  t >>= 63;
-  return (int) t;
+  t |= ps ^ (ms >> 1);   /* 0 if (1) holds */
+  t |= ms ^ NTRU_WEIGHT; /* 0 if (1) and (2) hold */
+
+  /* We have 0 <= t < 2^16. */
+  /* Return 0 on success (t=0), 1 on failure */
+  return (int) (1&((~t + 1) >> 31));
 }
 #endif
 
