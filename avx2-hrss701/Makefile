@@ -52,6 +52,7 @@ OBJS += poly_rq_mul.s \
 
 all: test/test_polymul \
      test/test_ntru \
+     test/test_owcpa \
      test/test_pack \
      test/ram \
      test/speed \
@@ -85,6 +86,9 @@ test/test_polymul: $(SRC_URAND) $(OBJS) $(HDR_URAND) test/test_polymul.c
 
 test/test_ntru: $(SRC_URAND) $(OBJS) $(HDR_URAND) test/test_ntru.c
 	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) test/test_ntru.c cpucycles.c
+
+test/test_owcpa: $(SRC_URAND) $(OBJS) $(HDR_URAND) test/test_owcpa.c
+	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) test/test_owcpa.c
 
 test/test_pack: $(SRC_URAND) $(OBJS) $(HDR_URAND) test/test_pack.c
 	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) test/test_pack.c cpucycles.c

@@ -36,6 +36,7 @@ HDR_KAT = $(HDR) rng.h api.h
 
 all: test/test_polymul \
      test/test_ntru \
+     test/test_owcpa \
      test/test_pack \
      test/ram \
      test/speed \
@@ -48,6 +49,9 @@ test/test_polymul: $(SRC_URAND) $(HDR_URAND) test/test_polymul.c
 
 test/test_ntru: $(SRC_URAND) $(HDR_URAND) test/test_ntru.c
 	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) test/test_ntru.c
+
+test/test_owcpa: $(SRC_URAND) $(HDR_URAND) test/test_owcpa.c
+	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) test/test_owcpa.c
 
 test/test_pack: $(SRC_URAND) $(HDR_URAND) test/test_pack.c
 	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) test/test_pack.c
