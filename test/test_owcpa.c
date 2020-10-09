@@ -2,6 +2,8 @@
 #include "../kem.h"
 #include "../owcpa.h"
 #include "../params.h"
+#include "../randombytes.h"
+#include "../sample.h"
 
 #include <assert.h>
 #include <stdint.h>
@@ -26,6 +28,7 @@ static unsigned char verify(const unsigned char *a, const unsigned char *b, size
 int main(void)
 {
   int i, inc, fail;
+  int16_t g1;
 
   unsigned char pk[NTRU_PUBLICKEYBYTES];
   unsigned char sk[NTRU_SECRETKEYBYTES];
@@ -34,22 +37,76 @@ int main(void)
   unsigned char k2[NTRU_SHAREDKEYBYTES];
 
   unsigned char buf[NTRU_PRFKEYBYTES+NTRU_CIPHERTEXTBYTES];
+
+  unsigned char rm_seed[NTRU_SAMPLE_RM_BYTES];
   unsigned char rm[NTRU_OWCPA_MSGBYTES];
-  poly r, m;
+  poly h, f, fp, g, r, m, x1, x2;
 
   crypto_kem_keypair(pk, sk);
-  crypto_kem_enc(ct, k1, pk);
 
+  /* Test that f and fp are inversed mod p */
+  poly_S3_frombytes(&f, sk);
+  poly_S3_frombytes(&fp, sk+NTRU_PACK_TRINARY_BYTES);
+  poly_S3_mul(&x1, &f, &fp);
+  assert(x1.coeffs[0] == 1);
+  for(i=1; i<NTRU_N; i++)
+    assert(x1.coeffs[i] == 0);
+
+  /* Test that the public key satisfies h*f = 3*g for g of the right form */
+  poly_Rq_sum_zero_frombytes(&h, pk);
+  poly_S3_frombytes(&f, sk);
+  poly_Z3_to_Zq(&f);
+  poly_Rq_mul(&g, &h, &f);
+  if(NTRU_Q % 3 == 1) for(i=0; i<NTRU_N; i++) g.coeffs[i] *= -(NTRU_Q-1)/3;
+  if(NTRU_Q % 3 == 2) for(i=0; i<NTRU_N; i++) g.coeffs[i] *= (NTRU_Q+1)/3;
+  for(i=0; i<NTRU_N; i++) g.coeffs[i] &= (NTRU_Q-1);
+
+#ifdef NTRU_HRSS
+  /* Check that g has coeffs in {-2,-1,0,1,2}. */
+  for(i=0; i<NTRU_N; i++) assert(((g.coeffs[i]+2) & (NTRU_Q-1)) < 5);
+
+  /* Check that g satisfies g(1) = 0 (mod q) */ 
+  g1 = 0; for(i=0; i<NTRU_N; i++) g1 += g.coeffs[i];
+  assert((g1&(NTRU_Q-1)) == 0);
+#endif
+
+#ifdef NTRU_HPS
+  /* Check that g has coeffs in {-1,0,1} */
+  for(i=0; i<NTRU_N; i++) assert(((g.coeffs[i]+1) & (NTRU_Q-1)) < 3);
+
+  /* Check that g has the correct number of +1s */
+  g1 = 0; for(i=0; i<NTRU_N; i++) if(g.coeffs[i] == 1) g1++;
+  assert(g1 == NTRU_Q/16 - 1);
+
+  /* Check that g has the correct number of -1s */
+  g1 = 0; for(i=0; i<NTRU_N; i++) if(g.coeffs[i] == NTRU_Q-1) g1++;
+  assert(g1 == NTRU_Q/16 - 1);
+
+  /* note: correct weight implies g(1) = 0 */
+#endif
+
+  /* test encaps/decaps */
+  randombytes(rm_seed, NTRU_SAMPLE_RM_BYTES);
+  sample_rm(&r, &m, rm_seed);
+  poly_Z3_to_Zq(&r);
+  owcpa_enc(ct, &r, &m, pk);
   fail = owcpa_dec(rm, ct, sk);
+  /* Should return 0 on success */
   assert(fail == 0);
 
-  crypto_hash_sha3256(k2, rm, NTRU_OWCPA_MSGBYTES);
-  assert(verify(k1,k2,NTRU_SHAREDKEYBYTES) == 0);
+  /* output should match input */
+  poly_S3_frombytes(&x1, rm);
+  poly_Z3_to_Zq(&x1);
+  poly_S3_frombytes(&x2, rm+NTRU_PACK_TRINARY_BYTES);
+  for(i=0; i<NTRU_N; i++)
+  {
+    assert(r.coeffs[i] == x1.coeffs[i]);
+    assert(m.coeffs[i] == x2.coeffs[i]);
+  }
 
+  /* Test owcpa_check_ciphertext. */
   if(7&(NTRU_LOGQ*NTRU_PACK_DEG))
   {
-    /* If there are trailing bits, then test the behavior of owcpa_check_ciphertext. */
-
     /* We construct "prf key | ct" in a new buffer, manipulate the last byte of
      * the ct component, and then check that crypto_kem_dec outputs H(prf key | ct).
      * We also check that owcpa_dec outputs 1.
@@ -116,22 +173,14 @@ int main(void)
 
   /* Wrong weight, but equal numbers of 1s and -1s */
   poly_S3_frombytes(&m, rm+NTRU_PACK_TRINARY_BYTES);
-  for(i=0; i<NTRU_N-1; i++)
-  {
-    if(m.coeffs[i] == 0)
-    {
-      m.coeffs[i] = 1;
-      break;
-    }
-  }
-  for(i=0; i<NTRU_N-1; i++)
-  {
-    if(m.coeffs[i] == 0)
-    {
-      m.coeffs[i] = 2;
-      break;
-    }
-  }
+  i = 0;
+  while(i < NTRU_N && m.coeffs[i] != 0) i++;
+  m.coeffs[i] = 1;
+
+  i = 0;
+  while(i < NTRU_N && m.coeffs[i] != 0) i++;
+  m.coeffs[i] = 2;
+
   owcpa_enc(ct, &r, &m, pk);
   assert(owcpa_dec(rm, ct, sk) == 1);
 #endif
