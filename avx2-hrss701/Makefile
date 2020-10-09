@@ -16,7 +16,7 @@ SRC = cmov.c \
       sample.c \
       sample_iid.c
 
-HDR = cmov.c \
+HDR = cmov.h \
       kem.h \
       owcpa.h \
       params.h \
@@ -132,15 +132,16 @@ clean:
 	-find . -name '__pycache__' -delete
 	-$(RM) *.o
 	-$(RM) *.s
-	-$(RM) -r test/test_polymul
-	-$(RM) -r test/test_ntru
-	-$(RM) -r test/test_pack
-	-$(RM) -r test/speed
-	-$(RM) -r test/ram
-	-$(RM) -r test/encap
 	-$(RM) -r test/decap
+	-$(RM) -r test/encap
 	-$(RM) -r test/keypair
+	-$(RM) -r test/ram
+	-$(RM) -r test/speed
 	-$(RM) -r test/speed_r2_inv
+	-$(RM) -r test/test_ntru
+	-$(RM) -r test/test_owcpa
+	-$(RM) -r test/test_pack
+	-$(RM) -r test/test_polymul
 	-$(RM) PQCgenKAT_kem
 	-$(RM) PQCkemKAT_*.req
 	-$(RM) PQCkemKAT_*.rsp

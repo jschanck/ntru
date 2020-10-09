@@ -138,15 +138,16 @@ clean:
 	-$(RM) *.o
 	-$(RM) *.s
 	-$(RM) poly_s3_inv.c
-	-$(RM) -r test/test_polymul
-	-$(RM) -r test/test_ntru
-	-$(RM) -r test/test_pack
-	-$(RM) -r test/speed
-	-$(RM) -r test/ram
-	-$(RM) -r test/encap
 	-$(RM) -r test/decap
+	-$(RM) -r test/encap
 	-$(RM) -r test/keypair
+	-$(RM) -r test/ram
+	-$(RM) -r test/speed
 	-$(RM) -r test/speed_r2_inv
+	-$(RM) -r test/test_ntru
+	-$(RM) -r test/test_owcpa
+	-$(RM) -r test/test_pack
+	-$(RM) -r test/test_polymul
 	-$(RM) PQCgenKAT_kem
 	-$(RM) PQCkemKAT_*.req
 	-$(RM) PQCkemKAT_*.rsp

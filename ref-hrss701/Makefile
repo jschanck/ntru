@@ -34,15 +34,15 @@ HDR_URAND = $(HDR) randombytes.h
 SRC_KAT = $(SRC) rng.c PQCgenKAT_kem.c
 HDR_KAT = $(HDR) rng.h api.h
 
-all: test/test_polymul \
+all: test/decap \
+     test/encap \
+     test/keypair \
+     test/ram \
+     test/speed \
      test/test_ntru \
      test/test_owcpa \
      test/test_pack \
-     test/ram \
-     test/speed \
-     test/encap \
-     test/decap \
-     test/keypair
+     test/test_polymul
 
 test/test_polymul: $(SRC_URAND) $(HDR_URAND) test/test_polymul.c
 	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) test/test_polymul.c
@@ -88,14 +88,15 @@ test: all
 
 clean:
 	-$(RM) *.o
-	-$(RM) -r test/test_polymul
-	-$(RM) -r test/test_ntru
-	-$(RM) -r test/test_pack
-	-$(RM) -r test/speed
-	-$(RM) -r test/ram
-	-$(RM) -r test/encap
 	-$(RM) -r test/decap
+	-$(RM) -r test/encap
 	-$(RM) -r test/keypair
+	-$(RM) -r test/ram
+	-$(RM) -r test/speed
+	-$(RM) -r test/test_ntru
+	-$(RM) -r test/test_owcpa
+	-$(RM) -r test/test_pack
+	-$(RM) -r test/test_polymul
 	-$(RM) PQCgenKAT_kem
 	-$(RM) PQCkemKAT_*.req
 	-$(RM) PQCkemKAT_*.rsp
