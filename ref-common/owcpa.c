@@ -2,6 +2,21 @@
 #include "poly.h"
 #include "sample.h"
 
+static int owcpa_check_ciphertext(const unsigned char *ciphertext)
+{
+  /* A ciphertext is log2(q)*(n-1) bits packed into bytes.  */
+  /* Check that any unused bits of the final byte are zero. */
+
+  uint16_t t = 0;
+
+  t = ciphertext[NTRU_CIPHERTEXTBYTES-1];
+  t &= 0xff << (8-(7 & (NTRU_LOGQ*NTRU_PACK_DEG)));
+
+  /* We have 0 <= t < 256 */
+  /* Return 0 on success (t=0), 1 on failure */
+  return (int) (1&((~t + 1) >> 15));
+}
+
 static int owcpa_check_r(const poly *r)
 {
   /* Check that r is in message space. */
@@ -140,8 +155,8 @@ int owcpa_dec(unsigned char *rm,
 
   fail = 0;
 
-  /* Check that unused bits of last byte of ciphertext are zero */
-  fail |= ciphertext[NTRU_CIPHERTEXTBYTES-1] & (0xff << (8 - (7 & (NTRU_LOGQ*NTRU_PACK_DEG))));
+  /* Check that the unused bits of the last byte of the ciphertext are zero */
+  fail |= owcpa_check_ciphertext(ciphertext);
 
   /* For the IND-CCA2 KEM we must ensure that c = Enc(h, (r,m)).             */
   /* We can avoid re-computing r*h + Lift(m) as long as we check that        */
