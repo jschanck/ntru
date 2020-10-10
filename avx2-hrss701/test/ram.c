@@ -1,1 +1,0 @@
-../../ref-hrss701/test/ram.c
