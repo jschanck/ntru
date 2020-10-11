@@ -13,6 +13,7 @@ SRC = cmov.c \
       packq.c \
       poly.c \
       poly_r2_inv.c \
+      poly_s3_inv.c \
       sample.c \
       sample_iid.c
 
@@ -47,8 +48,7 @@ OBJS += poly_rq_mul.s \
         vec32_sample_iid.s \
         poly_lift.s \
         poly_mod_3_Phi_n.s \
-        poly_mod_q_Phi_n.s \
-        poly_s3_inv.s
+        poly_mod_q_Phi_n.s
 
 all: test/decap \
      test/encap \
@@ -60,7 +60,10 @@ all: test/decap \
      test/test_owcpa \
      test/test_pack
 
-asm: ${OBJS}
+asm: ${OBJS} poly_s3_inv.c
+
+poly_s3_inv.c: asmgen/poly_s3_inv.py
+	NTRU_NAMESPACE=${NTRU_NAMESPACE} python3 $^ 700 | sed 's/4294967295/-1/g' > $@
 
 poly_rq_mul.s: asmgen/rq_mul/poly_rq_mul.py asmgen/rq_mul/K2_schoolbook_64x11.py asmgen/rq_mul/K2_K2_64x44.py
 	NTRU_NAMESPACE=${NTRU_NAMESPACE} python3 $^ > $@
@@ -127,6 +130,7 @@ clean:
 	-find . -name '__pycache__' -delete
 	-$(RM) *.o
 	-$(RM) *.s
+	-$(RM) poly_s3_inv.c
 	-$(RM) -r test/decap
 	-$(RM) -r test/encap
 	-$(RM) -r test/keypair
