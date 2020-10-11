@@ -39,7 +39,10 @@ int main(void)
     crypto_kem_dec(k2, ct, sk);
     c += verify(k1, k2, NTRU_SHAREDKEYBYTES);
   }
-  printf("ERRORS: %d/%d\n\n", c, TRIALS);
+  if (c > 0)
+    printf("ERRORS: %d/%d\n\n", c, TRIALS);
+  else
+    printf("success\n\n");
 
   free(sk);
   free(pk);

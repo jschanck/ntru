@@ -156,8 +156,8 @@ int main(void)
   CHECK(poly_lift, "out == Mod(x-1,"Q")*centerlift(lift(Mod(in / (x-1), polcyclo("N"))))");
 #endif
 
-  printf("if(ALLOK, printf(\"success\"))");
-  printf("\n\n\\\\ You probably wanted to run: './test/test_poly | gp -q'\n");
+  printf("if(ALLOK, printf(\"success\\n\\n\"))");
+  printf("\n\n\\\\ You probably wanted to run: './test/test_gp_compat | gp -q'\n");
 
   return 0;
 }

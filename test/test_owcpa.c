@@ -185,6 +185,6 @@ int main(void)
   assert(owcpa_dec(rm, ct, sk) == 1);
 #endif
 
-  printf("success\n");
+  printf("success\n\n");
   return 0;
 }

@@ -53,6 +53,7 @@ int main(void)
   if(errorS3)
     printf("Pack S3 fails\n");
 
-  printf("TEST_PACK:\t%d\n", (errorS3 | errorRq) ? -1 : 0);
+  if (!(errorS3 | errorRq))
+    printf("success\n\n");
   return 0;
 }
