@@ -10,18 +10,13 @@ if __name__ == '__main__':
     p(".data")
     p(".p2align 5")
 
-    p("const_3_repeating:")
-    for i in range(16):
-        p(".word 0x3")
-
-    p("shuf_b8_to_low_doubleword:")
-    for j in range(16):
-        p(".byte 8")
-        p(".byte 255")
-
     p("mask_modq:")
     for i in range(16):
         p(".word {}".format(NTRU_Q-1))
+
+    p("const_half_q_minus_1:")
+    for i in range(16):
+        p(".word {}".format(NTRU_Q//2-1))
 
     mod3_masks()
 
@@ -32,37 +27,54 @@ if __name__ == '__main__':
     p("{}poly_Rq_to_S3:".format(NAMESPACE))
     p("_{}poly_Rq_to_S3:".format(NAMESPACE))
 
-    r = 0
-    a = 1
-    threes = 3
+    a = 0
+    flag = 1
+    r = 2
     last = 4
-    retval = 5
+    const_half_q_minus_1 = 5
     modq = 6
-    p("vmovdqa const_3_repeating(%rip), %ymm{}".format(threes))
+
     p("vmovdqa mask_modq(%rip), %ymm{}".format(modq))
-    p("vmovdqa {}(%rsi), %ymm{}".format((NTRU_N32 // 16 - 1)*32, last))
+    p("vmovdqa const_half_q_minus_1(%rip), %ymm{}".format(const_half_q_minus_1))
+
+    p("vmovdqa {}(%rsi), %ymm{}".format(2*(16*((NTRU_N-1) // 16)), last))
+
+    # broadcast last coefficient to all 16 words
+    quadword_of_last = ((NTRU_N-1)%16)//4
+    if quadword_of_last != 0:
+        p("vpermq ${}, %ymm{}, %ymm{}".format(quadword_of_last, last, last))
+    word_of_low = (NTRU_N-1)%4
+    if word_of_low != 0:
+        p("vpsrlq ${}, %ymm{}, %ymm{}".format(16*word_of_low, last, last))
+    p("vpslld $16, %ymm{}, %ymm{}".format(last, r))
+    p("vpsrld $16, %ymm{}, %ymm{}".format(r, last))
+    p("vpor %ymm{}, %ymm{}, %ymm{}".format(last, r, last))
+    p("vbroadcastss %xmm{}, %ymm{}".format(last, last))
+
+    # Add (-q) mod 3 to last if last is > q/2.
     p("vpand %ymm{}, %ymm{}, %ymm{}".format(modq, last, last));
+    p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(last, const_half_q_minus_1, flag))
+    p("vpsrlw ${}, %ymm{}, %ymm{}".format(LOGQ, flag, flag))
+    if LOGQ%2==0:
+        p("vpsllw ${}, %ymm{}, %ymm{}".format(1, flag, flag))
+    p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(last, flag, last))
 
-    p("vpsrlw ${}, %ymm{}, %ymm{}".format(LOGQ-1, last, r))
-    p("vpxor %ymm{}, %ymm{}, %ymm{}".format(threes, r, r))
-    p("vpsllw ${}, %ymm{}, %ymm{}".format(LOGQ, r, r))
-    p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(last, r, last))
-
-    mod3(last, retval)
-    p("vpsllw $1, %ymm{}, %ymm{}".format(retval, last))
-    p("vextracti128 $1, %ymm{}, %xmm{}".format(last, last))
-    p("vpshufb shuf_b8_to_low_doubleword(%rip), %ymm{}, %ymm{}".format(last, last))
-    p("vinserti128 $1, %xmm{}, %ymm{}, %ymm{}".format(last, last, last))
+    mod3(last, r)
+    # Multiply last by 2 since we want to subtract its value mod 3.
+    p("vpsllw $1, %ymm{}, %ymm{}".format(r, last))
 
     for i in range(NTRU_N32 // 16):
         p("vmovdqa {}(%rsi), %ymm{}".format(i*32, a))
         p("vpand %ymm{}, %ymm{}, %ymm{}".format(modq, a, a));
-        p("vpsrlw ${}, %ymm{}, %ymm{}".format(LOGQ-1, a, r))
-        p("vpxor %ymm{}, %ymm{}, %ymm{}".format(threes, r, r))
-        p("vpsllw ${}, %ymm{}, %ymm{}".format(LOGQ, r, r))
-        p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(a, r, r))
-        p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(last, r, r))
-        mod3(r, retval)
-        p("vmovdqa %ymm{}, {}(%rdi)".format(retval, i*32))
+
+        p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(a, const_half_q_minus_1, flag))
+        p("vpsrlw ${}, %ymm{}, %ymm{}".format(LOGQ, flag, flag))
+        if LOGQ%2==0:
+            p("vpsllw ${}, %ymm{}, %ymm{}".format(1, flag, flag))
+        p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(a, flag, a))
+
+        p("vpaddw %ymm{}, %ymm{}, %ymm{}".format(a, last, a))
+        mod3(a, r)
+        p("vmovdqa %ymm{}, {}(%rdi)".format(r, i*32))
 
     p("ret")
