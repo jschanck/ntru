@@ -51,16 +51,15 @@ OBJS += poly_rq_mul.s \
         poly_mod_3_Phi_n.s \
         poly_mod_q_Phi_n.s
 
-all: test/test_polymul \
+all: test/decap \
+     test/encap \
+     test/keypair \
+     test/speed \
+     test/speed_r2_inv \
+     test/test_gp_compat \
      test/test_ntru \
      test/test_owcpa \
-     test/test_pack \
-     test/ram \
-     test/speed \
-     test/encap \
-     test/decap \
-     test/keypair \
-     test/speed_r2_inv
+     test/test_pack
 
 asm: ${OBJS} poly_s3_inv.c
 
@@ -85,20 +84,17 @@ square_%_patience.s: $(wildcard bitpermutations/*)
 	 --patience --callee 6 --namespace=$(NTRU_NAMESPACE) --raw-name $(word 2, $(subst _, ,$@)) \
 	 > $@
 
-test/test_polymul: $(SRC_URAND) $(OBJS) $(HDR_URAND) test/test_polymul.c
-	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) test/test_polymul.c cpucycles.c
+test/test_gp_compat: $(SRC_URAND) $(OBJS) $(HDR_URAND) test/test_gp_compat.c
+	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) test/test_gp_compat.c
 
 test/test_ntru: $(SRC_URAND) $(OBJS) $(HDR_URAND) test/test_ntru.c
-	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) test/test_ntru.c cpucycles.c
+	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) test/test_ntru.c
 
 test/test_owcpa: $(SRC_URAND) $(OBJS) $(HDR_URAND) test/test_owcpa.c
 	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) test/test_owcpa.c
 
 test/test_pack: $(SRC_URAND) $(OBJS) $(HDR_URAND) test/test_pack.c
-	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) test/test_pack.c cpucycles.c
-
-test/ram: $(SRC_URAND) $(OBJS) $(HDR_URAND) test/ram.c
-	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) test/ram.c
+	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) test/test_pack.c
 
 test/speed: $(SRC_URAND) $(OBJS) $(HDR_URAND) cpucycles.h cpucycles.c test/speed.c
 	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) cpucycles.c test/speed.c
@@ -124,12 +120,11 @@ PQCgenKAT_kem: $(SRC_KAT) $(HDR_KAT) $(OBJS)
 .DELETE_ON_ERROR:
 
 test: all
-	./test/test_polymul
+	./test/speed
+	./test/speed_r2_inv
+	./test/test_gp_compat | gp -q
 	./test/test_ntru
 	./test/test_pack
-	./test/speed
-	./test/ram
-	./test/speed_r2_inv
 
 clean:
 	-find . -name '*.pyc' -delete
@@ -140,13 +135,12 @@ clean:
 	-$(RM) -r test/decap
 	-$(RM) -r test/encap
 	-$(RM) -r test/keypair
-	-$(RM) -r test/ram
 	-$(RM) -r test/speed
 	-$(RM) -r test/speed_r2_inv
+	-$(RM) -r test/test_gp_compat
 	-$(RM) -r test/test_ntru
 	-$(RM) -r test/test_owcpa
 	-$(RM) -r test/test_pack
-	-$(RM) -r test/test_polymul
 	-$(RM) PQCgenKAT_kem
 	-$(RM) PQCkemKAT_*.req
 	-$(RM) PQCkemKAT_*.rsp
