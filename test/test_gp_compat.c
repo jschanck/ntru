@@ -40,15 +40,21 @@ int main(void)
   poly in, in2, out;
 
   printf("ALLOK=1;\n");
+  printf("plift(x) = lift(lift(x));\n");
+  /*  Pari/GP center lifts to (-q/2, q/2] instead of [-q/2, q/2) */
+  printf("clift(x) = if(type(x) == \"t_POLMOD\", -centerlift(-lift(x)), -centerlift(-x));\n");
+  printf("q = "Q";\n");
+  printf("n = "N";\n");
+  printf("Phi = polcyclo(n);\n");
 
   /* Test poly_Z3_to_Zq */
   randombytes(uniformbytes, sizeof(uniformbytes));
   sample_iid(&in,uniformbytes);
   for(i=0; i<NTRU_N; i++) out.coeffs[i] = in.coeffs[i];
   poly_Z3_to_Zq(&out);
-  poly_sprint(s1, &in); printf("in = %s;\n", s1);
-  poly_sprint(s2, &out); printf("out = %s;\n", s2);
-  CHECK(poly_Z3_to_Zq, "out == lift(Mod(centerlift(Mod(in,3)), "Q"))");
+  poly_sprint(s1, &in); printf("in = Mod(1,3) * Polrev(%s);\n", s1);
+  poly_sprint(s2, &out); printf("out = Polrev(%s);\n", s2);
+  CHECK(poly_Z3_to_Zq, "out == plift(Mod(clift(in), q))");
 
   /* Test poly_trinary_Zq_to_Z3 */
   randombytes(uniformbytes, sizeof(uniformbytes));
@@ -56,18 +62,18 @@ int main(void)
   poly_Z3_to_Zq(&in);
   for(i=0; i<NTRU_N; i++) out.coeffs[i] = in.coeffs[i];
   poly_trinary_Zq_to_Z3(&out);
-  poly_sprint(s1, &in); printf("in = %s;\n", s1);
-  poly_sprint(s2, &out); printf("out = %s;\n", s2);
-  CHECK(poly_trinary_Zq_to_Z3, "out == lift(Mod(centerlift(Mod(in,"Q")),3))");
+  poly_sprint(s1, &in); printf("in = Mod(1,q) * Polrev(%s);\n", s1);
+  poly_sprint(s2, &out); printf("out = Polrev(%s);\n", s2);
+  CHECK(poly_trinary_Zq_to_Z3, "out == plift(Mod(1,3) * clift(in))");
 
   /* Test poly_Rq_mul */
   randombytes((unsigned char *)&in.coeffs, sizeof(in.coeffs));
   randombytes((unsigned char *)&in2.coeffs, sizeof(in2.coeffs));
   poly_Rq_mul(&out, &in, &in2);
-  poly_sprint(s1, &in); printf("in = Mod(1,"Q") * Polrev(%s);\n", s1);
-  poly_sprint(s2, &in2); printf("in2 = Mod(1,"Q") * Polrev(%s);\n", s2);
-  poly_sprint(s3, &out); printf("out = Mod(1,"Q") * Polrev(%s);\n", s3);
-  CHECK(poly_Rq_mul, "0 == lift(lift(Mod(in*in2 - out, x^"N"-1)))");
+  poly_sprint(s1, &in); printf("in = Mod(1,q) * Polrev(%s);\n", s1);
+  poly_sprint(s2, &in2); printf("in2 = Mod(1,q) * Polrev(%s);\n", s2);
+  poly_sprint(s3, &out); printf("out = Mod(1,q) * Polrev(%s);\n", s3);
+  CHECK(poly_Rq_mul, "plift(out) == plift(Mod(in*in2, x^n-1))");
 
   /* Test poly_Sq_mul */
   randombytes((unsigned char *)&in.coeffs, sizeof(in.coeffs));
@@ -76,10 +82,10 @@ int main(void)
   in2.coeffs[NTRU_N-1] = 0;
   poly_Sq_mul(&out, &in, &in2);
   out.coeffs[NTRU_N-1] = 0;
-  poly_sprint(s1, &in); printf("in = Mod(1,"Q") * Polrev(%s);\n", s1);
-  poly_sprint(s2, &in2); printf("in2 = Mod(1,"Q") * Polrev(%s);\n", s2);
-  poly_sprint(s3, &out); printf("out = Mod(1,"Q") * Polrev(%s);\n", s3);
-  CHECK(poly_Sq_mul, "0 == lift(lift(Mod(in*in2 - out, polcyclo("N"))))");
+  poly_sprint(s1, &in); printf("in = Mod(1,q) * Polrev(%s);\n", s1);
+  poly_sprint(s2, &in2); printf("in2 = Mod(1,q) * Polrev(%s);\n", s2);
+  poly_sprint(s3, &out); printf("out = Mod(1,q) * Polrev(%s);\n", s3);
+  CHECK(poly_Sq_mul, "plift(out) == plift(Mod(in*in2, Phi))");
 
   /* Test poly_S3_mul */
   randombytes((unsigned char *)&in.coeffs, sizeof(in.coeffs));
@@ -92,23 +98,23 @@ int main(void)
   out.coeffs[NTRU_N-1] = 0;
   poly_sprint(s1, &in); printf("in = Mod(1,3) * Polrev(%s);\n", s1);
   poly_sprint(s2, &in2); printf("in2 = Mod(1,3) * Polrev(%s);\n", s2);
-  poly_sprint(s3, &out); printf("out = Mod(1,3) * Polrev(%s);\n", s3);
-  CHECK(poly_S3_mul, "0 == lift(lift(Mod(in*in2 - out, polcyclo("N"))))");
+  poly_sprint(s3, &out); printf("out = Polrev(%s);\n", s3);
+  CHECK(poly_S3_mul, "out == plift(Mod(in*in2, Phi))");
 
   /* Test poly_R2_inv */
   randombytes((unsigned char *)&in.coeffs, sizeof(in.coeffs));
   for(i=0; i<NTRU_N; i++) in.coeffs[i] %= 2;
   poly_R2_inv(&out, &in);
   poly_sprint(s1, &in); printf("in = Mod(1,2) * Polrev(%s);\n", s1);
-  poly_sprint(s2, &out); printf("out = Mod(1,2) * Polrev(%s);\n", s2);
-  CHECK(poly_R2_inv, "0 == lift(lift(Mod(in*out - 1, polcyclo("N"))))");
+  poly_sprint(s2, &out); printf("out = Polrev(%s);\n", s2);
+  CHECK(poly_R2_inv, "1 == plift(Mod(in*out, Phi))");
 
   /* Test poly_Rq_inv */
   randombytes((unsigned char *)&in.coeffs, sizeof(in.coeffs));
   poly_Rq_inv(&out, &in);
-  poly_sprint(s1, &in); printf("in = Mod(1,"Q") * Polrev(%s);\n", s1);
-  poly_sprint(s2, &out); printf("out = Mod(1,"Q") * Polrev(%s);\n", s2);
-  CHECK(poly_Rq_inv, "0 == lift(lift(Mod(in*out - 1, polcyclo("N"))))");
+  poly_sprint(s1, &in); printf("in = Mod(1,q) * Polrev(%s);\n", s1);
+  poly_sprint(s2, &out); printf("out = Mod(1,q) * Polrev(%s);\n", s2);
+  CHECK(poly_Rq_inv, "1 == plift(Mod(in*out, Phi))");
 
   /* Test poly_S3_inv */
   randombytes((unsigned char *)&in.coeffs, sizeof(in.coeffs));
@@ -118,7 +124,7 @@ int main(void)
   out.coeffs[NTRU_N-1] = 0;
   poly_sprint(s1, &in); printf("in = Mod(1,3) * Polrev(%s);\n", s1);
   poly_sprint(s2, &out); printf("out = Mod(1,3) * Polrev(%s);\n", s2);
-  CHECK(poly_S3_inv, "0 == lift(lift(Mod(in*out - 1, polcyclo("N"))))");
+  CHECK(poly_S3_inv, "1 == plift(Mod(in*out, Phi))");
 
   /* Test poly_mod_3_Phi_n */
   randombytes((unsigned char *)&in.coeffs, sizeof(in.coeffs));
@@ -127,23 +133,25 @@ int main(void)
   poly_mod_3_Phi_n(&out);
   poly_sprint(s1, &in); printf("in = Mod(1,3) * Polrev(%s);\n", s1);
   poly_sprint(s2, &out); printf("out = Polrev(%s);\n", s2);
-  CHECK(poly_mod_3_Phi_n, "out == lift(lift(Mod(in, polcyclo("N"))))");
+  CHECK(poly_mod_3_Phi_n, "out == plift(Mod(in, Phi))");
 
   /* Test poly_mod_q_Phi_n */
   randombytes((unsigned char *)&in.coeffs, sizeof(in.coeffs));
   for(i=0; i<NTRU_N; i++) out.coeffs[i] = in.coeffs[i];
   poly_mod_q_Phi_n(&out); // Does not actually reduce mod q.
   for(i=0; i<NTRU_N; i++) out.coeffs[i] %= NTRU_Q;
-  poly_sprint(s1, &in); printf("in = Mod(1,"Q") * Polrev(%s);\n", s1);
+  poly_sprint(s1, &in); printf("in = Mod(1,q) * Polrev(%s);\n", s1);
   poly_sprint(s2, &out); printf("out = Polrev(%s);\n", s2);
-  CHECK(poly_mod_q_Phi_n, "out == lift(lift(Mod(in, polcyclo("N"))))");
+  CHECK(poly_mod_q_Phi_n, "out == plift(Mod(in, Phi))");
 
   /* Test poly_Rq_to_S3 */
   randombytes((unsigned char *)&in.coeffs, sizeof(in.coeffs));
+  in.coeffs[0] = NTRU_Q/2; /* Ensure we test reduction of q/2 */
+  in.coeffs[NTRU_N-1] = 1; /* Ensure reduction mod Phi is non-trivial */
   poly_Rq_to_S3(&out, &in);
-  poly_sprint(s1, &in); printf("in = Mod(1,"Q") * Polrev(%s);\n", s1);
+  poly_sprint(s1, &in); printf("in = Mod(1,q) * Polrev(%s);\n", s1);
   poly_sprint(s2, &out); printf("out = Polrev(%s);\n", s2);
-  CHECK(poly_Rq_to_S3, "out == lift(lift(Mod(Mod(1,3)*centerlift(in),polcyclo("N"))))");
+  CHECK(poly_Rq_to_S3, "out == plift(Mod(Mod(1,3) * clift(in),Phi))");
 
 #ifdef NTRU_HRSS
   /* Test poly_lift */
@@ -152,8 +160,8 @@ int main(void)
   in.coeffs[NTRU_N-1] = 0;
   poly_lift(&out, &in);
   poly_sprint(s1, &in); printf("in = Mod(1,3) * Polrev(%s);\n", s1);
-  poly_sprint(s2, &out); printf("out = Polrev(%s);\n", s2);
-  CHECK(poly_lift, "out == Mod(x-1,"Q")*centerlift(lift(Mod(in / (x-1), polcyclo("N"))))");
+  poly_sprint(s2, &out); printf("out = Mod(1,q) * Polrev(%s);\n", s2);
+  CHECK(poly_lift, "plift(out) == plift(Mod(1,q) * (x-1) * clift((Mod(in / (x-1), Phi))))");
 #endif
 
   printf("if(ALLOK, printf(\"success\\n\\n\"))");
