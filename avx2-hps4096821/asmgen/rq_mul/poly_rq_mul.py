@@ -162,10 +162,6 @@ if __name__ == '__main__':
     for i in range(9):
         p(".word 0")
 
-    p("mask_mod4096:")
-    for i in range(16):
-        p(".word 4095")
-
     p(".text")
     p(".global {}poly_Rq_mul".format(NAMESPACE))
     p(".global _{}poly_Rq_mul".format(NAMESPACE))
@@ -559,12 +555,10 @@ if __name__ == '__main__':
                 if coeff == 3:
                     if i == 3 and j >= 4:  # this part exceeds 832
                         return
-                    p("vpand mask_mod4096(%rip), %ymm{}, %ymm{}".format(limbreg, limbreg))
                     p("vmovq %xmm{}, {}({})".format(limbreg, (off + i*208 + j * 52 + coeff*16) * 2, r_real))
                 else:
                     if i == 3 and j >= 4:  # this part exceeds 832
                         return
-                    p("vpand mask_mod4096(%rip), %ymm{}, %ymm{}".format(limbreg, limbreg))
                     p("vmovdqu %ymm{}, {}({})".format(limbreg, (off + i*208 + j * 52 + coeff*16) * 2, r_real))
 
             tmp = alloc()

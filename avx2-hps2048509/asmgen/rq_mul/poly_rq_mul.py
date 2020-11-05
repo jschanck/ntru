@@ -168,10 +168,6 @@ if __name__ == '__main__':
     for i in range(8):
         p(".word 65535")
 
-    p("mask_mod2048:")
-    for i in range(16):
-        p(".word 2047")
-
     p(".text")
     p(".global {}poly_Rq_mul".format(NAMESPACE))
     p(".global _{}poly_Rq_mul".format(NAMESPACE))
@@ -569,7 +565,6 @@ if __name__ == '__main__':
             def store_limb(limbreg, i, j):
                 if i == 3 and j >= 4:  # this part exceeds 512
                     return
-                p("vpand mask_mod2048(%rip), %ymm{}, %ymm{}".format(limbreg, limbreg))
                 p("vmovdqa %ymm{}, {}({})".format(limbreg, (i*128 + j * 32 + coeff*16) * 2, r_real))
 
                 if coeff == 1 and j == 3: # these are bits 509 to 512, which we must spill into stack
@@ -655,7 +650,6 @@ if __name__ == '__main__':
             # exception case for two coefficients flowing from h2 into h0, h3 into h1, h4 into h2
             if j == 0 and i in [0, 1, 2]:
                 p("vpaddw {}(%rsp), %ymm{}, %ymm{}".format((far_spill_offset+i)*32, htemp, htemp))
-            p("vpand mask_mod2048(%rip), %ymm{}, %ymm{}".format(htemp, htemp))
             p("vmovdqa %ymm{}, {}({})".format(htemp, (i*128 + j * 32 + coeff*16) * 2, r_real))
             free(htemp)
 
