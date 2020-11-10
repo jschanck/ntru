@@ -207,13 +207,13 @@ static inline void schoolbook_KxK(uint16_t r[2*K], const uint16_t a[K], const ui
 {
   size_t i,j;
   for(j=0; j<K; j++) {
-    r[j] = a[0]*b[j];
+    r[j] = a[0]*(uint32_t)b[j];
   }
   for(i=1; i<K; i++) {
     for(j=0; j<K-1; j++) {
-      r[i+j] += a[i]*b[j];
+      r[i+j] += a[i]*(uint32_t)b[j];
     }
-    r[i+K-1] = a[i]*b[K-1];
+    r[i+K-1] = a[i]*(uint32_t)b[K-1];
   }
   r[2*K-1] = 0;
 }
