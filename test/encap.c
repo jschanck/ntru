@@ -8,7 +8,18 @@ int main() {
     unsigned char* c = (unsigned char*) malloc(CRYPTO_CIPHERTEXTBYTES);
     unsigned char* k = (unsigned char*) malloc(CRYPTO_BYTES);
 
-    fread(pk, 1, CRYPTO_PUBLICKEYBYTES, stdin);
+    size_t pk_bytes = fread(pk, 1, CRYPTO_PUBLICKEYBYTES, stdin);
+
+    if (pk_bytes != CRYPTO_PUBLICKEYBYTES) {
+        fprintf (stderr, "Error occurred while reading.\n");
+        fprintf (stderr,  "Read %ld bytes for public key.\n", pk_bytes);
+
+        free (pk);
+        free (c);
+        free (k);
+        
+        exit (-1);
+    }
 
     crypto_kem_enc(c, k, pk);
 

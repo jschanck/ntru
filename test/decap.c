@@ -9,8 +9,19 @@ int main() {
     unsigned char* k = (unsigned char*) malloc(CRYPTO_BYTES);
     int result;
 
-    fread(sk, 1, CRYPTO_SECRETKEYBYTES, stdin);
-    fread(c, 1, CRYPTO_CIPHERTEXTBYTES, stdin);
+    size_t sk_bytes = fread(sk, 1, CRYPTO_SECRETKEYBYTES, stdin);
+    size_t c_bytes = fread(c, 1, CRYPTO_CIPHERTEXTBYTES, stdin);
+
+    if (sk_bytes != CRYPTO_SECRETKEYBYTES || c_bytes != CRYPTO_CIPHERTEXTBYTES) {
+        fprintf (stderr, "Error occurred while reading.\n");
+        fprintf (stderr,  "Read %ld bytes for secret key and %ld bytes for ciphertext.\n", sk_bytes, c_bytes);
+
+        free (sk);
+        free (c);
+        free (k);
+
+        exit (-1);
+    }
 
     result = crypto_kem_dec(k, c, sk);
 
