@@ -31,9 +31,6 @@ HDR = cmov.h \
 SRC_URAND = $(SRC) randombytes.c
 HDR_URAND = $(HDR) randombytes.h
 
-SRC_KAT = $(SRC) rng.c PQCgenKAT_kem.c
-HDR_KAT = $(HDR) rng.h api.h
-
 all: test/decap \
      test/encap \
      test/keypair \
@@ -70,9 +67,6 @@ test/decap: $(SRC_URAND) $(HDR_URAND) test/decap.c
 test/keypair: $(SRC_URAND) $(HDR_URAND) test/keypair.c
 	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) test/keypair.c
 
-PQCgenKAT_kem: $(SRC_KAT) $(HDR_KAT)
-	$(CC) $(CFLAGS) -o $@ $(SRC_KAT) -lcrypto $(LDFLAGS)
-
 .PHONY: clean test
 
 test: all
@@ -81,7 +75,7 @@ test: all
 	./test/test_ntru
 	./test/test_pack
 
-clean:
+clean::
 	-$(RM) *.o
 	-$(RM) -r test/decap
 	-$(RM) -r test/encap
@@ -90,6 +84,3 @@ clean:
 	-$(RM) -r test/test_gp_compat
 	-$(RM) -r test/test_ntru
 	-$(RM) -r test/test_pack
-	-$(RM) PQCgenKAT_kem
-	-$(RM) PQCkemKAT_*.req
-	-$(RM) PQCkemKAT_*.rsp

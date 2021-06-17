@@ -1,1 +1,0 @@
-../ref-common/rng.c

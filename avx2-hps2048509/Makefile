@@ -31,9 +31,6 @@ HDR = cmov.h \
 SRC_URAND = $(SRC) randombytes.c
 HDR_URAND = $(HDR) randombytes.h
 
-SRC_KAT = $(SRC) rng.c PQCgenKAT_kem.c
-HDR_KAT = $(HDR) rng.h api.h
-
 OBJS = square_1_509_patience.s \
        square_3_509_patience.s \
        square_6_509_patience.s \
@@ -110,9 +107,6 @@ test/decap: $(SRC_URAND) $(OBJS) $(HDR_URAND) test/decap.c
 test/keypair: $(SRC_URAND) $(OBJS) $(HDR_URAND) test/keypair.c
 	$(CC) $(CFLAGS) -o $@ $(SRC_URAND) $(OBJS) test/keypair.c
 
-PQCgenKAT_kem: $(SRC_KAT) $(HDR_KAT) $(OBJS) 
-	$(CC) $(CFLAGS) -o $@ $(SRC_KAT) $(OBJS) -lcrypto $(LDFLAGS)
-
 .PHONY: clean test
 
 # Useful for the .s files;
@@ -125,7 +119,7 @@ test: all
 	./test/test_ntru
 	./test/test_pack
 
-clean:
+clean::
 	-find . -name '*.pyc' -delete
 	-find . -name '__pycache__' -delete
 	-$(RM) *.o
@@ -140,6 +134,3 @@ clean:
 	-$(RM) -r test/test_ntru
 	-$(RM) -r test/test_owcpa
 	-$(RM) -r test/test_pack
-	-$(RM) PQCgenKAT_kem
-	-$(RM) PQCkemKAT_*.req
-	-$(RM) PQCkemKAT_*.rsp

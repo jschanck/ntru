@@ -1,11 +1,16 @@
+include Makefile
+
+SRC_KAT = $(SRC) ../knownanswertest/rng.c ../knownanswertest/PQCgenKAT_kem.c
+HDR_KAT = $(HDR) ../knownanswertest/rng.h api.h
+
 all: PQCgenKAT_kem
 
-PQCgenKAT_kem:
-	$(MAKE) -f Makefile PQCgenKAT_kem
+PQCgenKAT_kem: $(SRC_KAT) $(HDR_KAT)
+	$(CC) $(CFLAGS) -o $@ $(SRC_KAT) -I. -lcrypto $(LDFLAGS)
 
 .PHONY: clean
 
-clean:
+clean::
 	-$(RM) PQCgenKAT_kem
 	-$(RM) PQCkemKAT_*.req
 	-$(RM) PQCkemKAT_*.rsp
