@@ -1,0 +1,11 @@
+all: PQCgenKAT_kem
+
+PQCgenKAT_kem:
+	$(MAKE) -f Makefile PQCgenKAT_kem
+
+.PHONY: clean
+
+clean:
+	-$(RM) PQCgenKAT_kem
+	-$(RM) PQCkemKAT_*.req
+	-$(RM) PQCkemKAT_*.rsp
