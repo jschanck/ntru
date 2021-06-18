@@ -7,20 +7,39 @@ int main() {
     unsigned char* sk = (unsigned char*) malloc(CRYPTO_SECRETKEYBYTES);
     unsigned char* c = (unsigned char*) malloc(CRYPTO_CIPHERTEXTBYTES);
     unsigned char* k = (unsigned char*) malloc(CRYPTO_BYTES);
-    int result;
+    int rv = 0;
 
-    fread(sk, 1, CRYPTO_SECRETKEYBYTES, stdin);
-    fread(c, 1, CRYPTO_CIPHERTEXTBYTES, stdin);
+    size_t sk_bytes = fread(sk, 1, CRYPTO_SECRETKEYBYTES, stdin);
+    if(sk_bytes != CRYPTO_SECRETKEYBYTES) {
+      fprintf(stderr, "Read error.\n");
+      rv = -1;
+      goto cleanup;
+    }
 
-    result = crypto_kem_dec(k, c, sk);
+    size_t ct_bytes = fread(c, 1, CRYPTO_CIPHERTEXTBYTES, stdin);
+    if(ct_bytes != CRYPTO_CIPHERTEXTBYTES) {
+      fprintf(stderr, "Read error.\n");
+      rv = -1;
+      goto cleanup;
+    }
 
-    fwrite(k, 1, CRYPTO_BYTES, stdout);
+    int dec_fail = crypto_kem_dec(k, c, sk);
+    if(dec_fail) {
+      rv = -1;
+      goto cleanup;
+    }
 
-    fclose(stdout);
+    size_t k_bytes = fwrite(k, 1, CRYPTO_BYTES, stdout);
+    if(k_bytes != CRYPTO_BYTES) {
+      fprintf(stderr, "Write error.\n");
+      rv = -1;
+      goto cleanup;
+    }
 
+cleanup:
     free(sk);
     free(c);
     free(k);
 
-    return result;
+    return rv;
 }
