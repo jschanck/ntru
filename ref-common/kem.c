@@ -1,4 +1,5 @@
 #include "api.h"
+#include "aes256ctr.h"
 #include "cmov.h"
 #include "crypto_hash_sha3256.h"
 #include "kem.h"
@@ -12,7 +13,8 @@ int crypto_kem_keypair(unsigned char *pk, unsigned char *sk)
 {
   unsigned char seed[NTRU_SAMPLE_FG_BYTES];
 
-  randombytes(seed, NTRU_SAMPLE_FG_BYTES);
+  randombytes(seed, 32);
+  aes256ctr_prf(seed,NTRU_SAMPLE_FG_BYTES,seed,0);
   owcpa_keypair(pk, sk, seed);
 
   randombytes(sk+NTRU_OWCPA_SECRETKEYBYTES, NTRU_PRFKEYBYTES);
@@ -26,7 +28,8 @@ int crypto_kem_enc(unsigned char *c, unsigned char *k, const unsigned char *pk)
   unsigned char rm[NTRU_OWCPA_MSGBYTES];
   unsigned char rm_seed[NTRU_SAMPLE_RM_BYTES];
 
-  randombytes(rm_seed, NTRU_SAMPLE_RM_BYTES);
+  randombytes(rm_seed, 32);
+  aes256ctr_prf(rm_seed,NTRU_SAMPLE_RM_BYTES,rm_seed,0);
 
   sample_rm(&r, &m, rm_seed);
 

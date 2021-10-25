@@ -1,6 +1,9 @@
 #ifndef RANDOMBYTES_H
 #define RANDOMBYTES_H
 
-void randombytes(unsigned char *x,unsigned long long xlen);
+#include <stdint.h>
+#include <stddef.h>
+
+void randombytes(uint8_t *out, size_t outlen);
 
 #endif

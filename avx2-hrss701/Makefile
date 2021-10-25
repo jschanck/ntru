@@ -5,7 +5,8 @@ CFLAGS = -O3 -fomit-frame-pointer -march=native -fPIC -fPIE -pie
 CFLAGS += -Wall -Wextra -Wpedantic
 CFLAGS += -DCRYPTO_NAMESPACE\(s\)=${NTRU_NAMESPACE}\#\#s
 
-SRC = cmov.c \
+SRC = aes256ctr.c \
+      cmov.c \
       fips202.c \
       kem.c \
       owcpa.c \
@@ -17,7 +18,8 @@ SRC = cmov.c \
       sample.c \
       sample_iid.c
 
-HDR = cmov.h \
+HDR = aes256ctr.h \
+      cmov.h \
       kem.h \
       owcpa.h \
       params.h \
