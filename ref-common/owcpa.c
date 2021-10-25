@@ -72,19 +72,21 @@ void owcpa_keypair(unsigned char *pk,
 
   poly x1, x2, x3, x4, x5;
 
-  poly *f=&x1, *g=&x2, *invf_mod3=&x3;
+  poly *f=&x1, *g=&x2;
   poly *gf=&x3, *invgf=&x4, *tmp=&x5;
   poly *invh=&x3, *h=&x3;
 
   sample_fg(f,g,seed);
 
-  poly_S3_inv(invf_mod3, f);
   poly_S3_tobytes(sk, f);
-  poly_S3_tobytes(sk+NTRU_PACK_TRINARY_BYTES, invf_mod3);
 
   /* Lift coeffs of f and g from Z_p to Z_q */
   poly_Z3_to_Zq(f);
   poly_Z3_to_Zq(g);
+
+  for(i=0; i<NTRU_N; i++)
+      f->coeffs[i] = 3*f->coeffs[i];
+  f->coeffs[0] += 1;
 
 #ifdef NTRU_HRSS
   /* g = 3*(x-1)*g */
@@ -140,22 +142,22 @@ int owcpa_dec(unsigned char *rm,
 {
   int i;
   int fail;
-  poly x1, x2, x3, x4;
+  poly x1, x2, x3;
 
   poly *c = &x1, *f = &x2, *cf = &x3;
-  poly *mf = &x2, *finv3 = &x3, *m = &x4;
-  poly *liftm = &x2, *invh = &x3, *r = &x4;
-  poly *b = &x1;
+  poly *m = &x2, *liftm = &x3;
+  poly *b = &x1, *invh = &x2, *r = &x3;
 
   poly_Rq_sum_zero_frombytes(c, ciphertext);
   poly_S3_frombytes(f, secretkey);
   poly_Z3_to_Zq(f);
+  for(i=0; i<NTRU_N; i++)
+    f->coeffs[i] = 3*f->coeffs[i];
+  f->coeffs[0] += 1;
 
   poly_Rq_mul(cf, c, f);
-  poly_Rq_to_S3(mf, cf);
+  poly_Rq_to_S3(m, cf);
 
-  poly_S3_frombytes(finv3, secretkey+NTRU_PACK_TRINARY_BYTES);
-  poly_S3_mul(m, mf, finv3);
   poly_S3_tobytes(rm+NTRU_PACK_TRINARY_BYTES, m);
 
   fail = 0;
