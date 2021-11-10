@@ -9,20 +9,20 @@
 
 static void toom4_k2x2_mul(uint16_t ab[2*L], const uint16_t a[L], const uint16_t b[L]);
 
-static void toom4_k2x2_eval_0(uint16_t r[9*K], const uint16_t a[M]);
-static void toom4_k2x2_eval_p1(uint16_t r[9*K], const uint16_t a[M]);
-static void toom4_k2x2_eval_m1(uint16_t r[9*K], const uint16_t a[M]);
-static void toom4_k2x2_eval_p2(uint16_t r[9*K], const uint16_t a[M]);
-static void toom4_k2x2_eval_m2(uint16_t r[9*K], const uint16_t a[M]);
-static void toom4_k2x2_eval_p3(uint16_t r[9*K], const uint16_t a[M]);
-static void toom4_k2x2_eval_inf(uint16_t r[9*K], const uint16_t a[M]);
+static void toom4_k2x2_eval_0(uint16_t r[9*K], const uint16_t a[L]);
+static void toom4_k2x2_eval_p1(uint16_t r[9*K], const uint16_t a[L]);
+static void toom4_k2x2_eval_m1(uint16_t r[9*K], const uint16_t a[L]);
+static void toom4_k2x2_eval_p2(uint16_t r[9*K], const uint16_t a[L]);
+static void toom4_k2x2_eval_m2(uint16_t r[9*K], const uint16_t a[L]);
+static void toom4_k2x2_eval_p3(uint16_t r[9*K], const uint16_t a[L]);
+static void toom4_k2x2_eval_inf(uint16_t r[9*K], const uint16_t a[L]);
 static inline void k2x2_eval(uint16_t r[9*K]);
 
 static void toom4_k2x2_basemul(uint16_t r[18*K], const uint16_t a[9*K], const uint16_t b[9*K]);
 static inline void schoolbook_KxK(uint16_t r[2*K], const uint16_t a[K], const uint16_t b[K]);
 
-static void toom4_k2x2_interpolate(uint16_t r[2*M], const uint16_t a[63*2*K]);
-static inline void k2x2_interpolate(uint16_t r[M], const uint16_t a[9*K]);
+static void toom4_k2x2_interpolate(uint16_t r[2*L], const uint16_t a[63*2*K]);
+static inline void k2x2_interpolate(uint16_t r[2*M], const uint16_t a[9*K]);
 
 void poly_Rq_mul(poly *r, const poly *a, const poly *b)
 {
@@ -83,7 +83,7 @@ static void toom4_k2x2_mul(uint16_t ab[2*L], const uint16_t a[L], const uint16_t
 }
 
 
-static void toom4_k2x2_eval_0(uint16_t r[9*K], const uint16_t a[M])
+static void toom4_k2x2_eval_0(uint16_t r[9*K], const uint16_t a[L])
 {
   for(size_t i=0; i<M; i++) {
     r[i] = a[i];
@@ -91,7 +91,7 @@ static void toom4_k2x2_eval_0(uint16_t r[9*K], const uint16_t a[M])
   k2x2_eval(r);
 }
 
-static void toom4_k2x2_eval_p1(uint16_t r[9*K], const uint16_t a[M])
+static void toom4_k2x2_eval_p1(uint16_t r[9*K], const uint16_t a[L])
 {
   for(size_t i=0; i<M; i++) {
     r[i]  = a[0*M+i];
@@ -102,7 +102,7 @@ static void toom4_k2x2_eval_p1(uint16_t r[9*K], const uint16_t a[M])
   k2x2_eval(r);
 }
 
-static void toom4_k2x2_eval_m1(uint16_t r[9*K], const uint16_t a[M])
+static void toom4_k2x2_eval_m1(uint16_t r[9*K], const uint16_t a[L])
 {
   for(size_t i=0; i<M; i++) {
     r[i]  = a[0*M+i];
@@ -113,7 +113,7 @@ static void toom4_k2x2_eval_m1(uint16_t r[9*K], const uint16_t a[M])
   k2x2_eval(r);
 }
 
-static void toom4_k2x2_eval_p2(uint16_t r[9*K], const uint16_t a[M])
+static void toom4_k2x2_eval_p2(uint16_t r[9*K], const uint16_t a[L])
 {
   for(size_t i=0; i<M; i++) {
     r[i]  = a[0*M+i];
@@ -124,7 +124,7 @@ static void toom4_k2x2_eval_p2(uint16_t r[9*K], const uint16_t a[M])
   k2x2_eval(r);
 }
 
-static void toom4_k2x2_eval_m2(uint16_t r[9*K], const uint16_t a[M])
+static void toom4_k2x2_eval_m2(uint16_t r[9*K], const uint16_t a[L])
 {
   for(size_t i=0; i<M; i++) {
     r[i]  = a[0*M+i];
@@ -135,7 +135,7 @@ static void toom4_k2x2_eval_m2(uint16_t r[9*K], const uint16_t a[M])
   k2x2_eval(r);
 }
 
-static void toom4_k2x2_eval_p3(uint16_t r[9*K], const uint16_t a[M])
+static void toom4_k2x2_eval_p3(uint16_t r[9*K], const uint16_t a[L])
 {
   for(size_t i=0; i<M; i++) {
     r[i]  = a[0*M+i];
@@ -146,7 +146,7 @@ static void toom4_k2x2_eval_p3(uint16_t r[9*K], const uint16_t a[M])
   k2x2_eval(r);
 }
 
-static void toom4_k2x2_eval_inf(uint16_t r[9*K], const uint16_t a[M])
+static void toom4_k2x2_eval_inf(uint16_t r[9*K], const uint16_t a[L])
 {
   for(size_t i=0; i<M; i++) {
     r[i] = a[3*M+i];
@@ -255,7 +255,7 @@ static void toom4_k2x2_interpolate(uint16_t r[2*M], const uint16_t a[7*18*K])
   }
 }
 
-static inline void k2x2_interpolate(uint16_t r[M], const uint16_t a[9*K])
+static inline void k2x2_interpolate(uint16_t r[2*M], const uint16_t a[9*K])
 {
   size_t i;
   uint16_t tmp[4*K];
